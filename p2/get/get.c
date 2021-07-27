@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <netdb.h>
 #include <string.h>
+#include <err.h>
 #include "usage.h"
 
 #define CONNECTION_PORT 80
@@ -25,20 +26,26 @@ send_HTTP_request(int fd, char* file, char* host)
     char* requestString;
 
     /* Allocate enough space for our HTTP request */
-    requestString = (char*)malloc(strlen(file) + strlen(host) + 26);
+    //requestString = (char*)malloc(strlen(file) + strlen(host) + 26);
 
     /* Construct HTTP request:
      * GET / HTTP/1.0
      * Host: hostname
      * <blank line>
      */
-    sprintf(requestString, "GET %s HTTP/1.0\r\nHost: %s\r\n\r\n", file, host);
+    //sprintf(requestString, "GET %s HTTP/1.0\r\nHost: %s\r\n\r\n", file, host);
 
+    /* 
+     *Memory is dynamically allocated by asprintf based on request size  [PRAC 1]
+     */
+    asprintf(&requestString, "GET %s HTTP/1.0\r\nHost: %s\r\n\r\n", file, host);
+  
     /* Send our request to server */
     if(write(fd, requestString, strlen(requestString)) < 1) {
-	    perror("Write error");
-	    exit(1);
+	    errx(1, "%s", "Write error");
     }
+
+    free(requestString);
 }
 
 void
@@ -53,8 +60,7 @@ get_and_output_HTTP_response(int fd)
     while(!eof) {
 	numBytesRead = read(fd, buffer, 1024);
 	if(numBytesRead < 0) {
-	    perror("Read error\n");
-	    exit(1);
+        errx(1, "%s", "Read Error");
 	} else if(numBytesRead == 0) {
 	    eof = 1;
 	} else {
@@ -83,7 +89,7 @@ resolve_and_connect(struct userArgs *connectionArgs) {
     int ai_family = connectionArgs->ai_family;
 
 
-    printf("DBG_MSG: \n\r\r Port: %d\n\r\r Hostname: %s\n\r\r IPV: %s\n\r\r", port, hostname, ((ai_family == AF_INET) ? "IPV4":"IPV6"));
+    warnx("\n\r\r Port: %d\n\r\r Hostname: %s\n\r\r IPV: %s\n\r\r", port, hostname, ((ai_family == AF_INET) ? "IPV4":"IPV6"));
 
     error = getaddrinfo(hostname, NULL, NULL, &addressInfo);
 
@@ -111,16 +117,14 @@ resolve_and_connect(struct userArgs *connectionArgs) {
      */
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if(fd < 0) {
-	    perror("Error creating socket");
-	    exit(EXIT_SOCKETERR);
+	    errx(EXIT_SOCKETERR, "%s", "Error creating socket");
     }
 
     /*
      * Attempt to connect to server at that address 
      */
     if(connect(fd, (struct sockaddr*)&socketAddr, sizeof(socketAddr)) < 0) {
-	    perror("Error connecting");
-	    exit(EXIT_CONNECT);
+        errx(EXIT_CONNECT, "%s", "Error Connecting");
     }
 
     freeaddrinfo(addressInfo); //Connected, no, longer required
@@ -139,7 +143,6 @@ resolve_and_connect(struct userArgs *connectionArgs) {
 int
 main(int argc, char* argv[]) {
     int  ch, fd;
-
     struct userArgs connectionArgs;
 
     if(argc < 2) {
@@ -149,7 +152,9 @@ main(int argc, char* argv[]) {
 	    usage(BADARGS);
     }
 
-    //Set default
+    /*
+     * Set defaults
+     */
     connectionArgs.port = CONNECTION_PORT;
     connectionArgs.ai_family = AF_INET; 
     connectionArgs.hostname = "";

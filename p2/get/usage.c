@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <err.h>
 #include "usage.h"
 
 /**
@@ -15,15 +16,11 @@ usage(usageTypes s) {
 
     switch (s) {
         case HELP:
-            fprintf(stderr, "Usage: %s hostname [-p port] [-4 ipv4] [-6 ipv6]\n", __progname);
-            exit(EXIT_HELP);
+            errx(EXIT_HELP, "Usage: %s hostname [-p port] [-4 ipv4] [-6 ipv6]", __progname);
         case BADARGS:
-            fprintf(stderr, "Usage: %s hostname [-p port] [-4 ipv4] [-6 ipv6]\n", __progname);
-            exit(EXIT_INVALARGS);
+            errx(EXIT_INVALARGS, "Usage: %s hostname [-p port] [-4 ipv4] [-6 ipv6]", __progname);
         case BADHOST:
-            fprintf(stderr, "Unable to resolve IP from hostname\n");
-            exit(EXIT_BADHOST);        
+            errx(EXIT_BADHOST, "Unable to resolve IP from hostname");    
     }
-
     exit(EXIT_USAGE);
 }
