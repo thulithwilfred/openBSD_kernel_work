@@ -14,9 +14,11 @@ usage(usageTypes s) {
      extern char *__progname;
 
     switch (s) {
-        case INVALIDMSG:
+        case HELP:
+            fprintf(stderr, "Usage: %s hostname [-p port] [-4 ipv4] [-6 ipv6]\n", __progname);
+            exit(EXIT_HELP);
         case BADARGS:
-            fprintf(stderr, "Usage: %s hostname\n", __progname);
+            fprintf(stderr, "Usage: %s hostname [-p port] [-4 ipv4] [-6 ipv6]\n", __progname);
             exit(EXIT_INVALARGS);
         case BADHOST:
             fprintf(stderr, "Unable to resolve IP from hostname\n");

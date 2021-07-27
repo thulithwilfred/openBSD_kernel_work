@@ -18,6 +18,7 @@
 
 #define CONNECTION_PORT 80
 
+
 void
 send_HTTP_request(int fd, char* file, char* host)
 {
@@ -71,11 +72,18 @@ get_and_output_HTTP_response(int fd)
  * @return int socket fd
  */
 int 
-resolve_and_connect(char* hostname) {
+resolve_and_connect(struct userArgs *connectionArgs) {
     int error, fd;
     struct addrinfo* addressInfo;
     struct sockaddr_in socketAddr;
     struct in_addr ipAddress;
+
+    char* hostname = connectionArgs->hostname;
+    int port = connectionArgs->port;
+    int ai_family = connectionArgs->ai_family;
+
+
+    printf("DBG_MSG: \n\r\r Port: %d\n\r\r Hostname: %s\n\r\r IPV: %s\n\r\r", port, hostname, ((ai_family == AF_INET) ? "IPV4":"IPV6"));
 
     error = getaddrinfo(hostname, NULL, NULL, &addressInfo);
 
@@ -93,8 +101,8 @@ resolve_and_connect(char* hostname) {
      * Create a structure that represents the IP address and port number
      * that we're connecting to.
      */
-    socketAddr.sin_family = AF_INET;	/* IP v4 */
-    socketAddr.sin_port = htons(CONNECTION_PORT);	/* Convert port number to network byte order */
+    socketAddr.sin_family = ai_family;	/* IP v4 */
+    socketAddr.sin_port = htons(port);	/* Convert port number to network byte order */
     socketAddr.sin_addr.s_addr = ipAddress.s_addr;	/* Copy IP address - already in network byte order */
 
     
@@ -119,26 +127,62 @@ resolve_and_connect(char* hostname) {
     return fd;
 }
 
-
+/**
+ * @brief Simple program that sends and reads HTTPS request,
+            the user can tell which host to connect to and on which port
+            /which ipv protocol (IPv4/6.
+ * 
+ * @param argc arg count
+ * @param argv args
+ * @return int 0 on success
+ */
 int
 main(int argc, char* argv[]) {
-    int fd;
-    char* hostname;
+    int  ch, fd;
 
-    if(argc != 2) {
+    struct userArgs connectionArgs;
+
+    if(argc < 2) {
         /*
          * Usage function is non-returning
          */
 	    usage(BADARGS);
     }
 
-     hostname = argv[1];
+    //Set default
+    connectionArgs.port = CONNECTION_PORT;
+    connectionArgs.ai_family = AF_INET; 
+    connectionArgs.hostname = "";
+
+    while(optind < argc) {
+        if ((ch = getopt(argc, argv, "?46p:")) != -1) {
+            switch (ch) {
+                case 'p':
+                    connectionArgs.port = atoi(optarg);
+                    break;
+               case '4':
+                   connectionArgs.ai_family = AF_INET;
+                    break;
+                case '6':
+                    connectionArgs.ai_family = AF_INET6;
+                    break;
+               case '?':
+                 usage(HELP);
+                 break;
+             default:
+                 break;
+            }
+        } else {
+            connectionArgs.hostname = argv[optind];
+            optind++;
+        }
+    }
 
      /* 
       * PRAC1: Merge `name_to_IP_addr()` and `connect_to()`
       */
-     fd = resolve_and_connect(hostname);
-     send_HTTP_request(fd, "/", hostname);
+     fd = resolve_and_connect(&connectionArgs);
+     send_HTTP_request(fd, "/", connectionArgs.hostname);
      get_and_output_HTTP_response(fd);
      close(fd);
 
