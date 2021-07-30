@@ -15,6 +15,7 @@
 #include <netdb.h>
 #include <string.h>
 #include <err.h>
+#include <errno.h>
 #include "usage.h"
 
 #define CONNECTION_PORT 80
@@ -42,6 +43,7 @@ send_HTTP_request(int fd, char* file, char* host)
   
     /* Send our request to server */
     if(write(fd, requestString, strlen(requestString)) < 1) {
+        free(requestString);
 	    errx(1, "%s", "Write error");
     }
 
@@ -58,14 +60,14 @@ get_and_output_HTTP_response(int fd)
     // Repeatedly read from network fd until nothing left - write 
     // everything out to stdout
     while(!eof) {
-	numBytesRead = read(fd, buffer, 1024);
-	if(numBytesRead < 0) {
-        errx(1, "%s", "Read Error");
-	} else if(numBytesRead == 0) {
-	    eof = 1;
-	} else {
-	    fwrite(buffer, sizeof(char), numBytesRead, stdout);
-	}
+	    numBytesRead = read(fd, buffer, 1024);
+	    if(numBytesRead < 0) {
+            errx(1, "%s", "Read Error");
+	    } else if(numBytesRead == 0) {
+	        eof = 1;
+	    } else {
+	        fwrite(buffer, sizeof(char), numBytesRead, stdout);
+	    }
     }
 }
 
@@ -79,56 +81,63 @@ get_and_output_HTTP_response(int fd)
  */
 int 
 resolve_and_connect(struct userArgs *connectionArgs) {
-    int error, fd;
-    struct addrinfo* addressInfo;
-    struct sockaddr_in socketAddr;
-    struct in_addr ipAddress;
+    int error, sfd, save_errno;
+    struct addrinfo* addressInfo, *res, hints;
+    const char *cause = NULL;
 
     char* hostname = connectionArgs->hostname;
     int port = connectionArgs->port;
     int ai_family = connectionArgs->ai_family;
 
+    /* Hints to point getaddr in the right direction */
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = connectionArgs->ai_family;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
 
     warnx("\n\r\r Port: %d\n\r\r Hostname: %s\n\r\r IPV: %s\n\r\r", port, hostname, ((ai_family == AF_INET) ? "IPV4":"IPV6"));
 
-    error = getaddrinfo(hostname, NULL, NULL, &addressInfo);
+    error = getaddrinfo(hostname, NULL, &hints, &addressInfo);
 
-    if(error) {
+    if(error) 
 	    usage(BADHOST);
-    }
-
-    /*
-     * Extract IP Addr
-     */
-    ipAddress = (((struct sockaddr_in*)(addressInfo->ai_addr))->sin_addr);
-
-
-    /*
-     * Create a structure that represents the IP address and port number
-     * that we're connecting to.
-     */
-    socketAddr.sin_family = ai_family;	/* IP v4 */
-    socketAddr.sin_port = htons(port);	/* Convert port number to network byte order */
-    socketAddr.sin_addr.s_addr = ipAddress.s_addr;	/* Copy IP address - already in network byte order */
-
     
-    /* 
-     * Create TCP socket 
-     */
-    fd = socket(AF_INET, SOCK_STREAM, 0);
-    if(fd < 0) {
-	    errx(EXIT_SOCKETERR, "%s", "Error creating socket");
+    sfd = -1; 
+
+    for (res = addressInfo; res; res = res->ai_next) {
+        sfd = socket(res->ai_family, res->ai_socktype,
+	            res->ai_protocol);
+
+	    if (sfd == -1) {
+		    cause = "socket";
+		    continue;
+        }
+
+        switch(res->ai_family) {
+            case AF_INET:
+                ((struct sockaddr_in *)(res->ai_addr))->sin_port = htons(connectionArgs->port);
+                break;
+            case AF_INET6:
+                ((struct sockaddr_in6 *)(res->ai_addr))->sin6_port = htons(connectionArgs->port);
+                break;
+        }
+
+        if (connect(sfd, res->ai_addr, res->ai_addrlen) == -1) {
+		    cause = "connect";
+		    save_errno = errno;
+		    close(sfd);
+		    errno = save_errno;
+		    sfd = -1;
+		    continue;
+	    }
+        break;	/* okay we got one */
     }
 
-    /*
-     * Attempt to connect to server at that address 
-     */
-    if(connect(fd, (struct sockaddr*)&socketAddr, sizeof(socketAddr)) < 0) {
-        errx(EXIT_CONNECT, "%s", "Error Connecting");
-    }
+    if (sfd == -1)
+        err(1, "%s", cause);
 
     freeaddrinfo(addressInfo); //Connected, no, longer required
-    return fd;
+    return sfd;
 }
 
 /**
