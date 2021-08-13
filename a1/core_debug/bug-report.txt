@@ -1,6 +1,6 @@
 Summary
 --------------------------------------------------------------------------------------------------------
-prom-exporter ends with a segmentation fault, as a result of acessing recently freed memory.
+prom-exporter ends with a segmentation fault, as a result of acessing recently freed memory. Occurs when there are improperly handled requests.
 
 Steps to reproduce
 --------------------------------------------------------------------------------------------------------
