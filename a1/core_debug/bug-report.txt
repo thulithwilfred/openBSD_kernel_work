@@ -1,0 +1,104 @@
+Summary
+--------------------------------------------------------------------------------------------------------
+prom-exporter ends with a segmentation fault, as a result of acessing recently freed memory.
+
+Steps to reproduce
+--------------------------------------------------------------------------------------------------------
+Steps to reproduced by detected by investigating the stack frames at the point of crash, using a core dump in gdb.  
+
+Shell 1:
+>$./prom-exporter -f
+
+Shell 2:
+>$ nc localhost 27600
+>$ close nc                         //i.e ctrl+c
+>$ nc localhost 27600 < file.txt
+
+Where file.txt contains arbtrary data, i.e. 'aaaaaaaaaaaaaaa'
+Tested with a file with 2048 characters to match the recv buffer. 
+
+Error:
+The resulting causes prom-exporter to end with singal 11, Segmentation fault. 
+
+
+Analysis
+--------------------------------------------------------------------------------------------------------
+Initial Approach:
+    1. Using the gdb to dissect a core dump, by investigating the stack frames and narrowing down to point of cause.
+    At a glance, the program crashes as a result of accessing a freed memory region. 
+
+    (gdb) bt 
+    #0  free_req (req=0xdfdfdfdfdfdfdfdf) at main.c:100
+    #1  0x000003ee4c2f7577 in reactor_loop (lsock=3, registry=0x3f05d362300, settings=0x7f7ffffbdb00) at main.c:405
+    #2  0x000003ee4c2f6aa9 in main (argc=2, argv=0x7f7ffffbdc08) at main.c:253
+
+    (gdb) print req 
+    $1 = (struct req *) 0xdfdfdfdfdfdfdfdf <- Invalid memory region
+
+    2. Root cause, in main.c @line 348
+        	parser->data = req;   //paser->data points to req 
+
+			req->id = reqid++;
+			req->sock = sock;
+			req->raddr = raddr;
+			req->registry = registry;
+			#req->parser = parser;  //[1] Here we note that req->parser points to the current request parser instance also. 
+
+        in main.c @line  402
+
+        	if (parser->upgrade) {
+					/* we don't use this, so just close */
+					tslog("upgrade? %d", req->id);
+					#free_req(parser->data);      //This eventually causes the crash by attemting to deref parser->data after it has been freed.           
+					continue;
+			} else if (plen != recvd) {
+					tslog("http-parser gave error on %d, "
+					    "close", req->id);
+					#free_req(parser->data);                 //There could be scenario [2] where this is executed, given that the HTTP parser had returned an error. 
+					continue;
+			}
+
+        
+        in such a scenario (as mentioned in the comment next to free_req(parser->data));
+        the following code is executed.
+
+        in main.c @line 111 (free_req())
+        	fclose(req->wf);  //Here req refers to (struct req *)parser->data
+
+	        #free(req->parser);  //parser->data->parser This means that the parser is essentially freeing itself (see [1])
+	        free(req);
+
+        After the following, the stack trace shows that the data held by the parser in the context of the reactor loop is now invalid (as expected from the above atrocity).
+                (gdb) p/a parser->data
+                $2 = 0xdfdfdfdfdfdfdfdf  [3]
+
+        If there is an improperly handled request that causes (req != NULL), that causes the for loop (@line 373 in main.c) to iterate after [2] has occured. This can lead to parser->upgrade
+        as being misread as a '1' (due to corrupted memory) [3], in main.c @line 402.
+        This leads to another call to free_req(parser->data), where it attempts to dereference a data member that is invalid thus causing the 
+        segmentation fault. 
+
+    2. Using the GDB approach i was able reproduce the error, which further helped create the proposed fix as seen below. 
+
+Proposed Fix
+--------------------------------------------------------------------------------------------------------
+    Given that each request, gets its own req & parser structs when a new connection is accepted. 
+    @line 405, 410 should be replaced with
+        -- < free_req(parser->data);
+        ++ > free_req(req);
+
+    @line 400 should be replaced with
+		 -- < plen = http_parser_execute(parser,
+		 ++ > plen = http_parser_execute(req->parser,
+ 				    settings, buf, recvd);
+
+    As when free_req is called, it will only free the parser that is associated with the CURRENT req. 
+    In this scenario, even if there was an unhandled req where the for loop has iterated, only the parser for that request will be checked. [ex @line 402.  if (parser->upgrade)]
+
+NOTES
+--------------------------------------------------------------------------------------------------------
+    Applicable patch has been created as bug-report.patch
+    Can be applied with
+    
+    >$ patch < bug-repot.patch
+        or removed with
+    >$ patch -R < bug-report.patch

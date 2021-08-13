@@ -1,0 +1,24 @@
+--- main.c	Sat Aug 14 00:03:18 2021
++++ main_patched.c	Sat Aug 14 06:33:19 2021
+@@ -397,17 +397,17 @@
+ 					continue;
+ 				}
+ 
+-				plen = http_parser_execute(parser,
++				plen = http_parser_execute(req->parser,
+ 				    settings, buf, recvd);
+-				if (parser->upgrade) {
++				if (req->parser->upgrade) {
+ 					/* we don't use this, so just close */
+ 					tslog("upgrade? %d", req->id);
+-					free_req(parser->data);
++					free_req(req);
+ 					continue;
+ 				} else if (plen != recvd) {
+ 					tslog("http-parser gave error on %d, "
+ 					    "close", req->id);
+-					free_req(parser->data);
++					free_req(req);
+ 					continue;
+ 				}
+ 
