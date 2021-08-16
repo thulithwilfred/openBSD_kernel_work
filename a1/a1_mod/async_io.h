@@ -6,7 +6,6 @@ enum response_type {
 	RESP_METRICS
 };
 
-
 /*
  * Struct representing a request that's being processed and the connection it's
  * being received on (each connection can send only one request at present, so
@@ -32,8 +31,8 @@ struct req {
 };
 
 
-void async_init(int lsock, struct registry *registry, http_parser_settings *http_settings);
+void async_init(int , struct registry *, http_parser_settings *);
 
-void free_req(struct req *req);
+void free_req(struct req *);
 
 #endif

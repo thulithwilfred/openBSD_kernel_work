@@ -28,14 +28,21 @@
 #define REQ_TIMEOUT 30
 #define MAX_BLEN 2048
 
+/* Event timeout Struct */
 struct timeval tv;
 
+/* Holds request data, parser settings and event 
+ * struct pointers, used for event callbacks 
+ */
 struct req_event {
     struct event* ev;
     struct req* req;
     http_parser_settings *settings;
 };
 
+/* Holds registry and parser settings,
+ * used for event callbacks 
+ */
 struct settings {
     struct registry *reg;
     http_parser_settings *settings;
@@ -43,6 +50,7 @@ struct settings {
 
 http_parser_settings settings;
 
+/* Current request ID */
 int reqid = 1;
 
 static void
@@ -52,20 +60,19 @@ req_callback(int sfd, short revents, void *conn) {
     struct req_event* req_ev = (struct req_event*)conn;
     int blen = MAX_BLEN;
 
-    buf = malloc(sizeof(char) * blen);
-
     if (revents == EV_TIMEOUT) {
-        printf("Timeout, closing sfd: %d\n", sfd);
+        tslog("Timeout, closing sfd: %d\n", sfd);
         event_del(req_ev->ev);
         return;
     }
 
+    buf = malloc(sizeof(char) * blen);
     recvd = recv(sfd, buf, blen, 0);
 
     if (recvd < 0) {
         tslog("error recv: %s", strerror(errno));
     } else if (recvd == 0) {
-        tslog("Client disconnected");
+        tslog("Client disconnected, closing sfd");
         event_del(req_ev->ev);
         free(buf);
         return;
@@ -78,17 +85,26 @@ req_callback(int sfd, short revents, void *conn) {
 	if (req_ev->req->parser->upgrade) {
         /* we don't use this, so just close */
         tslog("upgrade? %d", req_ev->req->id);
+        event_del(req_ev->ev);
         free_req(req_ev->req);
+        free(buf);
         return;
     } else if (plen != recvd) {
         tslog("http-parser gave error on %d, "
             "close", req_ev->req->id);
+        event_del(req_ev->ev);
         free_req(req_ev->req);
+        free(buf);
         return;
 	}
 
-
-    printf("Recvd %d: %s", recvd, buf);
+    if (req_ev->req->done) {
+        tslog("Request Complete\n");
+        event_del(req_ev->ev);
+        free_req(req_ev->req);
+        free(buf);
+        return;
+    }
     free(buf);
 }
 
@@ -102,6 +118,7 @@ sock_event_callback(int sfd, short revents, void *conn) {
     struct settings *set = (struct settings*)conn;
     struct req_event *req_ev;
 
+    /* Accept incoming connections */
     slen = sizeof(raddr);
     sock = accept4(sfd, (struct sockaddr *)&raddr, &slen, SOCK_NONBLOCK);
 
@@ -166,22 +183,29 @@ sock_event_callback(int sfd, short revents, void *conn) {
 
     event_set(ev, EVENT_FD(ev), EV_READ | EV_PERSIST, req_callback, req_ev);
     event_add(ev, &tv);
-
-    printf("Client accepted on fd %d...\n", sock); 
 }
+
 
 void
 async_init(int lsock, struct registry *registry, http_parser_settings *http_settings) {
+        int ev_err;
         struct event *ev = malloc(sizeof(struct event));
         struct settings *set = malloc(sizeof(struct settings));
 
         set->reg = registry;
-        set->settings = http_settings; //wtf is this
+        set->settings = http_settings; 
 
         ev->ev_fd = lsock;
-        printf("Setting Up Async IO on %d\n", lsock);
+        tslog("Setting Up Async IO on sfd%d\n", lsock);
         event_init();
         event_set(ev, EVENT_FD(ev), EV_READ | EV_PERSIST, sock_event_callback, set);
         event_add(ev, NULL);
-        event_dispatch();   //Start event loop   
+        ev_err = event_dispatch();   //Start event loop   
+
+        if (ev_err < 0) {
+            tslog("Error on event loop\n");
+        }
+
+        free(set);
+        free(ev);
 }
