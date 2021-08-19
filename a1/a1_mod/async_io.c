@@ -8,6 +8,7 @@
 #include <poll.h>
 #include <time.h>
 #include <signal.h>
+#include <stdbool.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -37,6 +38,8 @@ struct timeval tv;
 struct req_event {
     struct event* ev;
     struct req* req;
+    char* recv_buffer; 
+    int recv_len;
     http_parser_settings *settings;
 };
 
@@ -54,6 +57,31 @@ http_parser_settings settings;
 int reqid = 1;
 
 /**
+ * @brief Cleanup function for requests.
+ *        Will free the allocated memory for a buffer, and the associated request.
+ * @note  See free_req() in main.c for additional information.  
+ * 
+ * @param req_ev request event structure associated with the wiping request. 
+ */
+static void wipe_request(struct req_event* req_ev) {
+    free(req_ev->recv_buffer);
+    event_del(req_ev->ev);
+    free_req(req_ev->req);
+}
+
+static bool end_of_req(char* buffer, int len) {
+    //printf("DD %d %d %d %d\n", buffer[len - 1], buffer[len - 2], buffer[len - 3] ,buffer[len - 4]);
+    if (buffer[len - 1] == '\n' && buffer[len - 2] == '\r' && buffer[len - 3] == '\n' && buffer[len - 4] == '\r') {
+        /* \n\r\n\r */
+        return true;
+    } else if (buffer[len - 1] == '\n' && buffer[len - 2] == '\n') {
+        /* \n\n */
+        return true;
+    }
+    return false;
+}
+
+/**
  * @brief Handles client events caused on the respective file descriptor.
  * 			
  * @param sfd Client file descriptor  
@@ -63,57 +91,64 @@ int reqid = 1;
 static void
 req_callback(int sfd, short revents, void *conn) {
     int recvd, plen;
-    char * buf;
     struct req_event* req_ev = (struct req_event*)conn;
     int blen = MAX_BLEN;
+    int recv_len = req_ev->recv_len;
 
     if (revents == EV_TIMEOUT) {
         tslog("Timeout, closing sfd: %d\n", sfd);
-																				/*TODO Close SFD HERE */
-        event_del(req_ev->ev);
+        wipe_request(req_ev);
         return;
     }
 
-    buf = malloc(sizeof(char) * blen);
-    recvd = recv(sfd, buf, blen, 0);
+    /*
+     * Receive data that (as long as it fits into to remaining MAX_BLEN), and append to the end of the current
+     * request buffer. This allows the requests to be appended to. 
+     */
+    recvd = recv(sfd, req_ev->recv_buffer + recv_len, blen - recv_len, 0);
+    req_ev->recv_len += recvd;   
 
     if (recvd < 0) {
-        tslog("error recv: %s", strerror(errno));
+        tslog("Error recv: %s", strerror(errno));
+        wipe_request(req_ev);
+        return;
     } else if (recvd == 0) {
-        tslog("Client disconnected, closing sfd");
-        event_del(req_ev->ev);
-        free(buf);
+        tslog("Client disconnected");
+        wipe_request(req_ev);
         return;
     }
 
-	plen = http_parser_execute(req_ev->req->parser,
-				    req_ev->settings, buf, recvd);
+    printf("Incoming Request:\n\r%s", req_ev->recv_buffer + recv_len);
 
+    if (end_of_req(req_ev->recv_buffer, req_ev->recv_len) == false) {
+        tslog("Partial Requst Received...");
+        return;
+    }
+
+    plen = http_parser_execute(req_ev->req->parser,
+                req_ev->settings, req_ev->recv_buffer, req_ev->recv_len);
 
 	if (req_ev->req->parser->upgrade) {
         /* we don't use this, so just close */
         tslog("upgrade? %d", req_ev->req->id);
-        event_del(req_ev->ev);
-        free_req(req_ev->req);
-        free(buf);
+        wipe_request(req_ev);
         return;
-    } else if (plen != recvd) {
+    } else if (plen != req_ev->recv_len) {
         tslog("http-parser gave error on %d, "
             "close", req_ev->req->id);
-        event_del(req_ev->ev);
-        free_req(req_ev->req);
-        free(buf);
+        /* Request could be invalid or incomplete */
+        wipe_request(req_ev);
         return;
 	}
 
     if (req_ev->req->done) {
         tslog("Request Complete\n");
-        event_del(req_ev->ev);
-        free_req(req_ev->req);
-        free(buf);
+        wipe_request(req_ev);
         return;
+    } else {
+        tslog("Request Incomplete, waiting...");
     }
-    free(buf);
+
 }
 
 
@@ -127,13 +162,14 @@ req_callback(int sfd, short revents, void *conn) {
  */
 static void
 sock_event_callback(int sfd, short revents, void *conn) {
-    int slen, sock;
     struct sockaddr_in raddr;
     struct event *ev;
     struct req *req;
     http_parser *parser;
     struct settings *set = (struct settings*)conn;
     struct req_event *req_ev;
+    int slen, sock;
+    int blen = MAX_BLEN;
 
     /* Accept incoming connections */
     slen = sizeof(raddr);
@@ -197,6 +233,9 @@ sock_event_callback(int sfd, short revents, void *conn) {
     req_ev->ev=ev;
     req_ev->req=req;
     req_ev->settings = set->settings;
+
+    req_ev->recv_buffer = malloc(sizeof(char) * blen);
+    req_ev->recv_len = 0;
 
     event_set(ev, EVENT_FD(ev), EV_READ | EV_PERSIST, req_callback, req_ev);
     event_add(ev, &tv);
