@@ -53,6 +53,13 @@ http_parser_settings settings;
 /* Current request ID */
 int reqid = 1;
 
+/**
+ * @brief Handles client events caused on the respective file descriptor.
+ * 			
+ * @param sfd Client file descriptor  
+ * @param revents Event callback flags
+ * @param conn Request data, struct
+ */
 static void
 req_callback(int sfd, short revents, void *conn) {
     int recvd, plen;
@@ -62,6 +69,7 @@ req_callback(int sfd, short revents, void *conn) {
 
     if (revents == EV_TIMEOUT) {
         tslog("Timeout, closing sfd: %d\n", sfd);
+																				/*TODO Close SFD HERE */
         event_del(req_ev->ev);
         return;
     }
@@ -108,6 +116,15 @@ req_callback(int sfd, short revents, void *conn) {
     free(buf);
 }
 
+
+/**
+ * @brief Sets up event handlers for incomming connections on the socket file descriptors.
+ *			and adds accepted client file descripters to events list. 
+ * 
+ * @param sfd Socket file descriptor
+ * @param revents Event callback flags
+ * @param conn Settings data 
+ */
 static void
 sock_event_callback(int sfd, short revents, void *conn) {
     int slen, sock;
@@ -185,27 +202,33 @@ sock_event_callback(int sfd, short revents, void *conn) {
     event_add(ev, &tv);
 }
 
-
+/**
+ * @brief Initialise async I/O using lib event, sets up the event loop.
+ * @note Funtion only returns when the event loops exits or returns error
+ *
+ * @param lsock socket fd
+ * @param registry registry settings
+ * @param http_settings http parser settings
+ */
 void
 async_init(int lsock, struct registry *registry, http_parser_settings *http_settings) {
-        int ev_err;
-        struct event *ev = malloc(sizeof(struct event));
-        struct settings *set = malloc(sizeof(struct settings));
+	int ev_err;
+    struct event *ev = malloc(sizeof(struct event));
+    struct settings *set = malloc(sizeof(struct settings));
 
-        set->reg = registry;
-        set->settings = http_settings; 
+    set->reg = registry;
+    set->settings = http_settings; 
 
-        ev->ev_fd = lsock;
-        tslog("Setting Up Async IO on sfd%d\n", lsock);
-        event_init();
-        event_set(ev, EVENT_FD(ev), EV_READ | EV_PERSIST, sock_event_callback, set);
-        event_add(ev, NULL);
-        ev_err = event_dispatch();   //Start event loop   
+    ev->ev_fd = lsock;
+    tslog("Setting Up Async IO on sfd%d\n", lsock);
+    event_init();
+    event_set(ev, EVENT_FD(ev), EV_READ | EV_PERSIST, sock_event_callback, set);
+    event_add(ev, NULL);
+    ev_err = event_dispatch();   //Start event loop   
 
-        if (ev_err < 0) {
-            tslog("Error on event loop\n");
-        }
-
-        free(set);
-        free(ev);
+    if (ev_err < 0) {
+		tslog("Error on event loop\n");
+    }
+    free(set);
+	free(ev);
 }
