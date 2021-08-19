@@ -26,6 +26,8 @@
 #include "metrics.h"
 #include "async_io.h"
 
+//#define DEBUG_MODE
+
 #define REQ_TIMEOUT 30
 #define MAX_BLEN 2048
 
@@ -69,6 +71,15 @@ static void wipe_request(struct req_event* req_ev) {
     free_req(req_ev->req);
 }
 
+/**
+ * @brief Test to see if the input buffer contain either a sequence of
+            "\n\n" or "\n\r\n\r" to indicate the end of a http request. 
+ * 
+ * @param buffer http request to test for completion
+ * @param len lenght of buffer
+ * @return true if either sequence is detected at the end
+ * @return false if sequence is not detected
+ */
 static bool end_of_req(char* buffer, int len) {
     //printf("DD %d %d %d %d\n", buffer[len - 1], buffer[len - 2], buffer[len - 3] ,buffer[len - 4]);
     if (buffer[len - 1] == '\n' && buffer[len - 2] == '\r' && buffer[len - 3] == '\n' && buffer[len - 4] == '\r') {
@@ -96,14 +107,14 @@ req_callback(int sfd, short revents, void *conn) {
     int recv_len = req_ev->recv_len;
 
     if (revents == EV_TIMEOUT) {
-        tslog("Timeout, closing sfd: %d\n", sfd);
+        tslog("Timeout for ReqID: %d, closing...", req_ev->req->id);
         wipe_request(req_ev);
         return;
     }
 
     /*
-     * Receive data that (as long as it fits into to remaining MAX_BLEN), and append to the end of the current
-     * request buffer. This allows the requests to be appended to. 
+     * Receive data as long as it fits into the remaining of MAX_BLEN, then append to the end of the current
+     * request buffer. This allows for partial requests to be appended onto. 
      */
     recvd = recv(sfd, req_ev->recv_buffer + recv_len, blen - recv_len, 0);
     req_ev->recv_len += recvd;   
@@ -113,29 +124,32 @@ req_callback(int sfd, short revents, void *conn) {
         wipe_request(req_ev);
         return;
     } else if (recvd == 0) {
-        tslog("Client disconnected");
+        warnx("Client on ReqID: %d disconnected...", req_ev->req->id);
         wipe_request(req_ev);
         return;
     }
 
+#ifdef DEBUG_MODE
     printf("Incoming Request:\n\r%s", req_ev->recv_buffer + recv_len);
+#endif
 
+    /* Check to see if the current state of the request is complete */
     if (end_of_req(req_ev->recv_buffer, req_ev->recv_len) == false) {
-        tslog("Partial Requst Received...");
+        tslog("Partial Requst Received...waiting for %d to complete", req_ev->req->id);
         return;
     }
-
+    
     plen = http_parser_execute(req_ev->req->parser,
                 req_ev->settings, req_ev->recv_buffer, req_ev->recv_len);
 
 	if (req_ev->req->parser->upgrade) {
         /* we don't use this, so just close */
-        tslog("upgrade? %d", req_ev->req->id);
+        tslog("Upgrade? %d", req_ev->req->id);
         wipe_request(req_ev);
         return;
     } else if (plen != req_ev->recv_len) {
-        tslog("http-parser gave error on %d, "
-            "close", req_ev->req->id);
+        tslog("http-parser gave error on ReqID %d, "
+            "closing...", req_ev->req->id);
         /* Request could be invalid or incomplete */
         wipe_request(req_ev);
         return;
@@ -145,10 +159,7 @@ req_callback(int sfd, short revents, void *conn) {
         tslog("Request Complete\n");
         wipe_request(req_ev);
         return;
-    } else {
-        tslog("Request Incomplete, waiting...");
-    }
-
+    } 
 }
 
 
@@ -206,6 +217,7 @@ sock_event_callback(int sfd, short revents, void *conn) {
 	}
 
 	http_parser_init(parser, HTTP_REQUEST);
+    /* Setup request and parser data*/
 	parser->data = req;
 
 	req->id = reqid++;
@@ -213,8 +225,8 @@ sock_event_callback(int sfd, short revents, void *conn) {
 	req->raddr = raddr;
 	req->registry = set->reg;
 	req->parser = parser;
-
-    req->wf = fdopen(sock, "w");
+    /* Only write socket is closed later */
+    req->wf = fdopen(sock, "w"); 
 
 
 	if (req->wf == NULL) {
@@ -229,11 +241,14 @@ sock_event_callback(int sfd, short revents, void *conn) {
     ev->ev_fd = sock;
     tv.tv_sec = REQ_TIMEOUT;
 
+    /* 
+     * Setup all required data for an incoming request,
+     * if a request is completed or dropped, these are to be freed. 
+     */
     req_ev = malloc(sizeof(struct req_event));
     req_ev->ev=ev;
     req_ev->req=req;
     req_ev->settings = set->settings;
-
     req_ev->recv_buffer = malloc(sizeof(char) * blen);
     req_ev->recv_len = 0;
 
@@ -263,11 +278,15 @@ async_init(int lsock, struct registry *registry, http_parser_settings *http_sett
     event_init();
     event_set(ev, EVENT_FD(ev), EV_READ | EV_PERSIST, sock_event_callback, set);
     event_add(ev, NULL);
-    ev_err = event_dispatch();   //Start event loop   
+
+    /* Begin event loop */
+    ev_err = event_dispatch();     
 
     if (ev_err < 0) {
+        /* Should not get here */
 		tslog("Error on event loop\n");
     }
+
     free(set);
 	free(ev);
 }
