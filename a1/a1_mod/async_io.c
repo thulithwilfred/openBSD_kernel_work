@@ -65,11 +65,52 @@ int reqid = 1;
  * 
  * @param req_ev request event structure associated with the wiping request. 
  */
-static void wipe_request(struct req_event* req_ev) {
+void wipe_request(struct req_event* req_ev) {
+    /* Clear recv buffer */
     free(req_ev->recv_buffer);
+    /* Clear read events */
     event_del(req_ev->ev);
+    /* Clear reqeust packet */
     free_req(req_ev->req);
+    /* Clear request event  data */
+    free(req_ev);
 }
+
+/**
+ * @brief Cleans up both write and read associated reqeust data.
+ * 			must be called only when a request is completed either by 
+ *			succesful parsing or invalid request. 
+
+ * @note Wipe request is also called by invalid receives. 
+ * @param req_wr write request data struct. 
+ */
+void clean_up_write(struct req_write *req_wr) {
+	/* Clear any read event associated data */
+	wipe_request(req_wr->req->req_ev);
+	/* Clear write events */
+	event_del(req_wr->ev);
+	/* Clear write buffer */
+	free(req_wr->write_buffer);
+	/* Clear write ev struct */
+	free(req_wr->ev);
+	/* Clear req_wr data */
+	free(req_wr);
+}
+
+
+/**
+ * @brief Adds write request to the even loop, 
+			receives a call back when the FD can be written to. 
+ * 
+ * @param req_wr 
+ */
+void
+add_write_callback(struct req_write *req_wr) {
+	event_set(req_wr->ev, EVENT_FD(req_wr->ev), EV_WRITE | EV_PERSIST, sock_write_event_callback, req_wr);
+	event_add(req_wr->ev, NULL);
+}
+
+
 
 /**
  * @brief Test to see if the input buffer contain either a sequence of
@@ -91,6 +132,40 @@ static bool end_of_req(char* buffer, int len) {
     }
     return false;
 }
+
+
+void
+sock_write_event_callback(int sfd, short revents, void *conn) {
+	struct req_write *req_wr;
+	int sent;
+
+	req_wr = (struct req_write *)conn;
+	/* Sent as much data as we can, socket is opened in non-blocking 
+	 * partial_write_len is initially 0, and will increment the send buffer as required. 
+	 */
+	
+	sent = send(req_wr->req->sock, req_wr->write_buffer + req_wr->partial_write_len,req_wr->write_len - req_wr->partial_write_len, MSG_DONTWAIT);
+
+	if (sent == EAGAIN) {
+		/* Shoudn't really get here, since event based */
+		return;
+	}
+
+	if (sent < 0) {
+		warnx("Send error to ReqID: %d, closing...\n", req_wr->req->id);
+		clean_up_write(req_wr);
+	}
+
+	if (sent == req_wr->write_len) {
+		tslog("Write Complete to ReqID %d, cleaning up...", req_wr->req->id);
+		req_wr->req->done = 1;
+		clean_up_write(req_wr);
+		return;
+	}
+	req_wr->partial_write_len += sent;
+}
+
+
 
 /**
  * @brief Handles client events caused on the respective file descriptor.
@@ -116,8 +191,14 @@ req_callback(int sfd, short revents, void *conn) {
      * Receive data as long as it fits into the remaining of MAX_BLEN, then append to the end of the current
      * request buffer. This allows for partial requests to be appended onto. 
      */
-    recvd = recv(sfd, req_ev->recv_buffer + recv_len, blen - recv_len, 0);
+    recvd = recv(sfd, req_ev->recv_buffer + recv_len, blen - recv_len, 
+MSG_DONTWAIT);
     req_ev->recv_len += recvd;   
+
+    if (recvd == EAGAIN) {
+		/* Shoudn't really get here, since event based */
+		return;
+	}
 
     if (recvd < 0) {
         tslog("Error recv: %s", strerror(errno));
@@ -154,12 +235,6 @@ req_callback(int sfd, short revents, void *conn) {
         wipe_request(req_ev);
         return;
 	}
-
-    if (req_ev->req->done) {
-        tslog("Request Complete\n");
-        wipe_request(req_ev);
-        return;
-    } 
 }
 
 
@@ -225,18 +300,6 @@ sock_event_callback(int sfd, short revents, void *conn) {
 	req->raddr = raddr;
 	req->registry = set->reg;
 	req->parser = parser;
-    /* Only write socket is closed later */
-    req->wf = fdopen(sock, "w"); 
-
-
-	if (req->wf == NULL) {
-        tslog("failed to fdopen socket: %s",
-        strerror(errno));
-        close(req->sock);
-        free(parser);
-        free(req);
-        return;
-	}
 
     ev->ev_fd = sock;
     tv.tv_sec = REQ_TIMEOUT;
@@ -246,12 +309,13 @@ sock_event_callback(int sfd, short revents, void *conn) {
      * if a request is completed or dropped, these are to be freed. 
      */
     req_ev = malloc(sizeof(struct req_event));
+    req->req_ev=req_ev;
     req_ev->ev=ev;
     req_ev->req=req;
     req_ev->settings = set->settings;
     req_ev->recv_buffer = malloc(sizeof(char) * blen);
     req_ev->recv_len = 0;
-
+    
     event_set(ev, EVENT_FD(ev), EV_READ | EV_PERSIST, req_callback, req_ev);
     event_add(ev, &tv);
 }

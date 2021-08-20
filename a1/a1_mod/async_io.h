@@ -21,18 +21,36 @@ struct req {
 
 	struct registry *registry;	/* The metrics registry */
 
+	struct req_event *req_ev;
+
 	struct sockaddr_in raddr;	/* Remote peer */
 	size_t pfdnum;			/* pollfd index, or 0 if not polled */
 	int sock;			/* Client socket */
-	FILE *wf;			/* Writable FILE of our client socket */
 
 	struct http_parser *parser;
 	enum response_type resp;	/* Response type based on URL+method */
 };
 
 
+struct req_write {
+	struct event* ev;
+	struct req* req;
+	char* write_buffer;
+	int write_len; /* Buffer lenght */
+	int partial_write_len; /* How much was written */
+};
+
+
 void async_init(int , struct registry *, http_parser_settings *);
 
 void free_req(struct req *);
+
+void add_write_callback(struct req_write *req_wr);
+
+void clean_up_write(struct req_write *req_wr);
+
+void wipe_request(struct req_event* req_ev);
+
+void sock_write_event_callback(int sfd, short revents, void *conn);
 
 #endif

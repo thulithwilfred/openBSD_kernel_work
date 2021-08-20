@@ -41,11 +41,11 @@ SRCS+=		collect_if.c
 SRCS+=		collect_uvm.c
 SRCS+=		collect_pools.c
 SRCS+=		collect_procs.c
-SRCS+=		collect_disk.c		
+SRCS+=		collect_disk.c
+SRCS+=		collect_netstat.c		
 
-#Add -Werror
 CFLAGS+=	-fno-strict-aliasing -fstack-protector-all  \
-	   	-fwrapv -fPIC -Wall -g -O0
+	   	-fwrapv -fPIC -Wall -g -O0 -Werror
 
 LDADD=-levent
 DPADD=${LIBEVENT}
