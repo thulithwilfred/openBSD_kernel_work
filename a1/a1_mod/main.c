@@ -56,10 +56,6 @@
 const int BACKLOG = 8;
 const size_t BUFLEN = 2048;
 
-
-/* Global list of all open reqs */
-static struct req *reqs = NULL;
-
 static int on_url(http_parser *, const char *, size_t);
 static int on_header_field(http_parser *, const char *, size_t);
 static int on_header_value(http_parser *, const char *, size_t);
@@ -70,25 +66,7 @@ static int on_message_complete(http_parser *);
 static char *stats_buf = NULL;
 static size_t stats_buf_sz = 0;
 
-void
-free_req(struct req *req)
-{
-	/* Remove this req from the reqs list */
-	if (req->prev == NULL)
-		reqs = req->next;
-	if (req->prev != NULL)
-		req->prev->next = req->next;
-	if (req->next != NULL)
-		req->next->prev = req->prev;
 
-	/*
-	 * Close the accepted client socked fd.
-	 */
-	close(req->sock);
-
-	free(req->parser);
-	free(req);
-}
 
 static __dead void
 usage(const char *arg0)
@@ -392,8 +370,8 @@ on_message_complete(http_parser *parser)
 #ifdef DEBUG_MODE
 	printf("Output Buffer Size: %d\n\n %s", output_buffer_size, output_buffer);
 #endif
-	ev->ev_fd = req->sock;
 
+	ev->ev_fd = req->sock;
 	req_wr->ev = ev;
 	req_wr->write_buffer = output_buffer;
 	req_wr->write_len = output_buffer_size;

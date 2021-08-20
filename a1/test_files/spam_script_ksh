@@ -3,5 +3,5 @@ i=0
 while [ $i -ne 1000 ]
 do
         i=$(($i+1))
-	curl -v http://localhost:27600/metrics
+	curl -v http://localhost:27600
 done

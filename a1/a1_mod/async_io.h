@@ -15,10 +15,6 @@ struct req {
 	int id;				/* A serial number for this req */
 	int done;			/* Is the request done? 1 = true */
 
-	/* Links for the "reqs" list */
-	struct req *next;
-	struct req *prev;
-
 	struct registry *registry;	/* The metrics registry */
 
 	struct req_event *req_ev;
@@ -33,13 +29,31 @@ struct req {
 
 
 struct req_write {
-	struct event* ev;
-	struct req* req;
+	struct event *ev;
+	struct req *req;
 	char* write_buffer;
-	int write_len; /* Buffer lenght */
-	int partial_write_len; /* How much was written */
+	int write_len; /* Buffer length */
+	int partial_write_len; /* Bytes written last time */
 };
 
+/* Holds registry and parser settings,
+ * used for event callbacks 
+ */
+struct settings {
+    struct registry *reg;
+    http_parser_settings *settings;
+};
+
+/* Holds request data, parser settings and event 
+ * struct pointers, used for event callbacks 
+ */
+struct req_event {
+    struct event* ev;
+    struct req* req;
+    char* recv_buffer; 
+    int recv_len;
+    http_parser_settings *settings;
+};
 
 void async_init(int , struct registry *, http_parser_settings *);
 

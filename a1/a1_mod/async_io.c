@@ -34,29 +34,27 @@
 /* Event timeout Struct */
 struct timeval tv;
 
-/* Holds request data, parser settings and event 
- * struct pointers, used for event callbacks 
- */
-struct req_event {
-    struct event* ev;
-    struct req* req;
-    char* recv_buffer; 
-    int recv_len;
-    http_parser_settings *settings;
-};
-
-/* Holds registry and parser settings,
- * used for event callbacks 
- */
-struct settings {
-    struct registry *reg;
-    http_parser_settings *settings;
-};
-
 http_parser_settings settings;
 
 /* Current request ID */
 int reqid = 1;
+
+/**
+ * @brief Free request and close finished sockets. 
+ * 
+ * @param req request packet
+ */
+void
+free_req(struct req *req)
+{
+	/*
+	 * Close the accepted client socked fd.
+	 */
+	close(req->sock);
+
+	free(req->parser);
+	free(req);
+}
 
 /**
  * @brief Cleanup function for requests.
@@ -122,7 +120,6 @@ add_write_callback(struct req_write *req_wr) {
  * @return false if sequence is not detected
  */
 static bool end_of_req(char* buffer, int len) {
-    //printf("DD %d %d %d %d\n", buffer[len - 1], buffer[len - 2], buffer[len - 3] ,buffer[len - 4]);
     if (buffer[len - 1] == '\n' && buffer[len - 2] == '\r' && buffer[len - 3] == '\n' && buffer[len - 4] == '\r') {
         /* \n\r\n\r */
         return true;
@@ -133,39 +130,46 @@ static bool end_of_req(char* buffer, int len) {
     return false;
 }
 
-
+/**
+ * @brief Write to socket call back, will be called the the specified
+ *          fd is ready to be written to. 
+ * @note The function will clear request upon completed or error'd requests.
+ *
+ * @param sfd write fd
+ * @param revents event status
+ * @param conn callback data
+ */
 void
 sock_write_event_callback(int sfd, short revents, void *conn) {
 	struct req_write *req_wr;
 	int sent;
-
+    
 	req_wr = (struct req_write *)conn;
 	/* Sent as much data as we can, socket is opened in non-blocking 
 	 * partial_write_len is initially 0, and will increment the send buffer as required. 
 	 */
 	
 	sent = send(req_wr->req->sock, req_wr->write_buffer + req_wr->partial_write_len,req_wr->write_len - req_wr->partial_write_len, MSG_DONTWAIT);
-
+    req_wr->partial_write_len += sent;
 	if (sent == EAGAIN) {
 		/* Shoudn't really get here, since event based */
 		return;
 	}
 
 	if (sent < 0) {
-		warnx("Send error to ReqID: %d, closing...\n", req_wr->req->id);
+		warnx("Send error %d to ReqID: %d, closing...\n", sent,req_wr->req->id);
 		clean_up_write(req_wr);
+        return;
 	}
 
-	if (sent == req_wr->write_len) {
+	if (0 == req_wr->write_len - req_wr->partial_write_len) {
 		tslog("Write Complete to ReqID %d, cleaning up...", req_wr->req->id);
 		req_wr->req->done = 1;
 		clean_up_write(req_wr);
 		return;
 	}
-	req_wr->partial_write_len += sent;
+	
 }
-
-
 
 /**
  * @brief Handles client events caused on the respective file descriptor.
@@ -191,8 +195,8 @@ req_callback(int sfd, short revents, void *conn) {
      * Receive data as long as it fits into the remaining of MAX_BLEN, then append to the end of the current
      * request buffer. This allows for partial requests to be appended onto. 
      */
-    recvd = recv(sfd, req_ev->recv_buffer + recv_len, blen - recv_len, 
-MSG_DONTWAIT);
+    recvd = recv(sfd, req_ev->recv_buffer + recv_len, blen - recv_len,
+             MSG_DONTWAIT);
     req_ev->recv_len += recvd;   
 
     if (recvd == EAGAIN) {
@@ -219,7 +223,10 @@ MSG_DONTWAIT);
         tslog("Partial Requst Received...waiting for %d to complete", req_ev->req->id);
         return;
     }
-    
+
+    /* Disable Incoming data from this client, it's time to parse */
+    event_del(req_ev->ev);
+
     plen = http_parser_execute(req_ev->req->parser,
                 req_ev->settings, req_ev->recv_buffer, req_ev->recv_len);
 
