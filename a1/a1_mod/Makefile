@@ -42,7 +42,7 @@ SRCS+=		collect_uvm.c
 SRCS+=		collect_pools.c
 SRCS+=		collect_procs.c
 SRCS+=		collect_disk.c
-SRCS+=		collect_netstat.c		
+SRCS+=		collect_ipstat.c		
 
 CFLAGS+=	-fno-strict-aliasing -fstack-protector-all  \
 	   	-fwrapv -fPIC -Wall -g -O0 -Werror

@@ -55,9 +55,10 @@ const uint64_t MAX_COUNTER_MASK = (1ULL << 53) - 1;
  */
 extern struct metrics_module_ops
     collect_pf_ops, collect_cpu_ops, collect_if_ops, collect_uvm_ops,
-    collect_pools_ops, collect_procs_ops, collect_disk_ops, collect_netstat_ops;
+    collect_pools_ops, collect_procs_ops, collect_disk_ops, collect_ipstat_ops;
 
 static struct metrics_module_ops *modops[] = {
+	&collect_ipstat_ops,
 	&collect_pf_ops,
 	&collect_cpu_ops,
 	&collect_if_ops,
@@ -65,7 +66,6 @@ static struct metrics_module_ops *modops[] = {
 	&collect_pools_ops,
 	&collect_procs_ops,
 	&collect_disk_ops,
-	&collect_netstat_ops,
 	NULL
 };
 
