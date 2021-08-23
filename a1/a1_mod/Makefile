@@ -44,8 +44,9 @@ SRCS+=		collect_procs.c
 SRCS+=		collect_disk.c
 SRCS+=		collect_ipstat.c		
 
+#Add -DDEBUG_MODE to build for debug outputs.
 CFLAGS+=	-fno-strict-aliasing -fstack-protector-all  \
-	   	-fwrapv -fPIC -Wall -g -O0 -Werror
+	   	-fwrapv -fPIC -Wall -g -O0 -Werror 
 
 LDADD=-levent
 DPADD=${LIBEVENT}

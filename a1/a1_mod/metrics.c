@@ -58,7 +58,7 @@ extern struct metrics_module_ops
     collect_pools_ops, collect_procs_ops, collect_disk_ops, collect_ipstat_ops;
 
 static struct metrics_module_ops *modops[] = {
-	&collect_ipstat_ops,
+	&collect_ipstat_ops, /* Adding ip metrics */
 	&collect_pf_ops,
 	&collect_cpu_ops,
 	&collect_if_ops,
