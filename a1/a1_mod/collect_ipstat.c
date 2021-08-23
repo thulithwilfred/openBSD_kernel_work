@@ -41,7 +41,11 @@ struct metric_ops ipstat_metric_ops = {
 
 struct ipstat_modpriv {
 	struct ipstat stats;
-	struct metric *pckts, *frgmnt, *dgram, *total_tx_rx;
+
+	struct metric *ipckts, *ifrgmnt, *ofrgmnt;
+	struct metric *opckts;
+	struct metric *dpckts, *dfrgmnt, *ddgram;
+	struct metric *dgram_chksm;
 };
 
 /**
@@ -58,30 +62,53 @@ ipstat_register(struct registry *r, void **modpriv) {
 	*modpriv = priv;
 
 
-	priv->dgram = metric_new(r, "ip_stat_dgram_info", 
-		"IP datagram rx/tx statistics, in datagrams(s)",
+	priv->opckts = metric_new(r, "ip_tx_packets", 
+		"IP outgoing packet statistics, in packet(s)",
 		METRIC_COUNTER, METRIC_VAL_UINT64, NULL, &ipstat_metric_ops,
 		metric_label_new("reason", METRIC_VAL_STRING),
-	    NULL); 
+	    NULL);
 
-	priv->pckts = metric_new(r, "ip_stat_packet_info", 
-		"IP packet tx/rx statistics, in packet(s)",
+	priv->ipckts = metric_new(r, "ip_rx_packets", 
+		"IP incoming packet statistics, in packet(s)",
 		METRIC_COUNTER, METRIC_VAL_UINT64, NULL, &ipstat_metric_ops,
 		metric_label_new("reason", METRIC_VAL_STRING),
-	    NULL); 
+	    NULL);
 
-	priv->frgmnt = metric_new(r, "ip_stat_fragments_info", 
-		"IP fragments tx/rx statistics, in fragment(s)",
+	priv->dpckts = metric_new(r, "ip_packet_diag_info", 
+		"IP packet diagnpstics information, in packet(s)",
 		METRIC_COUNTER, METRIC_VAL_UINT64, NULL, &ipstat_metric_ops,
 		metric_label_new("reason", METRIC_VAL_STRING),
-	    NULL); 
+	    NULL);
 
-	priv->total_tx_rx = metric_new(r, "ip_stat_totals_info", 
-		"IP packets total tx/rx statistics, in packets(s)",
+	priv->ifrgmnt = metric_new(r, "ip_rx_fragments", 
+		"IP incoming fragment information, in fragments(s)",
 		METRIC_COUNTER, METRIC_VAL_UINT64, NULL, &ipstat_metric_ops,
 		metric_label_new("reason", METRIC_VAL_STRING),
-	    NULL); 	
+	    NULL);
 
+	priv->ofrgmnt = metric_new(r, "ip_tx_fragments", 
+		"IP created tx fragment information, in fragments(s)",
+		METRIC_COUNTER, METRIC_VAL_UINT64, NULL, &ipstat_metric_ops,
+		metric_label_new("reason", METRIC_VAL_STRING),
+	    NULL);
+
+	priv->dfrgmnt = metric_new(r, "ip_fragments_diag_info", 
+		"IP fragments diagnostic information, in fragments(s)",
+		METRIC_COUNTER, METRIC_VAL_UINT64, NULL, &ipstat_metric_ops,
+		metric_label_new("reason", METRIC_VAL_STRING),
+	    NULL);
+
+	priv->dgram_chksm = metric_new(r, "dgram_checksum_info", 
+		"Total datagrams software checksummed, in datagram(s)",
+		METRIC_COUNTER, METRIC_VAL_UINT64, NULL, &ipstat_metric_ops,
+		metric_label_new("reason", METRIC_VAL_STRING),
+	    NULL);
+
+	priv->ddgram = metric_new(r, "dgram_diag_info", 
+		"Datagrams diagnostic information, in datagram(s)",
+		METRIC_COUNTER, METRIC_VAL_UINT64, NULL, &ipstat_metric_ops,
+		metric_label_new("reason", METRIC_VAL_STRING),
+	    NULL);
 }
 
 /**
@@ -104,45 +131,54 @@ ipstat_collect(void *modpriv) {
 			warnx("%s", "ip_stat collection error");
 		return (0);
 	}
-	/* Packet Totals RX/TX */
-	metric_update(priv->total_tx_rx, "total-rx", priv->stats.ips_total);
-	metric_update(priv->total_tx_rx, "total-consumed", priv->stats.ips_delivered);
-	metric_update(priv->total_tx_rx, "total-tx", priv->stats.ips_localout);
 
-	/* Following the order of declaration in ip_stat */
-	metric_update(priv->pckts, "total-rx", priv->stats.ips_total);
-	metric_update(priv->pckts, "bad-header-checksum", priv->stats.ips_badsum);
-	metric_update(priv->pckts, "less-bytes-than-IPv4-header-length", priv->stats.ips_toosmall);
-	metric_update(priv->pckts, "less-bytes-than-total-length-field", priv->stats.ips_tooshort);
-	metric_update(priv->pckts, "bad-IP-header-length", priv->stats.ips_badhlen);
-	metric_update(priv->pckts, "bad-options", priv->stats.ips_badoptions);
-	metric_update(priv->pckts, "incorrect-version-number", priv->stats.ips_badvers);
+	/* Outgoing Packets */
+	metric_update(priv->opckts, "total-tx", priv->stats.ips_localout);
+	metric_update(priv->opckts, "redirects-tx", priv->stats.ips_redirectsent);
+	metric_update(priv->opckts, "tx-dropped-no-buf", priv->stats.ips_odropped);
+	metric_update(priv->opckts, "tx-dropped-noroute", priv->stats.ips_noroute);
+	metric_update(priv->opckts, "sent-with-fabricated-ip-header", priv->stats.ips_rawout);
+	metric_update(priv->opckts, "total-forwarded", priv->stats.ips_forward);
+	/* Incoming Packets */
+	metric_update(priv->ipckts, "total-consumed", priv->stats.ips_delivered);
+	metric_update(priv->ipckts, "total-rx", priv->stats.ips_total);
+	metric_update(priv->ipckts, "rx-on-wrong-interface", priv->stats.ips_wrongif);
+	metric_update(priv->ipckts, "total-successfully-reassembled", priv->stats.ips_reassembled);
+	/* IP Packet Diagnostics */
+	metric_update(priv->dpckts, "with-unknown-protocols", priv->stats.ips_noproto);
+	metric_update(priv->dpckts, "bad-header-checksum", priv->stats.ips_badsum);
+	metric_update(priv->dpckts, "less-bytes-than-IPv4-header-length", priv->stats.ips_toosmall);
+	metric_update(priv->dpckts, "packets-too-short", priv->stats.ips_tooshort);
+	metric_update(priv->dpckts, "bad-ip-header-length", priv->stats.ips_badhlen);
+	metric_update(priv->dpckts, "less-bytes-than-total-length-field", priv->stats.ips_badlen);
+	metric_update(priv->dpckts, "bad-options", priv->stats.ips_badoptions);
+	metric_update(priv->dpckts, "incorrect-version-number", priv->stats.ips_badvers);
+	metric_update(priv->dpckts, "non-forwadable", priv->stats.ips_cantforward);
+	metric_update(priv->dpckts, "more-bytes-than-max-packet-size", priv->stats.ips_toolong);
+	metric_update(priv->dpckts, "with-no-match-gif-found", priv->stats.ips_nogif);
+	metric_update(priv->dpckts, "multicasts-for-unreg-groups", priv->stats.ips_notmember);
 	/* IP Fragments */
-	metric_update(priv->frgmnt, "ip-fragments-received", priv->stats.ips_fragments);
-	metric_update(priv->frgmnt, "ip-fragments-dropped", priv->stats.ips_fragdropped);
-	metric_update(priv->frgmnt, "malformed-fragments-dropped", priv->stats.ips_badfrags);
-	metric_update(priv->frgmnt, "fragments-dopped-after-timeout", priv->stats.ips_fragtimeout);
-	metric_update(priv->pckts, "total-successfully-reassembled", priv->stats.ips_reassembled);
-	metric_update(priv->pckts, "total-consumed", priv->stats.ips_delivered);
-	metric_update(priv->pckts, "with-unknown-protocols", priv->stats.ips_noproto);
-	metric_update(priv->pckts, "total-forwarded", priv->stats.ips_forward);
-	metric_update(priv->pckts, "non-forwadable", priv->stats.ips_cantforward);
-	metric_update(priv->pckts, "redirects-tx", priv->stats.ips_redirectsent);
-	metric_update(priv->pckts, "total-tx", priv->stats.ips_localout);
-	metric_update(priv->pckts, "sent-with-fabricated-ip-header", priv->stats.ips_rawout);
-	metric_update(priv->pckts, "tx-dropped-no-buf", priv->stats.ips_odropped);
-	metric_update(priv->pckts, "tx-dropped-noroute", priv->stats.ips_noroute);
-	metric_update(priv->dgram, "tx-dgram-fragmented", priv->stats.ips_fragmented);
-	metric_update(priv->frgmnt, "tx-fragments-created", priv->stats.ips_ofragments);
-	metric_update(priv->dgram, "dgrams-cannot-be-fragmented", priv->stats.ips_cantfrag);
-	metric_update(priv->frgmnt, "frags-dropped-no-memory", priv->stats.ips_rcvmemdrop);
-	metric_update(priv->pckts, "more-bytes-than-max-packet-size", priv->stats.ips_toolong);
-	metric_update(priv->pckts, "with-no-match-gif-found", priv->stats.ips_nogif);
-	metric_update(priv->dgram, "dgrams-with-invalid-addr-on-header", priv->stats.ips_badaddr);
-	metric_update(priv->dgram, "rx-dgram-software-checksummed", priv->stats.ips_inswcsum);
-	metric_update(priv->dgram, "tx-dgram-software-checksummed", priv->stats.ips_outswcsum);
-	metric_update(priv->pckts, "multicasts-for-unreg-groups", priv->stats.ips_notmember);
-	metric_update(priv->pckts, "rx-on-wrong-interface", priv->stats.ips_wrongif);
+	metric_update(priv->ifrgmnt, "ip-received", priv->stats.ips_fragments);
+	metric_update(priv->ofrgmnt, "tx-created", priv->stats.ips_ofragments);
+	metric_update(priv->dfrgmnt, "ip-dropped", priv->stats.ips_fragdropped);
+	metric_update(priv->dfrgmnt, "malformed-dropped", priv->stats.ips_badfrags);
+	metric_update(priv->dfrgmnt, "dropped-after-timeout", priv->stats.ips_fragtimeout);
+	metric_update(priv->dfrgmnt, "dropped-no-memory", priv->stats.ips_rcvmemdrop);
+	/* Datagram Info */
+	metric_update(priv->ddgram, "with-tx-fragmented", priv->stats.ips_fragmented);
+	metric_update(priv->ddgram, "cannot-be-fragmented", priv->stats.ips_cantfrag);
+	metric_update(priv->ddgram, "with-invalid-addr-on-header", priv->stats.ips_badaddr);
+	metric_update(priv->dgram_chksm, "rx-dgrams", priv->stats.ips_inswcsum);
+	metric_update(priv->dgram_chksm, "tx-dgrams", priv->stats.ips_outswcsum);
+	/* Clear old values */
+	metric_clear_old_values(priv->opckts);
+	metric_clear_old_values(priv->ipckts);
+	metric_clear_old_values(priv->dpckts);
+	metric_clear_old_values(priv->ifrgmnt);
+	metric_clear_old_values(priv->ofrgmnt);
+	metric_clear_old_values(priv->dfrgmnt);
+	metric_clear_old_values(priv->ddgram);
+	metric_clear_old_values(priv->dgram_chksm);
 
     return 0;
 }
