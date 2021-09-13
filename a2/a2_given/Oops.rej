@@ -1,0 +1,17 @@
+@@ -102,6 +102,7 @@
+ #define	mmwrite	mmrw
+ cdev_decl(mm);
+ cdev_decl(wd);
++#include "acct.h"
+ #include "bio.h"
+ #include "pty.h"
+ #include "com.h"
+@@ -202,7 +203,7 @@
+ 	cdev_notdef(),			/* 21 */
+ 	cdev_fd_init(1,filedesc),	/* 22: file descriptor pseudo-device */
+ 	cdev_bpf_init(NBPFILTER,bpf),	/* 23: Berkeley packet filter */
+-	cdev_notdef(),			/* 24 */
++	cdev_acct_init(NACCT,acct),	/* 24: process accounting */
+ #if 0
+ 	cdev_ocis_init(NPCMCIA,pcmcia), /* 25: PCMCIA Bus */
+ #else

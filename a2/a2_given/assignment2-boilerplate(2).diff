@@ -1,0 +1,369 @@
+diff -u a/sys/arch/amd64/amd64/conf.c b/sys/arch/amd64/amd64/conf.c
+--- a/sys/arch/amd64/amd64/conf.c
++++ b/sys/arch/amd64/amd64/conf.c
+@@ -102,6 +102,7 @@ int	nblkdev = nitems(bdevsw);
+ #define	mmwrite	mmrw
+ cdev_decl(mm);
+ cdev_decl(wd);
++#include "acct.h"
+ #include "bio.h"
+ #include "pty.h"
+ #include "com.h"
+@@ -202,7 +203,7 @@ struct cdevsw	cdevsw[] =
+ 	cdev_notdef(),			/* 21 */
+ 	cdev_fd_init(1,filedesc),	/* 22: file descriptor pseudo-device */
+ 	cdev_bpf_init(NBPFILTER,bpf),	/* 23: Berkeley packet filter */
+-	cdev_notdef(),			/* 24 */
++	cdev_acct_init(NACCT,acct),	/* 24: process accounting */
+ #if 0
+ 	cdev_ocis_init(NPCMCIA,pcmcia), /* 25: PCMCIA Bus */
+ #else
+diff -u a/sys/conf/GENERIC b/sys/conf/GENERIC
+--- a/sys/conf/GENERIC
++++ b/sys/conf/GENERIC
+@@ -114,5 +114,6 @@ pseudo-device	wg		# WireGuard
+ pseudo-device	bio	1	# ioctl multiplexing device
+ 
+ pseudo-device	fuse		# fuse device
++pseudo-device	acct		# process accounting device
+ 
+ option		BOOT_CONFIG	# add support for boot -c
+diff -u a/sys/conf/files b/sys/conf/files
+--- a/sys/conf/files
++++ b/sys/conf/files
+@@ -627,6 +627,9 @@ file	dev/dt/dt_prov_profile.c	dt
+ file	dev/dt/dt_prov_syscall.c	dt
+ file	dev/dt/dt_prov_static.c		dt
+ 
++pseudo-device acct
++file	dev/acct.c			acct	needs-flag
++
+ # XXX machine-independent SCSI files should live somewhere here, maybe
+ 
+ # kernel sources
+diff -u a/sys/dev/acct.h b/sys/dev/acct.h
+new file mode 100644
+--- /dev/null
++++ b/sys/dev/acct.h
+@@ -0,0 +1,217 @@
++/*	$OpenBSD$ */
++
++/*
++ * Copyright (c) 2021 The University of Queensland
++ *
++ * Permission to use, copy, modify, and distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <sys/types.h>
++#include <sys/syslimits.h>
++#include <sys/ioccom.h>
++
++#ifndef __DEV_ACCT_H__
++#define __DEV_ACCT_H__
++
++#define ACCT_MSG_FORK	0
++#define ACCT_MSG_EXEC	1
++#define ACCT_MSG_EXIT	2
++#define	ACCT_MSG_OPEN	3
++#define	ACCT_MSG_RENAME	4
++#define	ACCT_MSG_UNLINK	5
++#define	ACCT_MSG_CLOSE	6
++
++struct acct_common {
++	unsigned short		ac_type;
++	unsigned short		ac_len;
++	unsigned int		ac_seq;
++
++	char			ac_comm[16];	/* command name */
++	struct timespec		ac_etime;	/* elapsed time */
++	struct timespec		ac_btime;	/* starting time */
++	pid_t			ac_pid;		/* process id */
++	uid_t			ac_uid;		/* user id */
++	gid_t			ac_gid;		/* group id */
++	dev_t			ac_tty;		/* controlling tty */
++	unsigned int		ac_flag;	/* accounting flags */
++};
++
++/*
++ * fork info is mostly from the parent, but acct_fork gets passed the child.
++ */
++struct acct_fork {
++	struct acct_common	ac_common;
++	pid_t			ac_cpid;	/* child pid */
++};
++
++/*
++ * exec exists mostly to show the new command name.
++ */
++struct acct_exec {
++	struct acct_common	ac_common;
++};
++
++/*
++ * basically a clone of the ACCOUNTING syscall
++ */
++struct acct_exit {
++	struct acct_common	ac_common;
++	struct timespec		ac_utime;	/* user time */
++	struct timespec		ac_stime;	/* system time */
++	uint64_t		ac_mem;		/* average memory usage */
++	uint64_t		ac_io;		/* count of IO blocks */
++};
++
++/*
++ * generated when a process opens a marked file
++ */
++struct acct_open {
++	struct acct_common	ac_common;
++	char			ac_path[PATH_MAX];
++	int			ac_mode;	/* O_RDONLY | O_WRONLY */
++	int			ac_errno;	/* 0 = success */
++};
++
++struct acct_rename {
++	struct acct_common	ac_common;
++	char			ac_path[PATH_MAX];
++	char			ac_new[PATH_MAX];
++	int			ac_errno;
++};
++
++struct acct_unlink {
++	struct acct_common	ac_common;
++	char			ac_path[PATH_MAX];
++	int			ac_errno;
++};
++
++struct acct_close {
++	struct acct_common	ac_common;
++	char			ac_path[PATH_MAX];
++};
++
++
++#define	ACCT_ENA_FORK		(1 << 0)
++#define	ACCT_ENA_EXEC		(1 << 1)
++#define	ACCT_ENA_EXIT		(1 << 2)
++#define	ACCT_ENA_OPEN		(1 << 3)
++#define	ACCT_ENA_CLOSE		(1 << 4)
++#define	ACCT_ENA_RENAME		(1 << 5)
++#define	ACCT_ENA_UNLINK		(1 << 6)
++#define	ACCT_ENA_ALL		ACCT_ENA_FORK | \
++				ACCT_ENA_EXEC | \
++				ACCT_ENA_EXIT | \
++				ACCT_ENA_OPEN | \
++				ACCT_ENA_CLOSE | \
++				ACCT_ENA_RENAME | \
++				ACCT_ENA_UNLINK
++
++#define	ACCT_COND_READ		(1 << 0)
++#define	ACCT_COND_WRITE		(1 << 1)
++#define	ACCT_COND_SUCCESS	(1 << 2)
++#define	ACCT_COND_FAILURE	(1 << 3)
++#define	ACCT_COND_ALL		ACCT_COND_READ | \
++				ACCT_COND_WRITE | \
++				ACCT_COND_SUCCESS | \
++				ACCT_COND_FAILURE
++
++/*
++ * Common structure for all of the acct ioctls.
++ */
++struct acct_ctl {
++	uint32_t		acct_ena;		/* ACCT_ENA_* */
++	uint32_t		acct_cond;		/* ACCT_COND_* */
++	uint64_t		acct_fcount;		/* count of files */
++	char			acct_path[PATH_MAX];
++};
++
++/*
++ * Gets the global enabled auditing features.
++ *
++ * Output fields: acct_ena, acct_fcount
++ */
++#define	ACCT_IOC_STATUS		_IOR('j', 1, struct acct_ctl)
++
++/*
++ * Gets the set of enabled events and conditions applied to a particular
++ * file (if any). Returns ENOENT if the file is not being tracked.
++ *
++ * Input fields: acct_path
++ * Output fields: acct_ena, acct_cond
++ */
++#define	ACCT_IOC_FSTATUS	_IOWR('j', 2, struct acct_ctl)
++
++/*
++ * Enables audit features globally.
++ *
++ * Input fields: acct_ena (just the features to enable)
++ * Output fields: acct_ena (all currently enabled features after applying)
++ */
++#define	ACCT_IOC_ENABLE		_IOWR('j', 3, struct acct_ctl)
++
++/*
++ * Disables audit features globally.
++ *
++ * Input fields: acct_ena (just the features to disable)
++ * Output fields: acct_ena (all currently enabled features after applying)
++ */
++#define	ACCT_IOC_DISABLE	_IOWR('j', 4, struct acct_ctl)
++
++/*
++ * Starts tracking a file and generating audit events about it. The file must
++ * exist at the specified path when this ioctl is called (if it doesn't, it
++ * returns ENOENT).
++ *
++ * If the file specified is already being tracked, will add to the existing
++ * events/conditions. Returns the final set of events/conditions for this file
++ * in the struct.
++ *
++ * Input fields: acct_ena, acct_cond, acct_path
++ * Output fields: acct_ena, acct_cond
++ */
++#define	ACCT_IOC_TRACK_FILE	_IOWR('j', 5, struct acct_ctl)
++
++/*
++ * Stops tracking a file for audit. The file must exist at the specified path.
++ *
++ * Removes all of the events and conditions specified from the tracking entry
++ * for the file. If no events/conditions are left, the tracking should be
++ * stopped altogether (and 0 returned in both acct_ena and acct_cond).
++ * Otherwise, any remaining events/conditions should be returned.
++ *
++ * Use ACCT_ENA_ALL/ACCT_COND_ALL if you need to completely stop tracking of
++ * a file.
++ *
++ * Input fields: acct_ena, acct_cond, acct_path
++ * Output fields: acct_ena, acct_cond
++ */
++#define	ACCT_IOC_UNTRACK_FILE	_IOWR('j', 6, struct acct_ctl)
++
++
++
++#ifdef _KERNEL
++
++/* Process accounting hooks: leave these alone. */
++void	acct_fork(struct process *);
++void	acct_exec(struct process *);
++void	acct_exit(struct process *);
++
++/* File accounting hooks: you can change these if you want to. */
++void	acct_open(struct process *, struct vnode *, int, int);
++void	acct_rename(struct process *, struct vnode *, const char *, int);
++void	acct_unlink(struct process *, struct vnode *, int);
++void	acct_close(struct process *, struct vnode *);
++
++#endif /* _KERNEL */
++
++#endif /* __DEV_ACCT_H__ */
+diff -u a/sys/kern/kern_exec.c b/sys/kern/kern_exec.c
+--- a/sys/kern/kern_exec.c
++++ b/sys/kern/kern_exec.c
+@@ -69,6 +69,11 @@
+ struct uvm_object *timekeep_object;
+ struct timekeep *timekeep;
+ 
++#include "acct.h"
++#if NACCT > 0
++#include <dev/acct.h>
++#endif
++
+ void	unveil_destroy(struct process *ps);
+ 
+ const struct kmem_va_mode kv_exec = {
+@@ -677,6 +682,10 @@ sys_execve(struct proc *p, void *v, register_t *retval)
+ 	if (exec_timekeep_map(pr))
+ 		goto free_pack_abort;
+ 
++#if NACCT > 0
++	acct_exec(pr);
++#endif
++
+ 	/* setup new registers and do misc. setup. */
+ 	if (pack.ep_emul->e_fixup != NULL) {
+ 		if ((*pack.ep_emul->e_fixup)(p, &pack) != 0)
+diff -u a/sys/kern/kern_exit.c b/sys/kern/kern_exit.c
+--- a/sys/kern/kern_exit.c
++++ b/sys/kern/kern_exit.c
+@@ -71,6 +71,11 @@
+ 
+ #include <uvm/uvm_extern.h>
+ 
++#include "acct.h"
++#if NACCT > 0
++#include <dev/acct.h>
++#endif
++
+ #include "kcov.h"
+ #if NKCOV > 0
+ #include <sys/kcov.h>
+@@ -204,6 +209,9 @@ exit1(struct proc *p, int xexit, int xsig, int flags)
+ 		semexit(pr);
+ #endif
+ 		killjobc(pr);
++#if NACCT > 0
++		acct_exit(pr);
++#endif
+ #ifdef ACCOUNTING
+ 		acct_process(p);
+ #endif
+diff -u a/sys/kern/kern_fork.c b/sys/kern/kern_fork.c
+--- a/sys/kern/kern_fork.c
++++ b/sys/kern/kern_fork.c
+@@ -66,6 +66,13 @@
+ #include <uvm/uvm.h>
+ #include <machine/tcb.h>
+ 
++#include "kcov.h"
++
++#include "acct.h"
++#if NACCT > 0
++#include <dev/acct.h>
++#endif
++
+ int	nprocesses = 1;		/* process 0 */
+ int	nthreads = 1;		/* proc 0 */
+ int	randompid;		/* when set to 1, pid's go random */
+@@ -468,6 +475,10 @@ fork1(struct proc *curp, int flags, void (*func)(void *), void *arg,
+ 	 */
+ 	KNOTE(&curpr->ps_klist, NOTE_FORK | pr->ps_pid);
+ 
++#if NACCT > 0
++	acct_fork(pr);
++#endif
++
+ 	/*
+ 	 * Update stats now that we know the fork was successful.
+ 	 */
+diff -u a/sys/sys/conf.h b/sys/sys/conf.h
+--- a/sys/sys/conf.h
++++ b/sys/sys/conf.h
+@@ -504,6 +504,13 @@ extern struct cdevsw cdevsw[];
+ 	(dev_type_stop((*))) enodev, 0, selfalse, \
+ 	(dev_type_mmap((*))) enodev, 0, D_CLONE }
+ 
++/* open, close, read, write, ioctl, poll, kqfilter */
++#define cdev_acct_init(c,n) { \
++	dev_init(c,n,open), dev_init(c,n,close), dev_init(c,n,read), \
++	dev_init(c,n,write), dev_init(c,n,ioctl), \
++	(dev_type_stop((*))) enodev, 0, dev_init(c,n,poll), \
++	(dev_type_mmap((*))) enodev, 0, 0, dev_init(c,n,kqfilter) }
++
+ #endif
+ 
+ /*
+@@ -643,6 +650,7 @@ cdev_decl(fuse);
+ cdev_decl(pvbus);
+ cdev_decl(ipmi);
+ cdev_decl(kcov);
++cdev_decl(acct);
+ 
+ #endif
+ 
