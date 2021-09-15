@@ -59,12 +59,14 @@ struct message {
 TAILQ_HEAD(message_queue, message) head; 
 
 /* Local Defines */
+#define ALL_OFF 0x00
 #define READ_ONLY 1 	/* Read Only Mode */
 
 
 /* Globals */
 int ronly_flag = 0;
 int sequence_num = 0;
+uint32_t acct_audit_stat = ALL_OFF;
 
 /**
  * @brief Initialise state required for operations 
@@ -74,6 +76,8 @@ int acctattach(int num)
 {
 	/* Initialise the message queue for acct messages */
 	TAILQ_INIT(&head);
+	/* Clear Audit Stats */
+	acct_audit_stat = ALL_OFF;
 	return 0;
 }
 
@@ -111,10 +115,37 @@ acctread(dev_t dev, struct uio *uio, int flags)
 	return 0;
 }
 
+/**
+ * @brief Set the audit stats 
+ * 
+ * @param set_mask bit fields to be set 
+ */
+void set_audit_stats(uint32_t set_mask) 
+{
+	rw_enter_write(&rwl);
+	acct_audit_stat |= set_mask;
+	rw_exit_write(&rwl);
+
+}
+
+/**
+ * @brief Clear the audit stats 
+ * 
+ * @param set_mask bit fields to be cleared
+ */
+void clear_audit_stats(uint32_t clear_mask)
+{
+	rw_enter_write(&rwl);
+	acct_audit_stat &= ~(clear_mask);
+	rw_exit_write(&rwl);
+}
+
 
 int 
 acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 {
+	struct acct_ctl *ctl = (struct acct_ctl*)data;
+
 	/* Support for generic ioctl requests */
 	switch(cmd) {
 		case FIONREAD:
@@ -139,9 +170,19 @@ acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 			break;
 		case ACCT_IOC_FSTATUS:
 			break;
-		case ACCT_IOC_ENABLE:
+		case ACCT_IOC_ENABLE:		
+			set_audit_stats(ctl->acct_ena);		/* set features to enable */
+
+			rw_enter_read(&rwl);
+			ctl->acct_ena = acct_audit_stat;	/* update with currently enabled features */
+			rw_exit_read(&rwl);
 			break;
 		case ACCT_IOC_DISABLE:
+			clear_audit_stats(ctl->acct_ena);		/* set features to disable */
+
+			rw_enter_read(&rwl);
+			ctl->acct_ena = acct_audit_stat;		/* update with currently enabled features  */
+			rw_exit_read(&rwl);
 			break;
 		case ACCT_IOC_TRACK_FILE:
 			break;
@@ -161,10 +202,15 @@ acct_fork(struct process *pdata)
 	struct timespec uptime;
 	struct message *acct_msg;
 
-	/* Fork account not enabled, let's not worry about this... */
-	if(0)
-		//TODO
+	/* if fork accounting not enabled, let's not worry about this... */
+	rw_enter_read(&rwl);
+	if((acct_audit_stat & ACCT_ENA_FORK) == 0) {
+		rw_exit_read(&rwl);
 		return;
+	}
+	rw_exit_read(&rwl);
+
+	/* Commited to processing the message now... */
 
 	/* Sequence begins from index 0 */
 	rw_enter_write(&rwl);
@@ -172,7 +218,7 @@ acct_fork(struct process *pdata)
 	sequence_num++;
 	rw_exit_write(&rwl);
 
-	acct_msg = malloc(sizeof(struct message), M_DEVBUF,M_WAITOK | M_ZERO);
+	acct_msg = malloc(sizeof(struct message), M_DEVBUF, M_WAITOK | M_ZERO);
 	
 	/* Set internal message data */
 	acct_msg->type = ACCT_MSG_FORK;
@@ -208,11 +254,13 @@ acct_fork(struct process *pdata)
 			common.ac_tty = pdata->ps_pgrp->pg_session->s_ttyp->t_dev;
 		else 
 			common.ac_tty = NODEV;
+
 	/* Get Accounting flags */
 	common.ac_flag = pdata->ps_acflag;
 
 	/* Update message common fields within this message */
 	acct_msg->data.fork_d.ac_common = common;
+
 	/* Set child pid */
 	acct_msg->data.fork_d.ac_cpid = pdata->ps_pid; 				 /* Referenced in process_new(), kern_fork.c */
 
