@@ -1,5 +1,3 @@
-/*	$OpenBSD$	*/
-
 /*
  * Copyright 2021, The University of Queensland
  *
@@ -14,6 +12,8 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ * $Revision: 321 $
  */
 
 #include <stdio.h>
@@ -332,7 +332,7 @@ cmd_status(const char *arg0, int argc, char *argv[])
 
 	bzero(&ctl, sizeof(struct acct_ctl));
 
-	fd = open(DEVPATH, O_RDONLY | O_EXCL);
+	fd = open(DEVPATH, O_RDWR | O_EXLOCK);
 	if (fd < 0)
 		err(EXIT_OPEN, "open(" DEVPATH ")");
 
@@ -365,7 +365,7 @@ cmd_enable(const char *arg0, int argc, char *argv[])
 	uint32_t mask;
 	struct acct_ctl ctl;
 
-	fd = open(DEVPATH, O_RDWR | O_EXCL);
+	fd = open(DEVPATH, O_RDWR | O_EXLOCK);
 	if (fd < 0)
 		err(EXIT_OPEN, "open(" DEVPATH ")");
 
@@ -399,7 +399,7 @@ cmd_disable(const char *arg0, int argc, char *argv[])
 	struct acct_ctl ctl;
 	uint32_t mask;
 
-	fd = open(DEVPATH, O_RDWR | O_EXCL);
+	fd = open(DEVPATH, O_RDWR | O_EXLOCK);
 	if (fd < 0)
 		err(EXIT_OPEN, "open(" DEVPATH ")");
 
@@ -462,7 +462,7 @@ cmd_track(const char *arg0, int argc, char *argv[])
 
 	strlcpy(ctl.acct_path, path, sizeof(ctl.acct_path));
 
-	fd = open(DEVPATH, O_RDWR | O_EXCL);
+	fd = open(DEVPATH, O_RDWR | O_EXLOCK);
 	if (fd < 0)
 		err(EXIT_OPEN, "open(" DEVPATH ")");
 
@@ -514,7 +514,7 @@ cmd_untrack(const char *arg0, int argc, char *argv[])
 
 	strlcpy(ctl.acct_path, path, sizeof(ctl.acct_path));
 
-	fd = open(DEVPATH, O_RDWR | O_EXCL);
+	fd = open(DEVPATH, O_RDWR | O_EXLOCK);
 	if (fd < 0)
 		err(EXIT_OPEN, "open(" DEVPATH ")");
 
@@ -730,7 +730,7 @@ cmd_watch(const char *arg0, int argc, char *argv[])
 	struct acct_common *cmn = &msg.common;
 	unsigned int seq = 0;
 
-	fd = open(DEVPATH, O_RDONLY | O_EXCL);
+	fd = open(DEVPATH, O_RDONLY | O_EXLOCK);
 	if (fd < 0)
 		err(EXIT_OPEN, "open(" DEVPATH ")");
 
