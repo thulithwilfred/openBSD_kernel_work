@@ -231,23 +231,15 @@ acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 	return (0);
 }
 
-void
-acct_fork(struct process *pdata) 
+struct acct_common 
+construct_common(struct process *pdata, int type)
 {
-	struct acct_common common;
 	struct timespec uptime, booted;
-	struct message *acct_msg;
-	//TODO Check that data is of the parents context not child
+	struct acct_common common;
 
-	/* if fork accounting not enabled, let's not worry about this... */
-	rw_enter_read(&rwl);
-	if((acct_audit_stat & ACCT_ENA_FORK) == 0) {
-		rw_exit_read(&rwl);
-		return;
-	}
-	rw_exit_read(&rwl);
-
-	/* Commited to processing the message now... */
+	/* 
+	 * Create message common fields 
+	 */
 
 	/* Sequence begins from index 0 */
 	rw_enter_write(&rwl);
@@ -255,24 +247,29 @@ acct_fork(struct process *pdata)
 	sequence_num++;
 	rw_exit_write(&rwl);
 
-	acct_msg = malloc(sizeof(struct message), M_DEVBUF, M_WAITOK | M_ZERO);
-	
-	/* Set internal message data */
-	acct_msg->type = ACCT_MSG_FORK;
-	acct_msg->size = sizeof(struct acct_fork);
-
-	/* 
-	 * Create message common fields and update 'this' message. 
-	 * Enqueue the message, once required data fields are filled out 
-	 */
-	
-	/* Set msg type */
-	common.ac_type = ACCT_MSG_FORK;
-	
-	/* Set len (size bytes) */
-	common.ac_len = sizeof(struct acct_fork);
-
-	rw_enter_read(&rwl);
+	/* Set message type and data size */
+	switch (type) {
+		case ACCT_MSG_FORK:
+			common.ac_type = ACCT_MSG_FORK;	
+			common.ac_len = sizeof(struct acct_fork);
+			break;
+		case ACCT_MSG_EXEC:
+			common.ac_type = ACCT_MSG_EXEC;
+			common.ac_len = sizeof(struct acct_exec);			
+			break;
+		case ACCT_MSG_EXIT:
+			common.ac_type = ACCT_MSG_EXIT;	
+			common.ac_len = sizeof(struct acct_exit);		
+			break;
+		case ACCT_MSG_OPEN:
+			break;
+		case ACCT_MSG_RENAME:
+			break;
+		case ACCT_MSG_UNLINK:
+			break;
+		case ACCT_MSG_CLOSE:
+			break;
+	}
 
 	/*  Get command name */
 	memcpy(common.ac_comm, pdata->ps_comm, sizeof(common.ac_comm));
@@ -283,8 +280,9 @@ acct_fork(struct process *pdata)
 	timespecadd(&booted, &pdata->ps_start, &common.ac_btime);	/* Calculate and update start time */	
 	timespecsub(&uptime, &pdata->ps_start, &common.ac_etime); 	/* Calculate and update elapsed time*/
 
+
 	/* Get Ids */
-	common.ac_pid = pdata->ps_ppid;								/* Referenced in process_new(), same as pdata->ps_pptr->ps_pid */
+	common.ac_pid = pdata->ps_ppid;								
 	common.ac_uid = pdata->ps_ucred->cr_uid;
 	common.ac_gid = pdata->ps_ucred->cr_gid;
 
@@ -295,15 +293,39 @@ acct_fork(struct process *pdata)
 		else 
 			common.ac_tty = NODEV;
 
+
 	/* Get Accounting flags */
 	common.ac_flag = pdata->ps_acflag;
 
+	return common;
+}
+
+void
+acct_fork(struct process *pr) 
+{
+	struct message *acct_msg;
+
+	/* if fork accounting not enabled, let's not worry about this... */
+	rw_enter_read(&rwl);
+	if((acct_audit_stat & ACCT_ENA_FORK) == 0) {
+		rw_exit_read(&rwl);
+		return;
+	}
+	rw_exit_read(&rwl);
+
+	/* Commited to processing the message now... */
+	acct_msg = malloc(sizeof(struct message), M_DEVBUF, M_WAITOK | M_ZERO); 
+	
+	/* Set internal message data */
+	acct_msg->type = ACCT_MSG_FORK;
+	acct_msg->size = sizeof(struct acct_fork);
+
 	/* Update message common fields within this message */
-	acct_msg->data.fork_d.ac_common = common;
-
+	rw_enter_read(&rwl);
+	/* Common message based on parent info */
+	acct_msg->data.fork_d.ac_common = construct_common(pr->ps_pptr, ACCT_MSG_FORK);	
 	/* Set child pid */
-	acct_msg->data.fork_d.ac_cpid = pdata->ps_pid; 				 /* Referenced in process_new(), kern_fork.c */
-
+	acct_msg->data.fork_d.ac_cpid = pr->ps_pid;		/* Child process id */
 	rw_exit_read(&rwl);
 
 	/* Enqueue Data */
@@ -313,10 +335,8 @@ acct_fork(struct process *pdata)
 } 
 
 void
-acct_exec(struct process *pdata)
+acct_exec(struct process *pr)
 {
-	struct acct_common common;
-	struct timespec uptime, booted;
 	struct message *acct_msg;
 
 	/* if fork accounting not enabled, let's not worry about this... */
@@ -328,59 +348,15 @@ acct_exec(struct process *pdata)
 	rw_exit_read(&rwl);
 
 	/* Commited to processing the message now... */
-
-	/* Sequence begins from index 0 */
-	rw_enter_write(&rwl);
-	common.ac_seq = sequence_num;
-	sequence_num++;
-	rw_exit_write(&rwl);
-	
 	acct_msg = malloc(sizeof(struct message), M_DEVBUF, M_WAITOK | M_ZERO);
 
 	/* Set internal message data */
 	acct_msg->type = ACCT_MSG_EXEC;
 	acct_msg->size = sizeof(struct acct_exec);
 
-	/* 
-	 * Create message common fields and update 'this' message. 
-	 * Enqueue the message, once required data fields are filled out 
-	 */
-	
-	/* Set msg type */
-	common.ac_type = ACCT_MSG_EXEC;
-	
-	/* Set len (size bytes) */
-	common.ac_len = sizeof(struct acct_exec);
-
-	rw_enter_read(&rwl);
-
-	/*  Get command name */
-	memcpy(common.ac_comm, pdata->ps_comm, sizeof(common.ac_comm));
-
-	/* Get Time */
-	nanouptime(&uptime);
-	nanoboottime(&booted);
-	timespecadd(&booted, &pdata->ps_start, &common.ac_btime);	/* Calculate and update start time */	
-	timespecsub(&uptime, &pdata->ps_start, &common.ac_etime); 	/* Calculate and update elapsed time*/
-
-	/* Get Ids */
-	common.ac_pid = pdata->ps_pid;								//TODO Check this
-	common.ac_uid = pdata->ps_ucred->cr_uid;
-	common.ac_gid = pdata->ps_ucred->cr_gid;
-
-	/* Get Controlling TTY */
-	if ((pdata->ps_flags & PS_CONTROLT) && 
-		pdata->ps_pgrp->pg_session->s_ttyp)
-			common.ac_tty = pdata->ps_pgrp->pg_session->s_ttyp->t_dev;
-		else 
-			common.ac_tty = NODEV;
-
-	/* Get Accounting flags */
-	common.ac_flag = pdata->ps_acflag;
-
 	/* Update message common fields within this message */
-	acct_msg->data.exec_d.ac_common = common;
-
+	rw_enter_read(&rwl);
+	acct_msg->data.exec_d.ac_common = construct_common(pr, ACCT_MSG_EXEC);
 	rw_exit_read(&rwl);
 
 	/* Enqueue Data */
@@ -390,10 +366,9 @@ acct_exec(struct process *pdata)
 }
 
 void
-acct_exit(struct process *pdata)
+acct_exit(struct process *pr)
 {
-	struct acct_common common;
-	struct timespec uptime, ut, st, booted, tmp;
+	struct timespec ut, st, tmp;
 	struct message *acct_msg;
 	struct rusage *r;
 	int t;
@@ -407,72 +382,27 @@ acct_exit(struct process *pdata)
 	rw_exit_read(&rwl);
 
 	/* Commited to processing the message now... */
-	
-	/* Sequence begins from index 0 */
-	rw_enter_write(&rwl);
-	common.ac_seq = sequence_num;
-	sequence_num++;
-	rw_exit_write(&rwl);
-	
 	acct_msg = malloc(sizeof(struct message), M_DEVBUF, M_WAITOK | M_ZERO);
 	
 	/* Set internal message data */
 	acct_msg->type = ACCT_MSG_EXIT;
 	acct_msg->size = sizeof(struct acct_exit);
 
-	/* 
-	 * Create message common fields and update 'this' message. 
-	 * Enqueue the message, once required data fields are filled out 
-	 */
-	
-	/* Set msg type */
-	common.ac_type = ACCT_MSG_EXIT;
-	
-	/* Set len (size bytes) */
-	common.ac_len = sizeof(struct acct_exit);
-
-	rw_enter_read(&rwl);
-
-	/*  Get command name */
-	memcpy(common.ac_comm, pdata->ps_comm, sizeof(common.ac_comm));
-
-	/* Get Time */
-	nanouptime(&uptime);
-	nanoboottime(&booted);
-	timespecadd(&booted, &pdata->ps_start, &common.ac_btime);	/* Calculate and update start time */														/* Calculate and update start time */
-	timespecsub(&uptime, &pdata->ps_start, &common.ac_etime); 	/* Calculate and update elapsed time */
-
-
-	/* Get Ids */
-	common.ac_pid = pdata->ps_pid;								//TODO Check this
-	common.ac_uid = pdata->ps_ucred->cr_uid;
-	common.ac_gid = pdata->ps_ucred->cr_gid;
-
-	/* Get Controlling TTY */
-	if ((pdata->ps_flags & PS_CONTROLT) && 
-		pdata->ps_pgrp->pg_session->s_ttyp)
-			common.ac_tty = pdata->ps_pgrp->pg_session->s_ttyp->t_dev;
-		else 
-			common.ac_tty = NODEV;
-
-	/* Get Accounting flags */
-	common.ac_flag = pdata->ps_acflag;
-
-
 	/* Update message common fields within this message */
-	acct_msg->data.exit_d.ac_common = common;
+	rw_enter_read(&rwl);
+	acct_msg->data.exit_d.ac_common = construct_common(pr, ACCT_MSG_EXIT);;
 
 	/* 
 	 * Set exit struct additional data 
 	 */
 	
 	/* User & sys Time */
-	calctsru(&pdata->ps_tu, &ut, &st, NULL);
+	calctsru(&pr->ps_tu, &ut, &st, NULL);
 	acct_msg->data.exit_d.ac_utime = ut;
 	acct_msg->data.exit_d.ac_stime = st;
 
 	/* Avg memory usage */
-	r = &pdata->ps_mainproc->p_ru;							//TODO CHECK? /* ps_mainproc (struct proc) contains the  usage  details (?) */
+	r = &pr->ps_mainproc->p_ru;							//TODO CHECK? /* ps_mainproc (struct proc) contains the  usage  details (?) */
 	timespecadd(&ut, &st, &tmp);
 	t = tmp.tv_sec * hz + tmp.tv_nsec / (1000 * tick); 		/* hz and tick are sys externs */
 
@@ -484,14 +414,12 @@ acct_exit(struct process *pdata)
 
 	/* I/O ops count */
 	acct_msg->data.exit_d.ac_io = r->ru_inblock + r->ru_oublock;
-
 	rw_exit_read(&rwl);
 
 	/* Enqueue Data */
 	rw_enter_write(&rwl);
 	TAILQ_INSERT_TAIL(&head, acct_msg, entries);
 	rw_exit_write(&rwl);
-
 }
 
 
