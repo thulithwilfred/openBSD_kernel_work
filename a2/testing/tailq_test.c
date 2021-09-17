@@ -74,6 +74,10 @@ int main(void) {
 		printf("Book\n - Name: %d, Auth: %d\n", b.name, b.auth);
 	}
 
+	read_msg_pt = TAILQ_FIRST(&head);
+	if (read_msg_pt->type == 0x02) 
+		printf("Still the same\n");
+
 	/* Remove Msg 2 */
 	TAILQ_REMOVE(&head, read_msg_pt, entry);
 	free(read_msg_pt);

@@ -22,6 +22,10 @@
 #include <sys/rwlock.h>
 #include <sys/tty.h>
 
+#include <sys/time.h>
+#include <sys/kernel.h>
+#include <sys/resourcevar.h>
+
 #include "acct.h"
 
 /** 
@@ -59,14 +63,21 @@ struct message {
 TAILQ_HEAD(message_queue, message) head; 
 
 /* Local Defines */
-#define ALL_OFF 0x00
-#define READ_ONLY 1 	/* Read Only Mode */
+#define ALL_OFF 		0x00		/* Set audit status, all off */
+#define RDWR_MODE_OK 	1 			/* Current mode is RDWR Mode */
+#define RDWR_MODE_NON	0
 
 
-/* Globals */
-int ronly_flag = 0;
-int sequence_num = 0;
+/* Globals 
+ * The following should be members should be operated on atomically.
+ */
+int rdwr_mode = 0;					/* Is the device opened in RDWR mode */
+int sequence_num = 0;				/* Current sequence number for a message */
+int open_status = 0; 				/* Is the device currently opened */
+int device_opened = 0;				/* Is the device currently opened */
+ 
 uint32_t acct_audit_stat = ALL_OFF;
+
 
 /**
  * @brief Initialise state required for operations 
@@ -76,9 +87,17 @@ int acctattach(int num)
 {
 	/* Initialise the message queue for acct messages */
 	TAILQ_INIT(&head);
+
 	/* Clear Audit Stats */
+	rw_enter_write(&rwl);
 	acct_audit_stat = ALL_OFF;
-	return 0;
+	sequence_num = 0;
+	open_status = 0;
+	rdwr_mode = 0;
+	device_opened = 0;
+	rw_exit_write(&rwl);
+
+	return (0);
 }
 
 int
@@ -88,16 +107,21 @@ acctopen(dev_t dev, int flag, int mode, struct proc *p)
 	if (minor(dev) != 0)
 		return (ENXIO);
 
+	//TODO: Double check that O_EXLOCK -> FLOCK is doing locks.
+
 	/* If not opened exclusively */
-	if (!(flag & FFLAGS(O_EXCL)))
-		return EEXIST;
+	if (!(flag & FFLAGS(O_EXLOCK)))
+		return ENODEV;
 
 	/* If not opened for reading or read/write */
 	if (!(flag & FFLAGS(O_RDONLY) || !(flag & FFLAGS(O_RDWR))))
 		return (EPERM);
 
-	if (flag & FFLAGS(O_RDONLY))
-		ronly_flag = READ_ONLY;
+	/* Set the mode in which the device was opened for, only care about if RDWR */
+	if (flag & FFLAGS(O_RDWR))
+		rdwr_mode = RDWR_MODE_OK; 
+	else 
+		rdwr_mode = RDWR_MODE_NON;
 	
 	/* Reset Sequence Num */
 	rw_enter_write(&rwl); /* The lock is probably not needed here? */
@@ -145,36 +169,48 @@ int
 acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 {
 	struct acct_ctl *ctl = (struct acct_ctl*)data;
+	struct message *next_msg;
 
 	/* Support for generic ioctl requests */
 	switch(cmd) {
 		case FIONREAD:
-			/* Get the number of bytes that are immediately available for reading*/
-			//TODO: Get len of next struct in queue
-			*(int *)data = 0;
-			break;
+			/* Get the number of bytes that are immediately available for reading */
+			rw_enter_read(&rwl);
+			if (TAILQ_EMPTY(&head)) {
+				*(int *)data = 0; 					/* Queue is empty, nothing to read */
+			} else {
+				next_msg = TAILQ_FIRST(&head); 		/* Next available message FIFO */
+				*(int *)data = next_msg->size;
+			}
+			rw_exit_read(&rwl);
+			return (0);
 		case FIONBIO:
 			/*  Handled in the upper FS layer */
-			break;
+			if (*(int *)data != 0) 					/* Attempting to set non-blocking, miss me with that... */
+				return (EOPNOTSUPP);
 		case FIOASYNC:
 			return (EOPNOTSUPP);
 	}
 
 	/* Device specific ioctls not accepted in read only mode */
-	if (ronly_flag == READ_ONLY) 
-		return (ENOTTY);
+	if (rdwr_mode != RDWR_MODE_OK) 
+	 	return (ENOTTY); 
 
 	/* Support for device specific ioctl requests */
 	switch(cmd) {
 		case ACCT_IOC_STATUS:
+			rw_enter_read(&rwl);
+			ctl->acct_ena = acct_audit_stat;		/* update with currently enabled features */
+			ctl->acct_fcount = 77;					//TODO	/* update count of files */
+			rw_exit_read(&rwl);
 			break;
 		case ACCT_IOC_FSTATUS:
 			break;
 		case ACCT_IOC_ENABLE:		
-			set_audit_stats(ctl->acct_ena);		/* set features to enable */
+			set_audit_stats(ctl->acct_ena);			/* set features to enable */
 
 			rw_enter_read(&rwl);
-			ctl->acct_ena = acct_audit_stat;	/* update with currently enabled features */
+			ctl->acct_ena = acct_audit_stat;		/* update with currently enabled features */
 			rw_exit_read(&rwl);
 			break;
 		case ACCT_IOC_DISABLE:
@@ -199,8 +235,9 @@ void
 acct_fork(struct process *pdata) 
 {
 	struct acct_common common;
-	struct timespec uptime;
+	struct timespec uptime, booted;
 	struct message *acct_msg;
+	//TODO Check that data is of the parents context not child
 
 	/* if fork accounting not enabled, let's not worry about this... */
 	rw_enter_read(&rwl);
@@ -235,16 +272,19 @@ acct_fork(struct process *pdata)
 	/* Set len (size bytes) */
 	common.ac_len = sizeof(struct acct_fork);
 
+	rw_enter_read(&rwl);
+
 	/*  Get command name */
 	memcpy(common.ac_comm, pdata->ps_comm, sizeof(common.ac_comm));
 
 	/* Get Time */
 	nanouptime(&uptime);
+	nanoboottime(&booted);
+	timespecadd(&booted, &pdata->ps_start, &common.ac_btime);	/* Calculate and update start time */	
 	timespecsub(&uptime, &pdata->ps_start, &common.ac_etime); 	/* Calculate and update elapsed time*/
-	common.ac_btime = pdata->ps_start; 							/* Get Starting time */
 
 	/* Get Ids */
-	common.ac_pid = pdata->ps_ppid;								/* Referenced in process_new(), kern_fork.c */
+	common.ac_pid = pdata->ps_ppid;								/* Referenced in process_new(), same as pdata->ps_pptr->ps_pid */
 	common.ac_uid = pdata->ps_ucred->cr_uid;
 	common.ac_gid = pdata->ps_ucred->cr_gid;
 
@@ -264,6 +304,8 @@ acct_fork(struct process *pdata)
 	/* Set child pid */
 	acct_msg->data.fork_d.ac_cpid = pdata->ps_pid; 				 /* Referenced in process_new(), kern_fork.c */
 
+	rw_exit_read(&rwl);
+
 	/* Enqueue Data */
 	rw_enter_write(&rwl);
 	TAILQ_INSERT_TAIL(&head, acct_msg, entries);
@@ -271,21 +313,192 @@ acct_fork(struct process *pdata)
 } 
 
 void
-acct_exec(struct process *data)
+acct_exec(struct process *pdata)
 {
+	struct acct_common common;
+	struct timespec uptime, booted;
+	struct message *acct_msg;
 
+	/* if fork accounting not enabled, let's not worry about this... */
+	rw_enter_read(&rwl);
+	if((acct_audit_stat & ACCT_ENA_EXEC) == 0) {
+		rw_exit_read(&rwl);
+		return;
+	}
+	rw_exit_read(&rwl);
+
+	/* Commited to processing the message now... */
+
+	/* Sequence begins from index 0 */
+	rw_enter_write(&rwl);
+	common.ac_seq = sequence_num;
+	sequence_num++;
+	rw_exit_write(&rwl);
+	
+	acct_msg = malloc(sizeof(struct message), M_DEVBUF, M_WAITOK | M_ZERO);
+
+	/* Set internal message data */
+	acct_msg->type = ACCT_MSG_EXEC;
+	acct_msg->size = sizeof(struct acct_exec);
+
+	/* 
+	 * Create message common fields and update 'this' message. 
+	 * Enqueue the message, once required data fields are filled out 
+	 */
+	
+	/* Set msg type */
+	common.ac_type = ACCT_MSG_EXEC;
+	
+	/* Set len (size bytes) */
+	common.ac_len = sizeof(struct acct_exec);
+
+	rw_enter_read(&rwl);
+
+	/*  Get command name */
+	memcpy(common.ac_comm, pdata->ps_comm, sizeof(common.ac_comm));
+
+	/* Get Time */
+	nanouptime(&uptime);
+	nanoboottime(&booted);
+	timespecadd(&booted, &pdata->ps_start, &common.ac_btime);	/* Calculate and update start time */	
+	timespecsub(&uptime, &pdata->ps_start, &common.ac_etime); 	/* Calculate and update elapsed time*/
+
+	/* Get Ids */
+	common.ac_pid = pdata->ps_pid;								//TODO Check this
+	common.ac_uid = pdata->ps_ucred->cr_uid;
+	common.ac_gid = pdata->ps_ucred->cr_gid;
+
+	/* Get Controlling TTY */
+	if ((pdata->ps_flags & PS_CONTROLT) && 
+		pdata->ps_pgrp->pg_session->s_ttyp)
+			common.ac_tty = pdata->ps_pgrp->pg_session->s_ttyp->t_dev;
+		else 
+			common.ac_tty = NODEV;
+
+	/* Get Accounting flags */
+	common.ac_flag = pdata->ps_acflag;
+
+	/* Update message common fields within this message */
+	acct_msg->data.exec_d.ac_common = common;
+
+	rw_exit_read(&rwl);
+
+	/* Enqueue Data */
+	rw_enter_write(&rwl);
+	TAILQ_INSERT_TAIL(&head, acct_msg, entries);
+	rw_exit_write(&rwl);
 }
 
 void
-acct_exit(struct process *data)
+acct_exit(struct process *pdata)
 {
+	struct acct_common common;
+	struct timespec uptime, ut, st, booted, tmp;
+	struct message *acct_msg;
+	struct rusage *r;
+	int t;
+
+	/* if exit accounting not enabled, let's not worry about this... */
+	rw_enter_read(&rwl);
+	if((acct_audit_stat & ACCT_ENA_EXIT) == 0) {
+		rw_exit_read(&rwl);
+		return;
+	}
+	rw_exit_read(&rwl);
+
+	/* Commited to processing the message now... */
 	
+	/* Sequence begins from index 0 */
+	rw_enter_write(&rwl);
+	common.ac_seq = sequence_num;
+	sequence_num++;
+	rw_exit_write(&rwl);
+	
+	acct_msg = malloc(sizeof(struct message), M_DEVBUF, M_WAITOK | M_ZERO);
+	
+	/* Set internal message data */
+	acct_msg->type = ACCT_MSG_EXIT;
+	acct_msg->size = sizeof(struct acct_exit);
+
+	/* 
+	 * Create message common fields and update 'this' message. 
+	 * Enqueue the message, once required data fields are filled out 
+	 */
+	
+	/* Set msg type */
+	common.ac_type = ACCT_MSG_EXIT;
+	
+	/* Set len (size bytes) */
+	common.ac_len = sizeof(struct acct_exit);
+
+	rw_enter_read(&rwl);
+
+	/*  Get command name */
+	memcpy(common.ac_comm, pdata->ps_comm, sizeof(common.ac_comm));
+
+	/* Get Time */
+	nanouptime(&uptime);
+	nanoboottime(&booted);
+	timespecadd(&booted, &pdata->ps_start, &common.ac_btime);	/* Calculate and update start time */														/* Calculate and update start time */
+	timespecsub(&uptime, &pdata->ps_start, &common.ac_etime); 	/* Calculate and update elapsed time */
+
+
+	/* Get Ids */
+	common.ac_pid = pdata->ps_pid;								//TODO Check this
+	common.ac_uid = pdata->ps_ucred->cr_uid;
+	common.ac_gid = pdata->ps_ucred->cr_gid;
+
+	/* Get Controlling TTY */
+	if ((pdata->ps_flags & PS_CONTROLT) && 
+		pdata->ps_pgrp->pg_session->s_ttyp)
+			common.ac_tty = pdata->ps_pgrp->pg_session->s_ttyp->t_dev;
+		else 
+			common.ac_tty = NODEV;
+
+	/* Get Accounting flags */
+	common.ac_flag = pdata->ps_acflag;
+
+
+	/* Update message common fields within this message */
+	acct_msg->data.exit_d.ac_common = common;
+
+	/* 
+	 * Set exit struct additional data 
+	 */
+	
+	/* User & sys Time */
+	calctsru(&pdata->ps_tu, &ut, &st, NULL);
+	acct_msg->data.exit_d.ac_utime = ut;
+	acct_msg->data.exit_d.ac_stime = st;
+
+	/* Avg memory usage */
+	r = &pdata->ps_mainproc->p_ru;							//TODO CHECK? /* ps_mainproc (struct proc) contains the  usage  details (?) */
+	timespecadd(&ut, &st, &tmp);
+	t = tmp.tv_sec * hz + tmp.tv_nsec / (1000 * tick); 		/* hz and tick are sys externs */
+
+	if (t)
+		acct_msg->data.exit_d.ac_mem = (r->ru_ixrss + r->ru_idrss + r->ru_isrss) / t;
+    else
+		acct_msg->data.exit_d.ac_mem = 0;
+
+
+	/* I/O ops count */
+	acct_msg->data.exit_d.ac_io = r->ru_inblock + r->ru_oublock;
+
+	rw_exit_read(&rwl);
+
+	/* Enqueue Data */
+	rw_enter_write(&rwl);
+	TAILQ_INSERT_TAIL(&head, acct_msg, entries);
+	rw_exit_write(&rwl);
+
 }
 
 
 int
 acctclose(dev_t dev, int flag, int mode, struct proc *p)
 {
+	//TODO Open / Close lock (Limit single instance betwee open and closes)
 	return 0;
 }
 
