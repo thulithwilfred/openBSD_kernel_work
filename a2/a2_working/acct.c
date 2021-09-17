@@ -78,7 +78,6 @@ int device_opened = 0;				/* Is the device currently opened */
  
 uint32_t acct_audit_stat = ALL_OFF;
 
-
 /**
  * @brief Initialise state required for operations 
  * 
@@ -107,18 +106,19 @@ acctopen(dev_t dev, int flag, int mode, struct proc *p)
 	if (minor(dev) != 0)
 		return (ENXIO);
 
-	//TODO: Double check that O_EXLOCK -> FLOCK is doing locks.
+	flag = OFLAGS(flag);
 
+	//TODO: Double check that O_EXLOCK -> FLOCK is doing locks.
 	/* If not opened exclusively */
-	if (!(flag & FFLAGS(O_EXLOCK)))
+	if ((flag & O_EXLOCK) == 0)
 		return ENODEV;
 
-	/* If not opened for reading or read/write */
-	if (!(flag & FFLAGS(O_RDONLY) || !(flag & FFLAGS(O_RDWR))))
+	/* If not opened with O_RDONLY or O_RDWR */
+	if (flag & O_WRONLY)
 		return (EPERM);
 
 	/* Set the mode in which the device was opened for, only care about if RDWR */
-	if (flag & FFLAGS(O_RDWR))
+	if (flag & O_RDWR)
 		rdwr_mode = RDWR_MODE_OK; 
 	else 
 		rdwr_mode = RDWR_MODE_NON;
@@ -126,6 +126,7 @@ acctopen(dev_t dev, int flag, int mode, struct proc *p)
 	/* Reset Sequence Num */
 	rw_enter_write(&rwl); /* The lock is probably not needed here? */
 	sequence_num = 0;
+	device_opened = 1;
 	rw_exit_write(&rwl);
 
 	return (0);
@@ -140,8 +141,21 @@ acctread(dev_t dev, struct uio *uio, int flags)
 	int err;
 
 	rw_enter_read(&rwl);
-	if (TAILQ_EMPTY(&head))
-		return(0); /* Nothing to see here officer... */
+
+	if (TAILQ_EMPTY(&head)) {
+		/* Data not ready, wake me up when ready... */
+		rw_exit_read(&rwl);
+
+		tsleep(&head, PWAIT | PCATCH ,"Waiting for acct messsages", 0);
+
+		rw_enter_read(&rwl);
+
+		/* Processes returning from sleep should always re-evaluate the conditions */
+		if (TAILQ_EMPTY(&head))  {
+			rw_exit_read(&rwl);
+			return EIO;
+		}
+	} 
 
 	/* Get next message from queue */
 	acct_msg = TAILQ_FIRST(&head);
@@ -160,7 +174,6 @@ acctread(dev_t dev, struct uio *uio, int flags)
 	TAILQ_REMOVE(&head, acct_msg, entries);
 	free(acct_msg, M_DEVBUF, sizeof(struct message));
 	rw_exit_read(&rwl);
-
 	return 0;
 }
 
@@ -267,10 +280,8 @@ construct_common(struct process *pdata, int type)
 	 */
 
 	/* Sequence begins from index 0 */
-	rw_enter_write(&rwl);
 	common.ac_seq = sequence_num;
 	sequence_num++;
-	rw_exit_write(&rwl);
 
 	/* Set message type and data size */
 	switch (type) {
@@ -330,12 +341,17 @@ acct_fork(struct process *pr)
 {
 	struct message *acct_msg;
 
-	/* if fork accounting not enabled, let's not worry about this... */
+	/* if fork accounting not enabled or device closed, let's not worry about this... */
 	rw_enter_read(&rwl);
-	if((acct_audit_stat & ACCT_ENA_FORK) == 0) {
+	if(device_opened && (acct_audit_stat & ACCT_ENA_FORK)) {
 		rw_exit_read(&rwl);
 		return;
 	}
+
+	// if((acct_audit_stat & ACCT_ENA_FORK) == 0) {
+	// 	rw_exit_read(&rwl);
+	// 	return;
+	// }
 	rw_exit_read(&rwl);
 
 	/* Commited to processing the message now... */
@@ -357,6 +373,9 @@ acct_fork(struct process *pr)
 	rw_enter_write(&rwl);
 	TAILQ_INSERT_TAIL(&head, acct_msg, entries);
 	rw_exit_write(&rwl);
+
+	/* Wake up read, incase it was blocked */
+	wakeup(&head);
 } 
 
 void
@@ -364,12 +383,17 @@ acct_exec(struct process *pr)
 {
 	struct message *acct_msg;
 
-	/* if fork accounting not enabled, let's not worry about this... */
+	/* if fork accounting not enabled or device closed, let's not worry about this... */
 	rw_enter_read(&rwl);
-	if((acct_audit_stat & ACCT_ENA_EXEC) == 0) {
+	if(device_opened && (acct_audit_stat & ACCT_ENA_EXEC)) {
 		rw_exit_read(&rwl);
 		return;
 	}
+
+	// if((acct_audit_stat & ACCT_ENA_EXEC) == 0) {
+	// 	rw_exit_read(&rwl);
+	// 	return;
+	// }
 	rw_exit_read(&rwl);
 
 	/* Commited to processing the message now... */
@@ -388,6 +412,9 @@ acct_exec(struct process *pr)
 	rw_enter_write(&rwl);
 	TAILQ_INSERT_TAIL(&head, acct_msg, entries);
 	rw_exit_write(&rwl);
+
+	/* Wake up read, incase it was blocked */
+	wakeup(&head);
 }
 
 void
@@ -398,12 +425,17 @@ acct_exit(struct process *pr)
 	struct rusage *r;
 	int t;
 
-	/* if exit accounting not enabled, let's not worry about this... */
+	/* if exit accounting not enabled or device closed, let's not worry about this... */
 	rw_enter_read(&rwl);
-	if((acct_audit_stat & ACCT_ENA_EXIT) == 0) {
+	if(device_opened && (acct_audit_stat & ACCT_ENA_EXIT)) {
 		rw_exit_read(&rwl);
 		return;
 	}
+
+	// if((acct_audit_stat & ACCT_ENA_EXIT) == 0) {
+	// 	rw_exit_read(&rwl);
+	// 	return;
+	// }
 	rw_exit_read(&rwl);
 
 	/* Commited to processing the message now... */
@@ -445,6 +477,9 @@ acct_exit(struct process *pr)
 	rw_enter_write(&rwl);
 	TAILQ_INSERT_TAIL(&head, acct_msg, entries);
 	rw_exit_write(&rwl);
+
+	/* Wake up read, incase it was blocked */
+	wakeup(&head);
 }
 
 
@@ -452,6 +487,10 @@ int
 acctclose(dev_t dev, int flag, int mode, struct proc *p)
 {
 	//TODO Open / Close lock (Limit single instance betwee open and closes)
+	rw_enter_write(&rwl); 
+	sequence_num = 0;
+	device_opened = 0;
+	rw_exit_write(&rwl);
 	return 0;
 }
 
