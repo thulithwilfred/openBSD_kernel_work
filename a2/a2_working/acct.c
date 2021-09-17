@@ -343,15 +343,16 @@ acct_fork(struct process *pr)
 
 	/* if fork accounting not enabled or device closed, let's not worry about this... */
 	rw_enter_read(&rwl);
-	if(device_opened && (acct_audit_stat & ACCT_ENA_FORK)) {
+	if(device_opened == 0) {
 		rw_exit_read(&rwl);
 		return;
 	}
 
-	// if((acct_audit_stat & ACCT_ENA_FORK) == 0) {
-	// 	rw_exit_read(&rwl);
-	// 	return;
-	// }
+	if((acct_audit_stat & ACCT_ENA_FORK) == 0) {
+		rw_exit_read(&rwl);
+		return;
+	}
+	
 	rw_exit_read(&rwl);
 
 	/* Commited to processing the message now... */
@@ -385,15 +386,16 @@ acct_exec(struct process *pr)
 
 	/* if fork accounting not enabled or device closed, let's not worry about this... */
 	rw_enter_read(&rwl);
-	if(device_opened && (acct_audit_stat & ACCT_ENA_EXEC)) {
+	if(device_opened == 0) {
 		rw_exit_read(&rwl);
 		return;
 	}
 
-	// if((acct_audit_stat & ACCT_ENA_EXEC) == 0) {
-	// 	rw_exit_read(&rwl);
-	// 	return;
-	// }
+	if((acct_audit_stat & ACCT_ENA_EXEC) == 0) {
+		rw_exit_read(&rwl);
+		return;
+	}
+
 	rw_exit_read(&rwl);
 
 	/* Commited to processing the message now... */
@@ -427,15 +429,17 @@ acct_exit(struct process *pr)
 
 	/* if exit accounting not enabled or device closed, let's not worry about this... */
 	rw_enter_read(&rwl);
-	if(device_opened && (acct_audit_stat & ACCT_ENA_EXIT)) {
+
+	if(device_opened == 0) {
 		rw_exit_read(&rwl);
 		return;
 	}
 
-	// if((acct_audit_stat & ACCT_ENA_EXIT) == 0) {
-	// 	rw_exit_read(&rwl);
-	// 	return;
-	// }
+	if((acct_audit_stat & ACCT_ENA_EXIT) == 0) {
+		rw_exit_read(&rwl);
+		return;
+	}
+
 	rw_exit_read(&rwl);
 
 	/* Commited to processing the message now... */
