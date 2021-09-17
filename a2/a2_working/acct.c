@@ -136,6 +136,31 @@ acctopen(dev_t dev, int flag, int mode, struct proc *p)
 int 
 acctread(dev_t dev, struct uio *uio, int flags)
 {
+	struct message *acct_msg;
+	int err;
+
+	rw_enter_read(&rwl);
+	if (TAILQ_EMPTY(&head))
+		return(0); /* Nothing to see here officer... */
+
+	/* Get next message from queue */
+	acct_msg = TAILQ_FIRST(&head);
+
+	err = uiomove((void*)&acct_msg->data, acct_msg->size, uio);
+
+	if (err) {
+		/* uiomove failed */
+		TAILQ_REMOVE(&head, acct_msg, entries);
+		free(acct_msg, M_DEVBUF, sizeof(struct message));
+		rw_exit_read(&rwl);
+		return (EFAULT);
+	}
+
+	/* Uiomove succeeded, clear message from queue */
+	TAILQ_REMOVE(&head, acct_msg, entries);
+	free(acct_msg, M_DEVBUF, sizeof(struct message));
+	rw_exit_read(&rwl);
+
 	return 0;
 }
 
