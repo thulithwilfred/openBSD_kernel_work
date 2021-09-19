@@ -11,6 +11,7 @@
 
 #include <sys/param.h>
 #include <sys/systm.h>
+#include <sys/types.h>
 #include <sys/conf.h>
 #include <sys/poll.h>
 #include <sys/types.h>
@@ -26,7 +27,13 @@
 #include <sys/kernel.h>
 #include <sys/resourcevar.h>
 
+#include <sys/namei.h>
+#include <sys/vnode.h>
+
 #include "acct.h"
+
+/* Local Functions */
+int resolve_vnode(const char*, struct proc *);
 
 /** 
  * TODO: 1. Parse the process hooks in here and set the appropriate structs and add them to the queue.
@@ -82,7 +89,8 @@ uint32_t acct_audit_stat = ALL_OFF;
  * @brief Initialise state required for operations 
  * 
  */
-int acctattach(int num) 
+int
+acctattach(int num) 
 {
 	/* Initialise the message queue for acct messages */
 	TAILQ_INIT(&head);
@@ -182,7 +190,8 @@ acctread(dev_t dev, struct uio *uio, int flags)
  * 
  * @param set_mask bit fields to be set 
  */
-void set_audit_stats(uint32_t set_mask) 
+void
+set_audit_stats(uint32_t set_mask) 
 {
 	rw_enter_write(&rwl);
 	acct_audit_stat |= set_mask;
@@ -208,6 +217,7 @@ acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 {
 	struct acct_ctl *ctl = (struct acct_ctl*)data;
 	struct message *next_msg;
+	const char* pathname;
 
 	/* Support for generic ioctl requests */
 	switch(cmd) {
@@ -259,6 +269,19 @@ acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 			rw_exit_read(&rwl);
 			break;
 		case ACCT_IOC_TRACK_FILE:
+			/* 1 Resolve vnode from path */
+			rw_enter_read(&rwl);
+			pathname = ctl->acct_path;
+			rw_exit_read(&rwl);
+
+			if (resolve_vnode(pathname, p) != 0) 
+				return ENOENT;
+
+			/* 2 If file does not exist return ENOENT */
+
+			/* 3 If already tracked, update events/conds */
+
+			/* 4 Update Output fields */
 			break;
 		case ACCT_IOC_UNTRACK_FILE:
 			break;
@@ -267,6 +290,55 @@ acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 			return (ENOTTY);
 	}
 	return (0);
+}
+
+/**
+ * @brief Refer to unveil_free_traversed_vnodes
+ * 
+ * @param ndp 
+ */
+void 
+free_traversed_vnodes(struct nameidata *ndp) 
+{
+	if (ndp->ni_tvpsize) {
+		size_t i;
+		
+		for (i = 0; i < ndp->ni_tvpend; i++)
+			vrele(ndp->ni_tvp[i]); /* ref for being in list */
+			
+		free(ndp->ni_tvp, M_PROC, ndp->ni_tvpsize *sizeof(struct vnode *));
+        ndp->ni_tvpsize = 0;
+        ndp->ni_tvpend = 0;
+	}
+}
+
+int 
+resolve_vnode(const char* pathname, struct proc *p)
+{
+	struct nameidata nd;
+	int err = 0;
+
+	NDINIT(&nd, LOOKUP, FOLLOW | LOCKLEAF | SAVENAME,
+    	UIO_SYSSPACE, pathname, p);
+
+	uprintf("namei...\n");
+
+    if ((err = namei(&nd)) != 0) {
+		free_traversed_vnodes(&nd);
+		uprintf("Resolve ERR..........");
+		return err;
+	}
+	
+
+    /* release lock from namei, but keep ref */
+    if (nd.ni_vp)
+		VOP_UNLOCK(nd.ni_vp);
+
+	uprintf("namei unlocked\n");
+
+	//TODO Seems to be resolving... follow up on the rest...
+
+	return (err);
 }
 
 struct acct_common 
@@ -463,7 +535,7 @@ acct_exit(struct process *pr)
 	acct_msg->data.exit_d.ac_stime = st;
 
 	/* Avg memory usage */
-	r = &pr->ps_mainproc->p_ru;							//TODO CHECK? /* ps_mainproc (struct proc) contains the  usage  details (?) */
+	r = &pr->ps_mainproc->p_ru;								//TODO CHECK? /* ps_mainproc (struct proc) contains the  usage  details (?) */
 	timespecadd(&ut, &st, &tmp);
 	t = tmp.tv_sec * hz + tmp.tv_nsec / (1000 * tick); 		/* hz and tick are sys externs */
 
