@@ -80,6 +80,7 @@ struct message {
 struct tree_node {
 	RB_ENTRY(tree_node) tree_entry;
 	struct vnode *v;				/* Holds a tracked files vnode red */
+	char path[PATH_MAX];			/* Holds path */
 	uint32_t audit_events;			/* File enabled events */
 	uint32_t audit_conds;			/* Audit conditions set for the tracking file */
 };
@@ -88,12 +89,14 @@ struct tree_node {
 /* Local Functions */
 int resolve_vnode(const char*, struct proc *, struct vnode **);
 int vnode_cmp(struct tree_node *, struct tree_node *);
-int add_node_to_tree(struct vnode *, uint32_t *, uint32_t *);
+int add_node_to_tree(struct vnode *, uint32_t *, uint32_t *, const char *);
 void free_traversed_vnodes(struct nameidata *);
 int untrack_from_tree(struct vnode *, uint32_t *, uint32_t *);
 int drop_all_files(void);
 int update_from_tree(struct vnode *, uint32_t *, uint32_t *);
-
+bool acct_this_message(uint32_t, uint32_t, int);
+bool acct_conds_ok(uint32_t, uint32_t);
+bool acct_mode_ok(uint32_t, int);
 
 /* Initializers */
 /* RW Lock */
@@ -348,7 +351,7 @@ acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 			 * 2 Vnode resolved, add to tracked tree
 			 * 	 If file is already tracked, params are updated.
 			 */
-			if (add_node_to_tree(vn, &ctl->acct_cond, &ctl->acct_ena) == EEXIST) {
+			if (add_node_to_tree(vn, &ctl->acct_cond, &ctl->acct_ena, pathname) == EEXIST) {
 				rw_exit_read(&rwl);
 				return (0);
 			}
@@ -466,11 +469,10 @@ untrack_from_tree(struct vnode *vn, uint32_t *ctl_conds, uint32_t *ctl_events)
 	*ctl_events = res->audit_events;
 	
 	return (0);
-
 }
 
 int
-add_node_to_tree(struct vnode *vn, uint32_t *ctl_conds, uint32_t *ctl_events)
+add_node_to_tree(struct vnode *vn, uint32_t *ctl_conds, uint32_t *ctl_events, const char* pathname)
 {
 	struct tree_node *new_node, *res; 
 
@@ -479,6 +481,9 @@ add_node_to_tree(struct vnode *vn, uint32_t *ctl_conds, uint32_t *ctl_events)
 	new_node->v = vn;
 	new_node->audit_conds = *ctl_conds;
 	new_node->audit_events = *ctl_events;
+	
+	/* Save path */
+	memcpy(new_node->path, pathname, PATH_MAX);
 
 	/* Try add Vnode to tracked tree of vnodes, checks by v_id */
 	res = RB_INSERT(vnodetree, &rb_head, new_node);
@@ -505,20 +510,21 @@ add_node_to_tree(struct vnode *vn, uint32_t *ctl_conds, uint32_t *ctl_events)
 int 
 resolve_vnode(const char* u_pathname, struct proc *p, struct vnode **vn)
 {
+	//TODO cleanup this area
 	struct nameidata nd;
-	char* k_pathname;
+	//char* k_pathname;
 	int err = 0;
 
-	k_pathname = malloc(PATH_MAX, M_DEVBUF, M_WAITOK | M_ZERO);
+	//k_pathname = malloc(PATH_MAX, M_DEVBUF, M_WAITOK | M_ZERO);
 
-	memcpy(k_pathname, u_pathname, PATH_MAX);
+	//memcpy(k_pathname, u_pathname, PATH_MAX);
 
 	NDINIT(&nd, LOOKUP, FOLLOW | LOCKLEAF,
-    	UIO_SYSSPACE, k_pathname, p);
+    	UIO_SYSSPACE, u_pathname, p);
 
 	if ((err = namei(&nd)) != 0) {
 		free_traversed_vnodes(&nd);
-		free(k_pathname, M_DEVBUF, PATH_MAX);
+		//free(k_pathname, M_DEVBUF, PATH_MAX);
 		return err;
 	}
 
@@ -529,7 +535,7 @@ resolve_vnode(const char* u_pathname, struct proc *p, struct vnode **vn)
 	if (nd.ni_vp)
 		VOP_UNLOCK(nd.ni_vp);
 
-	free(k_pathname, M_DEVBUF, PATH_MAX);
+	//free(k_pathname, M_DEVBUF, PATH_MAX);
 	return (err);
 }
 
@@ -600,7 +606,6 @@ construct_common(struct process *pdata, int type)
 	nanoboottime(&booted);
 	timespecadd(&booted, &pdata->ps_start, &common.ac_btime);	/* Calculate and update start time */	
 	timespecsub(&uptime, &pdata->ps_start, &common.ac_etime); 	/* Calculate and update elapsed time*/
-
 
 	/* Get Ids */
 	common.ac_pid = pdata->ps_ppid;								
@@ -773,10 +778,136 @@ acct_exit(struct process *pr)
 }
 
 
+void
+acct_open(struct process *p, struct vnode *vn_cmp, int o_flags, int err) 
+{
+	//struct message *acct_msg;
+	struct tree_node *find_node, *res;
+	uint32_t f_events, f_conds;			/* File Unique events */
+
+	/* Device not opened, no need to queue anything */
+	rw_enter_read(&rwl);
+
+	if (device_opened == 0) {
+		rw_exit_read(&rwl);
+		return;
+	}
+
+	/* If open accounting disabled, we outchea ... */
+	if ((acct_audit_stat & ACCT_ENA_OPEN) == 0) {
+		rw_exit_read(&rwl);
+		return;		
+	}
+
+	/* This file currently tracked ? */
+	find_node = malloc(sizeof(struct tree_node),  M_DEVBUF, M_WAITOK | M_ZERO);
+	find_node->v = vn_cmp;
+
+	/* Test for matching v_id in tree */
+	res = RB_FIND(vnodetree, &rb_head, find_node);
+
+	free(find_node, M_DEVBUF, sizeof(struct tree_node));
+
+	if (res == NULL) {
+		rw_exit_read(&rwl);
+		return;  			/* We aren't tracking this */
+	}
+
+	/* File conditions match the open call? */
+	f_events = res->audit_events;
+	f_conds = res->audit_conds;
+
+	/* File doesn't have open accounting set */
+	if ((f_events & ACCT_ENA_OPEN) == 0) {
+		rw_exit_read(&rwl);
+		return;
+	}
+
+	if (acct_this_message(f_conds, o_flags, err) == false) {
+		rw_exit_read(&rwl);
+		return;				/* Condition mismatch */
+	}
+
+	/* Construct message */
+	uprintf("Conds Valid\n");
+
+	return;
+}
+
+
+bool
+acct_this_message(uint32_t f_conds, uint32_t o_flags, int err)
+{
+
+	if (acct_mode_ok(f_conds, err) && acct_conds_ok(f_conds, o_flags))	
+		return true;
+
+	return false;
+}
+
+bool 
+acct_conds_ok(uint32_t f_conds, uint32_t o_flags) 
+{
+	if (((f_conds & ACCT_COND_READ) == 0) && ((f_conds & ACCT_COND_WRITE) == 0)) {
+		uprintf("RW not set\n");
+		return false;			/* R/W not set */
+	}
+
+	if ((f_conds & ACCT_COND_READ) && (f_conds & ACCT_COND_WRITE)) {
+		uprintf("RW both set\n");
+		return true;			/* R/W both set*/
+	}
+
+	if ((f_conds & ACCT_COND_READ) && (((o_flags & O_RDONLY) == 0) || (o_flags & O_RDWR))) {
+		uprintf("Read only set\n");
+		return true;			/* Read set, oflags match, O_RDONLY = 0x00 */
+	}
+
+	if ((f_conds & ACCT_COND_WRITE) && ((o_flags & O_WRONLY) || (o_flags & O_RDWR))) {
+		uprintf("Write only set\n");
+		return true;			/* Write set, oflages match */
+	}
+
+	return false; 
+}
+
+bool
+acct_mode_ok(uint32_t f_conds, int err) 
+{
+	if ((f_conds & ACCT_COND_SUCCESS) && (f_conds & ACCT_COND_FAILURE)) {
+		uprintf("S/F set\n");
+		return true;			/* Account both failed/succeeded messages */
+	}
+
+	if (((f_conds & ACCT_COND_SUCCESS) == 0) && ((f_conds & ACCT_COND_FAILURE) == 0)) {
+		uprintf("S/F not set\n");
+		return false;			/* No succes/fail set, dont account */
+	}
+
+	if ((f_conds & ACCT_COND_SUCCESS) && (err == 0)) {
+		uprintf("Success OK\n");
+		return true;		/* Success  set, no error */
+	}
+	
+	// if ((f_conds & ACCT_COND_SUCCESS) && err != 0) 
+	// 	return false;		/* Success set, but error */
+
+	if ((f_conds & ACCT_COND_FAILURE) && (err != 0)) {
+		uprintf("Failed OK\n");
+		return true;		/* Failure set and error, OK */
+	}
+
+	// if ((f_conds & ACCT_COND_FAILURE) && err == 0) 
+	// 	return false;		/* Failure set, but no error */
+
+	return false;
+
+}
+
 int
 acctclose(dev_t dev, int flag, int mode, struct proc *p)
 {
-	//TODO Wipe list of unread...
+	//TODO Clear the mfkn list my doggie...
 
 	rw_enter_write(&rwl); 
 	sequence_num = 0;
