@@ -47,6 +47,7 @@ int rdwr_mode = 0;					/* Is the device opened in RDWR mode */
 int sequence_num = 0;				/* Current sequence number for a message */
 int open_status = 0; 				/* Is the device currently opened */
 int device_opened = 0;				/* Is the device currently opened */
+int fcount = 0;						/* Tracked file count */
 uint32_t acct_audit_stat = ALL_OFF;	/* Starting global flags */
  
 
@@ -89,6 +90,9 @@ int resolve_vnode(const char*, struct proc *, struct vnode **);
 int vnode_cmp(struct tree_node *, struct tree_node *);
 int add_node_to_tree(struct vnode *, uint32_t *, uint32_t *);
 void free_traversed_vnodes(struct nameidata *);
+int untrack_from_tree(struct vnode *, uint32_t *, uint32_t *);
+int drop_all_files(void);
+int update_from_tree(struct vnode *, uint32_t *, uint32_t *);
 
 
 /* Initializers */
@@ -137,6 +141,7 @@ acctattach(int num)
 	open_status = 0;
 	rdwr_mode = 0;
 	device_opened = 0;
+	fcount = 0;	
 	rw_exit_write(&rwl);
 
 	return (0);
@@ -232,10 +237,7 @@ acctread(dev_t dev, struct uio *uio, int flags)
 void
 set_audit_stats(uint32_t set_mask) 
 {
-	rw_enter_write(&rwl);
 	acct_audit_stat |= set_mask;
-	rw_exit_write(&rwl);
-
 }
 
 /**
@@ -245,12 +247,10 @@ set_audit_stats(uint32_t set_mask)
  */
 void clear_audit_stats(uint32_t clear_mask)
 {
-	rw_enter_write(&rwl);
 	acct_audit_stat &= ~(clear_mask);
-	rw_exit_write(&rwl);
 }
 
-
+//TODO increment file count
 int 
 acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 {
@@ -258,6 +258,7 @@ acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 	struct vnode *vn;
 	struct message *next_msg;
 	const char* pathname;
+	uint32_t file_ena_mask;
 
 
 	/* Support for generic ioctl requests */
@@ -292,31 +293,52 @@ acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 		case ACCT_IOC_STATUS:
 			rw_enter_read(&rwl);
 			ctl->acct_ena = acct_audit_stat;		/* update with currently enabled features */
-			ctl->acct_fcount = 77;					//TODO	/* update count of files */
+			ctl->acct_fcount = fcount;					
 			rw_exit_read(&rwl);
 			break;
 		case ACCT_IOC_FSTATUS:
-			break;
-		case ACCT_IOC_ENABLE:		
-			set_audit_stats(ctl->acct_ena);			/* set features to enable */
-
 			rw_enter_read(&rwl);
+			pathname = ctl->acct_path;
+
+			/* 1 Resolve vnode from path */
+			if (resolve_vnode(pathname, p, &vn) != 0) {
+				rw_exit_read(&rwl);
+				return ENOENT;						/* Unable to resolve */
+			}
+
+			if ((update_from_tree(vn, &ctl->acct_cond, &ctl->acct_ena) == ENOENT)){
+				rw_exit_read(&rwl);
+				return ENOENT;
+			}
+
+			rw_exit_read(&rwl);
+			break;
+		case ACCT_IOC_ENABLE:	
+			rw_enter_read(&rwl);	
+			set_audit_stats(ctl->acct_ena);			/* set features to enable */
 			ctl->acct_ena = acct_audit_stat;		/* update with currently enabled features */
 			rw_exit_read(&rwl);
 			break;
 		case ACCT_IOC_DISABLE:
-			clear_audit_stats(ctl->acct_ena);		/* set features to disable */
-
 			rw_enter_read(&rwl);
+			clear_audit_stats(ctl->acct_ena);		/* set features to disable */
 			ctl->acct_ena = acct_audit_stat;		/* update with currently enabled features  */
+
+			file_ena_mask = (ACCT_ENA_OPEN | ACCT_ENA_CLOSE | ACCT_ENA_RENAME | ACCT_ENA_UNLINK);
+
+			if ((acct_audit_stat & (file_ena_mask)) == 0) {
+				/* Drop all files */
+				uprintf("Dropping all files...\n");
+				drop_all_files();
+			}
+
 			rw_exit_read(&rwl);
 			break;
-		case ACCT_IOC_TRACK_FILE:
-			/* 1 Resolve vnode from path */
+		case ACCT_IOC_TRACK_FILE:	
 			rw_enter_read(&rwl);
 			pathname = ctl->acct_path;
 			ctl->acct_ena &= FILE_ENA_MASK;			/* Disable fork/exec/exit */
-			
+			/* 1 Resolve vnode from path */
 			if (resolve_vnode(pathname, p, &vn) != 0) {
 				rw_exit_read(&rwl);
 				return ENOENT;						/* Unable to resolve */
@@ -334,14 +356,118 @@ acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 			rw_exit_read(&rwl);
 			break;
 		case ACCT_IOC_UNTRACK_FILE:
+			rw_enter_read(&rwl);
+			pathname = ctl->acct_path;
+			ctl->acct_ena &= FILE_ENA_MASK;			/* Disable fork/exec/exit */
+
+			/* 1 Resolve vnode from path */
+			if (resolve_vnode(pathname, p, &vn) != 0) {
+				rw_exit_read(&rwl);
+				return ENOENT;						/* Unable to resolve */
+			}
+
+			/* 2 Attempt to untrack */
+			if (untrack_from_tree(vn, &ctl->acct_cond, &ctl->acct_ena) == ENOENT) {
+				rw_exit_read(&rwl);
+				return (ENOENT);					/* Not tracked */
+			}
+
+			rw_exit_read(&rwl);
 			break;
 		default:
-			/* Inappropriate ioctl for device */
-			return (ENOTTY);
+			return (ENOTTY); 						/* Inappropriate ioctl for device */
 	}
 	return (0);
 }
 
+int 
+update_from_tree(struct vnode *vn, uint32_t *ctl_conds, uint32_t *ctl_events) 
+{
+	struct tree_node *find_node, *res;
+
+	/* Copy ref to vnode and update set up file events/conds */
+	find_node = malloc(sizeof(struct tree_node),  M_DEVBUF, M_WAITOK | M_ZERO);
+	find_node->v = vn;
+
+	/* Test for matching v_id in tree */
+	res = RB_FIND(vnodetree, &rb_head, find_node);
+
+	free(find_node, M_DEVBUF, sizeof(struct tree_node));
+
+	if (res == NULL) {
+		/* File not tracked */
+		uprintf("File not tracked...\n");
+		return (ENOENT);
+	}
+
+	/* Return remaining conditions */
+	uprintf("Getting file conditions...\n");
+	*ctl_conds = res->audit_conds;
+	*ctl_events = res->audit_events;
+
+	return (0);
+}
+
+int
+drop_all_files(void) {
+	struct tree_node *res, *next;
+
+	RB_FOREACH_SAFE(res, vnodetree, &rb_head, next) {
+		/* Release ref to vnode */
+		vrele(res->v);
+		RB_REMOVE(vnodetree,  &rb_head, res);
+		free(res, M_DEVBUF, sizeof(struct tree_node));
+		fcount--;					//TODO Should set 0?
+	}
+	return (0);
+}
+
+int
+untrack_from_tree(struct vnode *vn, uint32_t *ctl_conds, uint32_t *ctl_events)
+{
+	struct tree_node *find_node, *res;
+
+	/* Copy ref to vnode and update set up file events/conds */
+	find_node = malloc(sizeof(struct tree_node),  M_DEVBUF, M_WAITOK | M_ZERO);
+	find_node->v = vn;
+
+	/* Test for matching v_id in tree */
+	res = RB_FIND(vnodetree, &rb_head, find_node);
+
+	free(find_node, M_DEVBUF, sizeof(struct tree_node));
+
+	if (res == NULL) {
+		/* File not tracked */
+		uprintf("File not tracked...\n");
+		return (ENOENT);
+	}
+
+	/* Found a match, unset required params */
+	res->audit_conds &= ~(*ctl_conds);
+	res->audit_events &= ~(*ctl_events);
+
+	if ((res->audit_conds == 0) || (res->audit_events == 0)) {
+		/* Untrack file entirely */
+		uprintf("Untracking...\n");
+		*ctl_conds = 0;
+		*ctl_events = 0;
+		fcount--;	
+
+		/* Release ref to vnode */
+		vrele(res->v);
+		RB_REMOVE(vnodetree,  &rb_head, res);
+		free(res, M_DEVBUF, sizeof(struct tree_node));
+		return(0);
+	}
+
+	/* Return remaining conditions */
+	uprintf("Returning remaining conditions..\n");
+	*ctl_conds = res->audit_conds;
+	*ctl_events = res->audit_events;
+	
+	return (0);
+
+}
 
 int
 add_node_to_tree(struct vnode *vn, uint32_t *ctl_conds, uint32_t *ctl_events)
@@ -372,6 +498,7 @@ add_node_to_tree(struct vnode *vn, uint32_t *ctl_conds, uint32_t *ctl_events)
 	}
 
 	/* Added new entry */
+	fcount++;	
 	return (0);
 }
 
@@ -678,5 +805,3 @@ acctkqfilter(dev_t dev, struct knote *kn)
 {
 	return EOPNOTSUPP;
 }
-
-
