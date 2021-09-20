@@ -30,18 +30,24 @@
 #include <sys/namei.h>
 #include <sys/vnode.h>
 
+#include <sys/tree.h>
+
 #include "acct.h"
 
-/* Local Functions */
-int resolve_vnode(const char*, struct proc *);
+/* Local Defines */
+#define ALL_OFF 		0x00		/* Set audit status, all off */
+#define RDWR_MODE_OK 	1 			/* Current mode is RDWR Mode */
+#define RDWR_MODE_NON	0
 
-/** 
- * TODO: 1. Parse the process hooks in here and set the appropriate structs and add them to the queue.
- *		 2. Figure out where to put the kernel hooks for file auditing. 
+/* Globals 
+ * The following members should be operated on atomically.
  */
-
-/* RW Lock */
-struct rwlock rwl = RWLOCK_INITIALIZER("acct_lock");
+int rdwr_mode = 0;					/* Is the device opened in RDWR mode */
+int sequence_num = 0;				/* Current sequence number for a message */
+int open_status = 0; 				/* Is the device currently opened */
+int device_opened = 0;				/* Is the device currently opened */
+uint32_t acct_audit_stat = ALL_OFF;	/* Starting global flags */
+ 
 
 /* TailQ Data Structures */
 
@@ -60,6 +66,7 @@ union message_data {
 };
 
 
+/* Message queue that holds event messages */
 struct message {
 	TAILQ_ENTRY(message) entries;
 	int type; 						/* Defines type of data the message is, i.e struct acct_fork relates to ACCT_MSG_FORK*/
@@ -67,23 +74,47 @@ struct message {
 	union message_data data;		/* acct message */
 };
 
-TAILQ_HEAD(message_queue, message) head; 
+/* Red black tree that holds tracking file vnodes */
+struct tree_node {
+	RB_ENTRY(tree_node) tree_entry;
+	struct vnode *v;				/* Holds a tracked files vnode red */
+	int audit_conds;				/* Audit conditions set for the tracking file */
+};
 
-/* Local Defines */
-#define ALL_OFF 		0x00		/* Set audit status, all off */
-#define RDWR_MODE_OK 	1 			/* Current mode is RDWR Mode */
-#define RDWR_MODE_NON	0
+
+/* Local Functions */
+int resolve_vnode(const char*, struct proc *);
+int vnode_cmp(struct tree_node *, struct tree_node *);
 
 
-/* Globals 
- * The following should be members should be operated on atomically.
+/* Initializers */
+/* RW Lock */
+struct rwlock rwl = RWLOCK_INITIALIZER("acct_lock");
+
+TAILQ_HEAD(message_queue, message) head; 		
+
+RB_HEAD(vnodetree, tree_node) rb_head = RB_INITIALIZER(&rb_head);
+RB_PROTOTYPE(vnodetree, tree_node, tree_entry, vnode_cmp);
+RB_GENERATE(vnodetree, tree_node, tree_entry, vnode_cmp);
+
+/**
+ * @brief Node comparison used to compare trees' nodes with each other
+ * 	If the first argument is smaller than the second, the function returns a value smaller 
+ * 	than zero. If they are equal, the function returns zero.
+ * 
+ *  Otherwise, it should return a value greater than zero.
+ *  The compare function defines the order of the tree elements
+ * 
+ * @param v1 node 1
+ * @param v2 node 2
+ * @return * Node 
  */
-int rdwr_mode = 0;					/* Is the device opened in RDWR mode */
-int sequence_num = 0;				/* Current sequence number for a message */
-int open_status = 0; 				/* Is the device currently opened */
-int device_opened = 0;				/* Is the device currently opened */
- 
-uint32_t acct_audit_stat = ALL_OFF;
+int
+vnode_cmp(struct tree_node* v1, struct tree_node *v2)
+{
+	return (v1->v->v_id < v2->v->v_id ? -1 : v1->v->v_id > v2->v->v_id);
+}
+
 
 /**
  * @brief Initialise state required for operations 
@@ -114,9 +145,11 @@ acctopen(dev_t dev, int flag, int mode, struct proc *p)
 	if (minor(dev) != 0)
 		return (ENXIO);
 
+	if (device_opened)
+		return (EBUSY);
+
 	flag = OFLAGS(flag);
 
-	//TODO: Double check that O_EXLOCK -> FLOCK is doing locks.
 	/* If not opened exclusively */
 	if ((flag & O_EXLOCK) == 0)
 		return ENODEV;
@@ -152,15 +185,17 @@ acctread(dev_t dev, struct uio *uio, int flags)
 
 	if (TAILQ_EMPTY(&head)) {
 		/* Data not ready, wake me up when ready... */
-		rw_exit_read(&rwl);
+		err = rwsleep(&head, &rwl, PWAIT | PCATCH ,"Waiting for events", 0);
 
-		tsleep(&head, PWAIT | PCATCH ,"Waiting for acct messsages", 0);
-
-		rw_enter_read(&rwl);
+		/* Interuppted by sys call or returning from signal */
+		if ((err == EINTR) || (err == ERESTART)) {
+			rw_exit_read(&rwl);
+			return (err);						
+		}
 
 		/* Processes returning from sleep should always re-evaluate the conditions */
 		if (TAILQ_EMPTY(&head))  {
-			rw_exit_read(&rwl);
+			rw_exit_read(&rwl); 		
 			return EIO;
 		}
 	} 
@@ -277,8 +312,6 @@ acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 			if (resolve_vnode(pathname, p) != 0) 
 				return ENOENT;
 
-			/* 2 If file does not exist return ENOENT */
-
 			/* 3 If already tracked, update events/conds */
 
 			/* 4 Update Output fields */
@@ -313,13 +346,20 @@ free_traversed_vnodes(struct nameidata *ndp)
 }
 
 int 
-resolve_vnode(const char* pathname, struct proc *p)
+resolve_vnode(const char* u_pathname, struct proc *p)
 {
 	struct nameidata nd;
+	struct tree_node *rb_node; 
+	char* k_pathname;
 	int err = 0;
 
+	k_pathname = malloc(PATH_MAX, M_DEVBUF, M_WAITOK | M_ZERO);
+
+	memcpy(k_pathname, u_pathname, PATH_MAX);
+
 	NDINIT(&nd, LOOKUP, FOLLOW | LOCKLEAF | SAVENAME,
-    	UIO_SYSSPACE, pathname, p);
+    	UIO_SYSSPACE, k_pathname, p);
+
 
 	uprintf("namei...\n");
 
@@ -328,16 +368,26 @@ resolve_vnode(const char* pathname, struct proc *p)
 		uprintf("Resolve ERR..........");
 		return err;
 	}
-	
 
-    /* release lock from namei, but keep ref */
+//! Should make this sep funct	
+	/* Copy ref to vnode */
+	rb_node = malloc(sizeof(struct tree_node),  M_DEVBUF, M_WAITOK | M_ZERO);
+	rb_node->v = nd.ni_vp;
+
+	/* Add Vnode to tracked tree of vnodes */
+	if (RB_INSERT(vnodetree, &rb_head, rb_node) != NULL) {
+		/* Matching element exists in tree */
+		//TODO Update events and conditions
+	}
+//! Should make this sep funct
+
+    /* release lock from namei, but keep ref to vnode */
     if (nd.ni_vp)
 		VOP_UNLOCK(nd.ni_vp);
 
 	uprintf("namei unlocked\n");
 
-	//TODO Seems to be resolving... follow up on the rest...
-
+	free(k_pathname,M_DEVBUF, PATH_MAX);
 	return (err);
 }
 
@@ -458,6 +508,7 @@ acct_exec(struct process *pr)
 
 	/* if fork accounting not enabled or device closed, let's not worry about this... */
 	rw_enter_read(&rwl);
+	
 	if(device_opened == 0) {
 		rw_exit_read(&rwl);
 		return;
@@ -562,11 +613,13 @@ acct_exit(struct process *pr)
 int
 acctclose(dev_t dev, int flag, int mode, struct proc *p)
 {
-	//TODO Open / Close lock (Limit single instance betwee open and closes)
+	//TODO Wipe list of unread...
+
 	rw_enter_write(&rwl); 
 	sequence_num = 0;
 	device_opened = 0;
 	rw_exit_write(&rwl);
+
 	return 0;
 }
 
