@@ -33,11 +33,12 @@
 #include <sys/tree.h>
 
 #include "acct.h"
-
+//TODO STYLE BRUH
 /* Local Defines */
 #define ALL_OFF 		0x00		/* Set audit status, all off */
 #define RDWR_MODE_OK 	1 			/* Current mode is RDWR Mode */
 #define RDWR_MODE_NON	0
+#define FILE_ENA_MASK 	0x78		/* Bitmask to force set of file fork/exec/exit */
 
 /* Globals 
  * The following members should be operated on atomically.
@@ -78,13 +79,16 @@ struct message {
 struct tree_node {
 	RB_ENTRY(tree_node) tree_entry;
 	struct vnode *v;				/* Holds a tracked files vnode red */
-	int audit_conds;				/* Audit conditions set for the tracking file */
+	uint32_t audit_events;			/* File enabled events */
+	uint32_t audit_conds;			/* Audit conditions set for the tracking file */
 };
 
 
 /* Local Functions */
-int resolve_vnode(const char*, struct proc *);
+int resolve_vnode(const char*, struct proc *, struct vnode **);
 int vnode_cmp(struct tree_node *, struct tree_node *);
+int add_node_to_tree(struct vnode *, uint32_t *, uint32_t *);
+void free_traversed_vnodes(struct nameidata *);
 
 
 /* Initializers */
@@ -110,9 +114,9 @@ RB_GENERATE(vnodetree, tree_node, tree_entry, vnode_cmp);
  * @return * Node 
  */
 int
-vnode_cmp(struct tree_node* v1, struct tree_node *v2)
+vnode_cmp(struct tree_node *node1, struct tree_node *node2)
 {
-	return (v1->v->v_id < v2->v->v_id ? -1 : v1->v->v_id > v2->v->v_id);
+	return (node1->v->v_id < node2->v->v_id ? -1 : node1->v->v_id > node2->v->v_id);
 }
 
 
@@ -250,9 +254,11 @@ void clear_audit_stats(uint32_t clear_mask)
 int 
 acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 {
-	struct acct_ctl *ctl = (struct acct_ctl*)data;
+	struct acct_ctl *ctl;
+	struct vnode *vn;
 	struct message *next_msg;
 	const char* pathname;
+
 
 	/* Support for generic ioctl requests */
 	switch(cmd) {
@@ -278,6 +284,8 @@ acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 	/* Device specific ioctls not accepted in read only mode */
 	if (rdwr_mode != RDWR_MODE_OK) 
 	 	return (ENOTTY); 
+
+	ctl = (struct acct_ctl*)data;
 
 	/* Support for device specific ioctl requests */
 	switch(cmd) {
@@ -307,14 +315,23 @@ acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 			/* 1 Resolve vnode from path */
 			rw_enter_read(&rwl);
 			pathname = ctl->acct_path;
+			ctl->acct_ena &= FILE_ENA_MASK;			/* Disable fork/exec/exit */
+			
+			if (resolve_vnode(pathname, p, &vn) != 0) {
+				rw_exit_read(&rwl);
+				return ENOENT;						/* Unable to resolve */
+			}
+
+			/* 
+			 * 2 Vnode resolved, add to tracked tree
+			 * 	 If file is already tracked, params are updated.
+			 */
+			if (add_node_to_tree(vn, &ctl->acct_cond, &ctl->acct_ena) == EEXIST) {
+				rw_exit_read(&rwl);
+				return (0);
+			}
+	
 			rw_exit_read(&rwl);
-
-			if (resolve_vnode(pathname, p) != 0) 
-				return ENOENT;
-
-			/* 3 If already tracked, update events/conds */
-
-			/* 4 Update Output fields */
 			break;
 		case ACCT_IOC_UNTRACK_FILE:
 			break;
@@ -323,6 +340,70 @@ acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 			return (ENOTTY);
 	}
 	return (0);
+}
+
+
+int
+add_node_to_tree(struct vnode *vn, uint32_t *ctl_conds, uint32_t *ctl_events)
+{
+	struct tree_node *new_node, *res; 
+
+	/* Copy ref to vnode and update set up file events/conds */
+	new_node = malloc(sizeof(struct tree_node),  M_DEVBUF, M_WAITOK | M_ZERO);
+	new_node->v = vn;
+	new_node->audit_conds = *ctl_conds;
+	new_node->audit_events = *ctl_events;
+
+	/* Try add Vnode to tracked tree of vnodes, checks by v_id */
+	res = RB_INSERT(vnodetree, &rb_head, new_node);
+	
+	if (res != NULL) {
+		/* Matching element exists in tree */
+		uprintf("Already in tree....\n");
+		res->audit_conds |= *ctl_conds;	
+		res->audit_events |= *ctl_events;
+
+		/* Update ctl params with existing ones */
+		*ctl_conds = res->audit_conds;
+		*ctl_events = res->audit_events;
+
+		free(new_node, M_DEVBUF, sizeof(struct tree_node));
+		return EEXIST;
+	}
+
+	/* Added new entry */
+	return (0);
+}
+
+int 
+resolve_vnode(const char* u_pathname, struct proc *p, struct vnode **vn)
+{
+	struct nameidata nd;
+	char* k_pathname;
+	int err = 0;
+
+	k_pathname = malloc(PATH_MAX, M_DEVBUF, M_WAITOK | M_ZERO);
+
+	memcpy(k_pathname, u_pathname, PATH_MAX);
+
+	NDINIT(&nd, LOOKUP, FOLLOW | LOCKLEAF,
+    	UIO_SYSSPACE, k_pathname, p);
+
+	if ((err = namei(&nd)) != 0) {
+		free_traversed_vnodes(&nd);
+		free(k_pathname, M_DEVBUF, PATH_MAX);
+		return err;
+	}
+
+	/* Copy ref to resolved vnode */
+	*vn = nd.ni_vp;
+	
+    /* release lock from namei, but keep ref to vnode */
+	if (nd.ni_vp)
+		VOP_UNLOCK(nd.ni_vp);
+
+	free(k_pathname, M_DEVBUF, PATH_MAX);
+	return (err);
 }
 
 /**
@@ -345,51 +426,6 @@ free_traversed_vnodes(struct nameidata *ndp)
 	}
 }
 
-int 
-resolve_vnode(const char* u_pathname, struct proc *p)
-{
-	struct nameidata nd;
-	struct tree_node *rb_node; 
-	char* k_pathname;
-	int err = 0;
-
-	k_pathname = malloc(PATH_MAX, M_DEVBUF, M_WAITOK | M_ZERO);
-
-	memcpy(k_pathname, u_pathname, PATH_MAX);
-
-	NDINIT(&nd, LOOKUP, FOLLOW | LOCKLEAF | SAVENAME,
-    	UIO_SYSSPACE, k_pathname, p);
-
-
-	uprintf("namei...\n");
-
-    if ((err = namei(&nd)) != 0) {
-		free_traversed_vnodes(&nd);
-		uprintf("Resolve ERR..........");
-		return err;
-	}
-
-//! Should make this sep funct	
-	/* Copy ref to vnode */
-	rb_node = malloc(sizeof(struct tree_node),  M_DEVBUF, M_WAITOK | M_ZERO);
-	rb_node->v = nd.ni_vp;
-
-	/* Add Vnode to tracked tree of vnodes */
-	if (RB_INSERT(vnodetree, &rb_head, rb_node) != NULL) {
-		/* Matching element exists in tree */
-		//TODO Update events and conditions
-	}
-//! Should make this sep funct
-
-    /* release lock from namei, but keep ref to vnode */
-    if (nd.ni_vp)
-		VOP_UNLOCK(nd.ni_vp);
-
-	uprintf("namei unlocked\n");
-
-	free(k_pathname,M_DEVBUF, PATH_MAX);
-	return (err);
-}
 
 struct acct_common 
 construct_common(struct process *pdata, int type)
