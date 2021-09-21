@@ -793,9 +793,13 @@ acct_exit(struct process *pr)
 
 
 void
-acct_close(struct process *pr, struct vnode *vn_cmp) 
+acct_close(struct process *pr, struct vnode *vn_cmp, u_int f_flag) 
 {
+	struct message *acct_msg;
 	struct tree_node *find_node, *res;
+	u_int o_flags = OFLAGS(f_flag);
+	uint32_t f_events, f_conds;			/* File Unique events */
+	
 	/* Device not opened, no need to queue anything */
 	rw_enter_read(&rwl);
 
@@ -804,7 +808,7 @@ acct_close(struct process *pr, struct vnode *vn_cmp)
 		return;
 	}
 
-	/* If open accounting disabled, we outchea ... */
+	/* If open accounting disabled, we outchea ... */ 
 	if ((acct_audit_stat & ACCT_ENA_CLOSE) == 0) {
 		rw_exit_read(&rwl);
 		return;		
@@ -830,7 +834,45 @@ acct_close(struct process *pr, struct vnode *vn_cmp)
 		return;  			/* We aren't tracking this */
 	}
 
+	/* File conditions match the open call? */
+	f_events = res->audit_events;
+	f_conds = res->audit_conds;
+
+	/* File doesn't have close accounting set */
+	if ((f_events & ACCT_ENA_CLOSE) == 0) {
+		rw_exit_read(&rwl);
+		return;
+	}
+
+    uprintf("fflags %d, oflags %d\n", f_flag, o_flags);
+	if (acct_conds_ok(f_conds, o_flags) == false) {
+		rw_exit_read(&rwl);	 //TODO Check These
+		return;				/* Condition mismatch */
+	}
+
+	/* Construct message */
+	uprintf("Conds Valid\n");
+
+	/* Commited to processing the message now... */
+	acct_msg = malloc(sizeof(struct message), M_DEVBUF, M_WAITOK | M_ZERO);
+
+	/* Set internal message data */
+	acct_msg->type = ACCT_MSG_CLOSE;
+	acct_msg->size = sizeof(struct acct_close);
+
+	/* Update message common fields within this message */
+	acct_msg->data.close_d.ac_common = construct_common(pr, ACCT_MSG_CLOSE);
+
+	/* Update Open message specific fields */
+	memcpy(acct_msg->data.close_d.ac_path, res->path, PATH_MAX);
+
+	/* Add to queue */
+	TAILQ_INSERT_TAIL(&head, acct_msg, entries);
 	rw_exit_read(&rwl);
+
+	/* Wake up read, incase it was blocked */
+	wakeup(&head);
+	return;
 }
 
 void
@@ -846,9 +888,91 @@ remove_from_tree(struct tree_node *res)
 void 
 acct_unlink(struct process *pr, struct vnode *vn_cmp, int err)
 {
+	struct message *acct_msg;
+	struct tree_node *find_node, *res;
+	uint32_t f_events, f_conds;			/* File Unique events */
+
 	/* Device not opened, no need to queue anything */
-	// rw_enter_read(&rwl);
-	// rw_exit_read(&rwl);
+	rw_enter_read(&rwl);
+
+	/* Avert bamboozle */
+	if(vn_cmp == NULL) {
+		rw_exit_read(&rwl);
+		return;						
+	}
+
+	/* This file currently tracked ? */
+	find_node = malloc(sizeof(struct tree_node),  M_DEVBUF, M_WAITOK | M_ZERO);
+	find_node->v = vn_cmp;
+
+	/* Test for matching v_id in tree */
+	res = RB_FIND(vnodetree, &rb_head, find_node);
+
+	free(find_node, M_DEVBUF, sizeof(struct tree_node));
+
+	if (res == NULL) {
+		rw_exit_read(&rwl);
+		return;  			/* We aren't tracking this */
+	}
+
+	/* At this point the file is tracked, so drop it before we return */
+	fcount--;
+
+	/* Unlink acct globally disabled */
+	if ((acct_audit_stat & ACCT_ENA_UNLINK) == 0) {	
+		remove_from_tree(res);
+		rw_exit_read(&rwl);
+		return;		
+	}
+
+	/* Device not opened, no need to queue anything */
+	if (device_opened == 0) {
+		remove_from_tree(res);
+		rw_exit_read(&rwl);
+		return;
+	}
+
+	/* File conditions match the open call? */
+	f_events = res->audit_events;
+	f_conds = res->audit_conds;
+
+	/* File doesn't have unlink accounting set */
+	if ((f_events & ACCT_ENA_UNLINK) == 0) {
+		remove_from_tree(res);
+		rw_exit_read(&rwl);
+		return;
+	}
+
+	if (acct_mode_ok(f_conds, err) == false) {
+		remove_from_tree(res);
+		rw_exit_read(&rwl);	 //TODO Check These
+		return;				/* Succes/Failure condition mismatch */
+	}
+
+	/* Construct message */
+	
+	/* Commited to processing the message now... */
+	acct_msg = malloc(sizeof(struct message), M_DEVBUF, M_WAITOK | M_ZERO);
+
+	/* Set internal message data */
+	acct_msg->type = ACCT_MSG_UNLINK;
+	acct_msg->size = sizeof(struct acct_unlink);
+
+	/* Update message common fields within this message */
+	acct_msg->data.unlink_d.ac_common = construct_common(pr, ACCT_MSG_UNLINK);
+
+	/* Update Rename message specific fields */
+	memcpy(acct_msg->data.unlink_d.ac_path, res->path, PATH_MAX);
+	acct_msg->data.unlink_d.ac_errno = err;
+
+	/* Add to queue */
+	TAILQ_INSERT_TAIL(&head, acct_msg, entries);
+	remove_from_tree(res);			/* Removing since unlink event */
+	rw_exit_read(&rwl);
+
+	/* Wake up read, incase it was blocked */
+	wakeup(&head);
+	return;
 }
 
 void
@@ -893,6 +1017,7 @@ acct_rename(struct process *pr, struct vnode *vn_cmp, const char *new_path, int 
 
 	/* Device not opened, no need to queue anything */
 	if (device_opened == 0) {
+		remove_from_tree(res);
 		rw_exit_read(&rwl);
 		return;
 	}
@@ -901,7 +1026,7 @@ acct_rename(struct process *pr, struct vnode *vn_cmp, const char *new_path, int 
 	f_events = res->audit_events;
 	f_conds = res->audit_conds;
 
-	/* File doesn't have open accounting set */
+	/* File doesn't have rename accounting set */
 	if ((f_events & ACCT_ENA_RENAME) == 0) {
 		remove_from_tree(res);
 		rw_exit_read(&rwl);
@@ -1040,25 +1165,21 @@ acct_this_message(uint32_t f_conds, uint32_t o_flags, int err)
 bool 
 acct_conds_ok(uint32_t f_conds, uint32_t o_flags) 
 {
-	if (((f_conds & ACCT_COND_READ) == 0) && ((f_conds & ACCT_COND_WRITE) == 0)) {
-		uprintf("RW not set\n");
+	if (((f_conds & ACCT_COND_READ) == 0) && ((f_conds & ACCT_COND_WRITE) == 0)) 
 		return false;			/* R/W not set */
-	}
+	
 
-	if ((f_conds & ACCT_COND_READ) && (f_conds & ACCT_COND_WRITE)) {
-		uprintf("RW both set\n");
+	if ((f_conds & ACCT_COND_READ) && (f_conds & ACCT_COND_WRITE)) 
 		return true;			/* R/W both set*/
-	}
+	
 
-	if ((f_conds & ACCT_COND_READ) && (((o_flags & O_RDONLY) == 0) || (o_flags & O_RDWR))) {
-		uprintf("Read only set\n");
+	if ((f_conds & ACCT_COND_READ) && (((o_flags == O_RDONLY)) || (o_flags & O_RDWR))) 
 		return true;			/* Read set, oflags match, O_RDONLY = 0x00 */
-	}
+	
 
-	if ((f_conds & ACCT_COND_WRITE) && ((o_flags & O_WRONLY) || (o_flags & O_RDWR))) {
-		uprintf("Write only set\n");
+	if ((f_conds & ACCT_COND_WRITE) && ((o_flags & O_WRONLY) || (o_flags & O_RDWR))) 
 		return true;			/* Write set, oflages match */
-	}
+	
 
 	return false; 
 }
@@ -1066,32 +1187,22 @@ acct_conds_ok(uint32_t f_conds, uint32_t o_flags)
 bool
 acct_mode_ok(uint32_t f_conds, int err) 
 {
-	if ((f_conds & ACCT_COND_SUCCESS) && (f_conds & ACCT_COND_FAILURE)) {
-		uprintf("S/F set\n");
+	if ((f_conds & ACCT_COND_SUCCESS) && (f_conds & ACCT_COND_FAILURE)) 
 		return true;			/* Account both failed/succeeded messages */
-	}
-
-	if (((f_conds & ACCT_COND_SUCCESS) == 0) && ((f_conds & ACCT_COND_FAILURE) == 0)) {
-		uprintf("S/F not set\n");
-		return false;			/* No succes/fail set, dont account */
-	}
-
-	if ((f_conds & ACCT_COND_SUCCESS) && (err == 0)) {
-		uprintf("Success OK\n");
-		return true;		/* Success  set, no error */
-	}
 	
-	// if ((f_conds & ACCT_COND_SUCCESS) && err != 0) 
-	// 	return false;		/* Success set, but error */
 
-	if ((f_conds & ACCT_COND_FAILURE) && (err != 0)) {
-		uprintf("Failed OK\n");
+	if (((f_conds & ACCT_COND_SUCCESS) == 0) && ((f_conds & ACCT_COND_FAILURE) == 0)) 
+		return false;			/* No succes/fail set, dont account */
+	
+
+	if ((f_conds & ACCT_COND_SUCCESS) && (err == 0)) 
+		return true;		/* Success  set, no error */
+	
+	
+
+	if ((f_conds & ACCT_COND_FAILURE) && (err != 0)) 
 		return true;		/* Failure set and error, OK */
-	}
-
-	// if ((f_conds & ACCT_COND_FAILURE) && err == 0) 
-	// 	return false;		/* Failure set, but no error */
-
+	
 	return false;
 
 }
