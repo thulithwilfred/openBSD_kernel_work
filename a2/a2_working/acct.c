@@ -1,8 +1,8 @@
 /**
  * @file acct.c 
  * @author Thulith Wilfred (thulith.mallawa@uqconnect.edu.au)
- * @brief 
- * @version 0.1
+ * @brief Process and File accounting device driver for OpenBSD
+ * @version 1.0
  * @date 2021-09-13
  * 
  * @copyright Copyright (c) 2021
@@ -35,19 +35,19 @@
 #include "acct.h"
 //TODO STYLE BRUH
 /* Local Defines */
-#define ALL_OFF 		0x00		/* Set audit status, all off */
-#define RDWR_MODE_OK 	1 			/* Current mode is RDWR Mode */
+#define ALL_OFF 	0x00		/* Set audit status, all off */
+#define RDWR_MODE_OK 	1 		/* Current mode is RDWR Mode */
 #define RDWR_MODE_NON	0
 #define FILE_ENA_MASK 	0x78		/* Bitmask to force set of file fork/exec/exit */
 
 /* Globals 
  * The following members should be operated on atomically.
  */
-int rdwr_mode = 0;					/* Is the device opened in RDWR mode */
-int sequence_num = 0;				/* Current sequence number for a message */
-int open_status = 0; 				/* Is the device currently opened */
-int device_opened = 0;				/* Is the device currently opened */
-int fcount = 0;						/* Tracked file count */
+int rdwr_mode = 0;			/* Is the device opened in RDWR mode */
+int sequence_num = 0;			/* Current sequence number for a message */
+int open_status = 0; 			/* Is the device currently opened */
+int device_opened = 0;			/* Is the device currently opened */
+int fcount = 0;				/* Tracked file count */
 uint32_t acct_audit_stat = ALL_OFF;	/* Starting global flags */
  
 
@@ -71,15 +71,15 @@ union message_data {
 /* Message queue that holds event messages */
 struct message {
 	TAILQ_ENTRY(message) entries;
-	int type; 						/* Defines type of data the message is, i.e struct acct_fork relates to ACCT_MSG_FORK*/
-	unsigned int size; 				/* Total size of the data held by 'data' in bytes, set by sender */
+	int type; 				/* Defines type of data the message is, i.e struct acct_fork relates to ACCT_MSG_FORK*/
+	unsigned int size; 			/* Total size of the data held by 'data' in bytes, set by sender */
 	union message_data data;		/* acct message */
 };
 
 /* Red black tree that holds tracking file vnodes */
 struct tree_node {
 	RB_ENTRY(tree_node) tree_entry;
-	struct vnode *v;				/* Holds a tracked files vnode red */
+	struct vnode *v;			/* Holds a tracked files vnode red */
 	char path[PATH_MAX];			/* Holds path */
 	uint32_t audit_events;			/* File enabled events */
 	uint32_t audit_conds;			/* Audit conditions set for the tracking file */
@@ -275,7 +275,7 @@ acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 			/* Get the number of bytes that are immediately available for reading */
 			rw_enter_read(&rwl);
 			if (TAILQ_EMPTY(&head)) {
-				*(int *)data = 0; 					/* Queue is empty, nothing to read */
+				*(int *)data = 0; 			/* Queue is empty, nothing to read */
 			} else {
 				next_msg = TAILQ_FIRST(&head); 		/* Next available message FIFO */
 				*(int *)data = next_msg->size;
@@ -284,7 +284,7 @@ acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 			return (0);
 		case FIONBIO:
 			/*  Handled in the upper FS layer */
-			if (*(int *)data != 0) 					/* Attempting to set non-blocking, miss me with that... */
+			if (*(int *)data != 0) 				/* Attempting to set non-blocking, miss me with that... */
 				return (EOPNOTSUPP);
 		case FIOASYNC:
 			return (EOPNOTSUPP);
@@ -298,91 +298,91 @@ acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 
 	/* Support for device specific ioctl requests */
 	switch(cmd) {
-		case ACCT_IOC_STATUS:
-			rw_enter_read(&rwl);
-			ctl->acct_ena = acct_audit_stat;		/* update with currently enabled features */
-			ctl->acct_fcount = fcount;					
+	case ACCT_IOC_STATUS:
+		rw_enter_read(&rwl);
+		ctl->acct_ena = acct_audit_stat;		/* update with currently enabled features */
+		ctl->acct_fcount = fcount;					
+		rw_exit_read(&rwl);
+		break;
+	case ACCT_IOC_FSTATUS:
+		rw_enter_read(&rwl);
+		pathname = ctl->acct_path;
+
+		/* 1 Resolve vnode from path */
+		if (resolve_vnode(pathname, p, &vn) != 0) {
 			rw_exit_read(&rwl);
-			break;
-		case ACCT_IOC_FSTATUS:
-			rw_enter_read(&rwl);
-			pathname = ctl->acct_path;
+			return ENOENT;				/* Unable to resolve */
+		}
 
-			/* 1 Resolve vnode from path */
-			if (resolve_vnode(pathname, p, &vn) != 0) {
-				rw_exit_read(&rwl);
-				return ENOENT;						/* Unable to resolve */
-			}
-
-			if ((update_from_tree(vn, &ctl->acct_cond, &ctl->acct_ena) == ENOENT)){
-				rw_exit_read(&rwl);
-				return ENOENT;
-			}
-
+		if ((update_from_tree(vn, &ctl->acct_cond, &ctl->acct_ena) == ENOENT)){
 			rw_exit_read(&rwl);
-			break;
-		case ACCT_IOC_ENABLE:	
-			rw_enter_read(&rwl);	
-			set_audit_stats(ctl->acct_ena);			/* set features to enable */
-			ctl->acct_ena = acct_audit_stat;		/* update with currently enabled features */
+			return ENOENT;
+		}
+
+		rw_exit_read(&rwl);
+		break;
+	case ACCT_IOC_ENABLE:	
+		rw_enter_read(&rwl);	
+		set_audit_stats(ctl->acct_ena);			/* set features to enable */
+		ctl->acct_ena = acct_audit_stat;		/* update with currently enabled features */
+		rw_exit_read(&rwl);
+		break;
+	case ACCT_IOC_DISABLE:
+		rw_enter_read(&rwl);
+		clear_audit_stats(ctl->acct_ena);		/* set features to disable */
+		ctl->acct_ena = acct_audit_stat;		/* update with currently enabled features  */
+
+		file_ena_mask = (ACCT_ENA_OPEN | ACCT_ENA_CLOSE | ACCT_ENA_RENAME | ACCT_ENA_UNLINK);
+
+		if ((acct_audit_stat & (file_ena_mask)) == 0) {
+			/* Drop all files */
+			drop_all_files();
+		}
+
+		rw_exit_read(&rwl);
+		break;
+	case ACCT_IOC_TRACK_FILE:	
+		rw_enter_read(&rwl);
+		pathname = ctl->acct_path;
+		ctl->acct_ena &= FILE_ENA_MASK;			/* Disable fork/exec/exit */
+		/* 1 Resolve vnode from path */
+		if (resolve_vnode(pathname, p, &vn) != 0) {
 			rw_exit_read(&rwl);
-			break;
-		case ACCT_IOC_DISABLE:
-			rw_enter_read(&rwl);
-			clear_audit_stats(ctl->acct_ena);		/* set features to disable */
-			ctl->acct_ena = acct_audit_stat;		/* update with currently enabled features  */
+			return ENOENT;				/* Unable to resolve */
+		}
 
-			file_ena_mask = (ACCT_ENA_OPEN | ACCT_ENA_CLOSE | ACCT_ENA_RENAME | ACCT_ENA_UNLINK);
-
-			if ((acct_audit_stat & (file_ena_mask)) == 0) {
-				/* Drop all files */
-				drop_all_files();
-			}
-
+		/* 
+		* 2 Vnode resolved, add to tracked tree
+		* 	 If file is already tracked, params are updated.
+		*/
+		if (add_node_to_tree(vn, &ctl->acct_cond, &ctl->acct_ena, pathname) == EEXIST) {
 			rw_exit_read(&rwl);
-			break;
-		case ACCT_IOC_TRACK_FILE:	
-			rw_enter_read(&rwl);
-			pathname = ctl->acct_path;
-			ctl->acct_ena &= FILE_ENA_MASK;			/* Disable fork/exec/exit */
-			/* 1 Resolve vnode from path */
-			if (resolve_vnode(pathname, p, &vn) != 0) {
-				rw_exit_read(&rwl);
-				return ENOENT;						/* Unable to resolve */
-			}
-
-			/* 
-			 * 2 Vnode resolved, add to tracked tree
-			 * 	 If file is already tracked, params are updated.
-			 */
-			if (add_node_to_tree(vn, &ctl->acct_cond, &ctl->acct_ena, pathname) == EEXIST) {
-				rw_exit_read(&rwl);
-				return (0);
-			}
+			return (0);
+		}
 	
+		rw_exit_read(&rwl);
+		break;
+	case ACCT_IOC_UNTRACK_FILE:
+		rw_enter_read(&rwl);
+		pathname = ctl->acct_path;
+		ctl->acct_ena &= FILE_ENA_MASK;			/* Disable fork/exec/exit */
+
+		/* 1 Resolve vnode from path */
+		if (resolve_vnode(pathname, p, &vn) != 0) {
 			rw_exit_read(&rwl);
-			break;
-		case ACCT_IOC_UNTRACK_FILE:
-			rw_enter_read(&rwl);
-			pathname = ctl->acct_path;
-			ctl->acct_ena &= FILE_ENA_MASK;			/* Disable fork/exec/exit */
+			return ENOENT;				/* Unable to resolve */
+		}
 
-			/* 1 Resolve vnode from path */
-			if (resolve_vnode(pathname, p, &vn) != 0) {
-				rw_exit_read(&rwl);
-				return ENOENT;						/* Unable to resolve */
-			}
-
-			/* 2 Attempt to untrack */
-			if (untrack_from_tree(vn, &ctl->acct_cond, &ctl->acct_ena) == ENOENT) {
-				rw_exit_read(&rwl);
-				return (ENOENT);					/* Not tracked */
-			}
-
+		/* 2 Attempt to untrack */
+		if (untrack_from_tree(vn, &ctl->acct_cond, &ctl->acct_ena) == ENOENT) {
 			rw_exit_read(&rwl);
-			break;
-		default:
-			return (ENOTTY); 						/* Inappropriate ioctl for device */
+			return (ENOENT);			/* Not tracked */
+		}
+
+		rw_exit_read(&rwl);
+		break;
+	default:
+		return (ENOTTY); 				/* Inappropriate ioctl for device */
 	}
 	return (0);
 }
@@ -522,7 +522,7 @@ resolve_vnode(const char* u_pathname, struct proc *p, struct vnode **vn)
 	/* Copy ref to resolved vnode */
 	*vn = nd.ni_vp;
 	
-    /* release lock from namei, but keep ref to vnode */
+    	/* release lock from namei, but keep ref to vnode */
 	if (nd.ni_vp)
 		VOP_UNLOCK(nd.ni_vp);
 
@@ -544,8 +544,8 @@ free_traversed_vnodes(struct nameidata *ndp)
 			vrele(ndp->ni_tvp[i]); /* ref for being in list */
 			
 		free(ndp->ni_tvp, M_PROC, ndp->ni_tvpsize *sizeof(struct vnode *));
-        ndp->ni_tvpsize = 0;
-        ndp->ni_tvpend = 0;
+        	ndp->ni_tvpsize = 0;
+        	ndp->ni_tvpend = 0;
 	}
 }
 
@@ -566,34 +566,34 @@ construct_common(struct process *pdata, int type)
 
 	/* Set message type and data size */
 	switch (type) {
-		case ACCT_MSG_FORK:
-			common.ac_type = ACCT_MSG_FORK;	
-			common.ac_len = sizeof(struct acct_fork);
-			break;
-		case ACCT_MSG_EXEC:
-			common.ac_type = ACCT_MSG_EXEC;
-			common.ac_len = sizeof(struct acct_exec);			
-			break;
-		case ACCT_MSG_EXIT:
-			common.ac_type = ACCT_MSG_EXIT;	
-			common.ac_len = sizeof(struct acct_exit);		
-			break;
-		case ACCT_MSG_OPEN:
-			common.ac_type = ACCT_MSG_OPEN;	
-			common.ac_len = sizeof(struct acct_open);	
-			break;
-		case ACCT_MSG_RENAME:
-			common.ac_type = ACCT_MSG_RENAME;	
-			common.ac_len = sizeof(struct acct_rename);		
-			break;
-		case ACCT_MSG_UNLINK:
-			common.ac_type = ACCT_MSG_UNLINK;	
-			common.ac_len = sizeof(struct acct_unlink);	
-			break;
-		case ACCT_MSG_CLOSE:
-			common.ac_type = ACCT_MSG_CLOSE;	
-			common.ac_len = sizeof(struct acct_close);	
-			break;
+	case ACCT_MSG_FORK:
+		common.ac_type = ACCT_MSG_FORK;	
+		common.ac_len = sizeof(struct acct_fork);
+		break;
+	case ACCT_MSG_EXEC:
+		common.ac_type = ACCT_MSG_EXEC;
+		common.ac_len = sizeof(struct acct_exec);			
+		break;
+	case ACCT_MSG_EXIT:
+		common.ac_type = ACCT_MSG_EXIT;	
+		common.ac_len = sizeof(struct acct_exit);		
+		break;
+	case ACCT_MSG_OPEN:
+		common.ac_type = ACCT_MSG_OPEN;	
+		common.ac_len = sizeof(struct acct_open);	
+		break;
+	case ACCT_MSG_RENAME:
+		common.ac_type = ACCT_MSG_RENAME;	
+		common.ac_len = sizeof(struct acct_rename);		
+		break;
+	case ACCT_MSG_UNLINK:
+		common.ac_type = ACCT_MSG_UNLINK;	
+		common.ac_len = sizeof(struct acct_unlink);	
+		break;
+	case ACCT_MSG_CLOSE:
+		common.ac_type = ACCT_MSG_CLOSE;	
+		common.ac_len = sizeof(struct acct_close);	
+		break;
 	}
 
 	/*  Get command name */
@@ -611,12 +611,10 @@ construct_common(struct process *pdata, int type)
 	common.ac_gid = pdata->ps_ucred->cr_gid;
 
 	/* Get Controlling TTY */
-	if ((pdata->ps_flags & PS_CONTROLT) && 
-		pdata->ps_pgrp->pg_session->s_ttyp)
-			common.ac_tty = pdata->ps_pgrp->pg_session->s_ttyp->t_dev;
-		else 
-			common.ac_tty = NODEV;
-
+	if ((pdata->ps_flags & PS_CONTROLT) && pdata->ps_pgrp->pg_session->s_ttyp)
+		common.ac_tty = pdata->ps_pgrp->pg_session->s_ttyp->t_dev;
+	else 
+		common.ac_tty = NODEV;
 
 	/* Get Accounting flags */
 	common.ac_flag = pdata->ps_acflag;
@@ -759,9 +757,8 @@ acct_exit(struct process *pr)
 
 	if (t)
 		acct_msg->data.exit_d.ac_mem = (r->ru_ixrss + r->ru_idrss + r->ru_isrss) / t;
-    else
+	else
 		acct_msg->data.exit_d.ac_mem = 0;
-
 
 	/* I/O ops count */
 	acct_msg->data.exit_d.ac_io = r->ru_inblock + r->ru_oublock;
@@ -1138,8 +1135,9 @@ acct_open(struct process *pr, struct vnode *vn_cmp, int o_flags, int err)
 bool
 acct_this_message(uint32_t f_conds, uint32_t o_flags, int err)
 {
-	if (acct_mode_ok(f_conds, err) && acct_conds_ok(f_conds, o_flags))	
+	if (acct_mode_ok(f_conds, err) && acct_conds_ok(f_conds, o_flags))
 		return true;
+
 	return false;
 }
 
@@ -1182,10 +1180,9 @@ acct_mode_ok(uint32_t f_conds, int err)
 	
 
 	if ((f_conds & ACCT_COND_FAILURE) && (err != 0)) 
-		return true;		/* Failure set and error, OK */
+		return true;		/* Failure set and error, OK */	
 	
 	return false;
-
 }
 
 void nuke_the_message_list(void) 
@@ -1205,8 +1202,8 @@ acctclose(dev_t dev, int flag, int mode, struct proc *p)
 	sequence_num = 0;
 	device_opened = 0;
 
-    /* Wipe any remaining messages */
-    nuke_the_message_list();
+    	/* Wipe any remaining messages */
+    	nuke_the_message_list();
 	rw_exit_write(&rwl);
 
 	return 0;
