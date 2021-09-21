@@ -212,6 +212,12 @@ acctread(dev_t dev, struct uio *uio, int flags)
 		}
 	} 
 
+	/* Processes returning from sleep should always re-evaluate the conditions */
+	if (TAILQ_EMPTY(&head))  {
+		rw_exit_read(&rwl); 		
+		return EIO;
+	}
+
 	/* Get next message from queue */
 	acct_msg = TAILQ_FIRST(&head);
 
@@ -830,7 +836,14 @@ acct_open(struct process *p, struct vnode *vn_cmp, int o_flags, int err)
 
 	/* Construct message */
 	uprintf("Conds Valid\n");
+	//TODO Test conditions OK
+	//TODO Build the message
 
+	/* Add to queue */
+	rw_exit_read(&rwl);
+
+	/* Wake up read, incase it was blocked */
+	wakeup(&head);
 	return;
 }
 
