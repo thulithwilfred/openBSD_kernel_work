@@ -259,7 +259,6 @@ void clear_audit_stats(uint32_t clear_mask)
 	acct_audit_stat &= ~(clear_mask);
 }
 
-//TODO increment file count
 int 
 acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 {
@@ -337,7 +336,6 @@ acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 
 			if ((acct_audit_stat & (file_ena_mask)) == 0) {
 				/* Drop all files */
-				uprintf("Dropping all files...\n");
 				drop_all_files();
 			}
 
@@ -405,12 +403,10 @@ update_from_tree(struct vnode *vn, uint32_t *ctl_conds, uint32_t *ctl_events)
 
 	if (res == NULL) {
 		/* File not tracked */
-		uprintf("File not tracked...\n");
 		return (ENOENT);
 	}
 
 	/* Return remaining conditions */
-	uprintf("Getting file conditions...\n");
 	*ctl_conds = res->audit_conds;
 	*ctl_events = res->audit_events;
 
@@ -426,7 +422,7 @@ drop_all_files(void) {
 		vrele(res->v);
 		RB_REMOVE(vnodetree,  &rb_head, res);
 		free(res, M_DEVBUF, sizeof(struct tree_node));
-		fcount--;					//TODO Should set 0?
+		fcount--;					
 	}
 	return (0);
 }
@@ -447,7 +443,6 @@ untrack_from_tree(struct vnode *vn, uint32_t *ctl_conds, uint32_t *ctl_events)
 
 	if (res == NULL) {
 		/* File not tracked */
-		uprintf("File not tracked...\n");
 		return (ENOENT);
 	}
 
@@ -457,7 +452,6 @@ untrack_from_tree(struct vnode *vn, uint32_t *ctl_conds, uint32_t *ctl_events)
 
 	if ((res->audit_conds == 0) || (res->audit_events == 0)) {
 		/* Untrack file entirely */
-		uprintf("Untracking...\n");
 		*ctl_conds = 0;
 		*ctl_events = 0;
 		fcount--;	
@@ -470,7 +464,6 @@ untrack_from_tree(struct vnode *vn, uint32_t *ctl_conds, uint32_t *ctl_events)
 	}
 
 	/* Return remaining conditions */
-	uprintf("Returning remaining conditions..\n");
 	*ctl_conds = res->audit_conds;
 	*ctl_events = res->audit_events;
 	
@@ -496,7 +489,6 @@ add_node_to_tree(struct vnode *vn, uint32_t *ctl_conds, uint32_t *ctl_events, co
 	
 	if (res != NULL) {
 		/* Matching element exists in tree */
-		uprintf("Already in tree....\n");
 		res->audit_conds |= *ctl_conds;	
 		res->audit_events |= *ctl_events;
 
@@ -516,21 +508,14 @@ add_node_to_tree(struct vnode *vn, uint32_t *ctl_conds, uint32_t *ctl_events, co
 int 
 resolve_vnode(const char* u_pathname, struct proc *p, struct vnode **vn)
 {
-	//TODO cleanup this area
 	struct nameidata nd;
-	//char* k_pathname;
 	int err = 0;
-
-	//k_pathname = malloc(PATH_MAX, M_DEVBUF, M_WAITOK | M_ZERO);
-
-	//memcpy(k_pathname, u_pathname, PATH_MAX);
 
 	NDINIT(&nd, LOOKUP, FOLLOW | LOCKLEAF,
     	UIO_SYSSPACE, u_pathname, p);
 
 	if ((err = namei(&nd)) != 0) {
 		free_traversed_vnodes(&nd);
-		//free(k_pathname, M_DEVBUF, PATH_MAX);
 		return err;
 	}
 
@@ -541,7 +526,6 @@ resolve_vnode(const char* u_pathname, struct proc *p, struct vnode **vn)
 	if (nd.ni_vp)
 		VOP_UNLOCK(nd.ni_vp);
 
-	//free(k_pathname, M_DEVBUF, PATH_MAX);
 	return (err);
 }
 
@@ -844,14 +828,13 @@ acct_close(struct process *pr, struct vnode *vn_cmp, u_int f_flag)
 		return;
 	}
 
-    uprintf("fflags %d, oflags %d\n", f_flag, o_flags);
+
 	if (acct_conds_ok(f_conds, o_flags) == false) {
-		rw_exit_read(&rwl);	 //TODO Check These
+		rw_exit_read(&rwl);	 
 		return;				/* Condition mismatch */
 	}
 
 	/* Construct message */
-	uprintf("Conds Valid\n");
 
 	/* Commited to processing the message now... */
 	acct_msg = malloc(sizeof(struct message), M_DEVBUF, M_WAITOK | M_ZERO);
@@ -945,7 +928,7 @@ acct_unlink(struct process *pr, struct vnode *vn_cmp, int err)
 
 	if (acct_mode_ok(f_conds, err) == false) {
 		remove_from_tree(res);
-		rw_exit_read(&rwl);	 //TODO Check These
+		rw_exit_read(&rwl);	 
 		return;				/* Succes/Failure condition mismatch */
 	}
 
@@ -1035,7 +1018,7 @@ acct_rename(struct process *pr, struct vnode *vn_cmp, const char *new_path, int 
 
 	if (acct_mode_ok(f_conds, err) == false) {
 		remove_from_tree(res);
-		rw_exit_read(&rwl);	 //TODO Check These
+		rw_exit_read(&rwl);	 
 		return;				/* Succes/Failure condition mismatch */
 	}
 
@@ -1117,15 +1100,12 @@ acct_open(struct process *pr, struct vnode *vn_cmp, int o_flags, int err)
 		return;
 	}
 
-	uprintf("Open Flags: %d, Err: %d\n", o_flags, err);
-
 	if (acct_this_message(f_conds, o_flags, err) == false) {
-		rw_exit_read(&rwl);	 //TODO Check These
+		rw_exit_read(&rwl);	 
 		return;				/* Condition mismatch */
 	}
 
 	/* Construct message */
-	uprintf("Conds Valid\n");
 
 	/* Commited to processing the message now... */
 	acct_msg = malloc(sizeof(struct message), M_DEVBUF, M_WAITOK | M_ZERO);
@@ -1155,10 +1135,8 @@ acct_open(struct process *pr, struct vnode *vn_cmp, int o_flags, int err)
 bool
 acct_this_message(uint32_t f_conds, uint32_t o_flags, int err)
 {
-
 	if (acct_mode_ok(f_conds, err) && acct_conds_ok(f_conds, o_flags))	
 		return true;
-
 	return false;
 }
 
@@ -1207,14 +1185,25 @@ acct_mode_ok(uint32_t f_conds, int err)
 
 }
 
+void nuke_the_message_list(void) 
+{
+    struct message *acct_msg;
+
+    while ((acct_msg = TAILQ_FIRST(&head))) {
+	    TAILQ_REMOVE(&head, acct_msg, entries);
+	    free(acct_msg, M_DEVBUF, sizeof(struct message));
+    }
+}
+
 int
 acctclose(dev_t dev, int flag, int mode, struct proc *p)
 {
-	//TODO Clear the mfkn list my doggie...
-
 	rw_enter_write(&rwl); 
 	sequence_num = 0;
 	device_opened = 0;
+
+    /* Wipe any remaining messages */
+    nuke_the_message_list();
 	rw_exit_write(&rwl);
 
 	return 0;
