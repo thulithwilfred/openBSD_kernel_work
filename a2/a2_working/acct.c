@@ -599,10 +599,16 @@ construct_common(struct process *pdata, int type)
 			common.ac_len = sizeof(struct acct_open);	
 			break;
 		case ACCT_MSG_RENAME:
+			common.ac_type = ACCT_MSG_RENAME;	
+			common.ac_len = sizeof(struct acct_rename);		
 			break;
 		case ACCT_MSG_UNLINK:
+			common.ac_type = ACCT_MSG_UNLINK;	
+			common.ac_len = sizeof(struct acct_unlink);	
 			break;
 		case ACCT_MSG_CLOSE:
+			common.ac_type = ACCT_MSG_CLOSE;	
+			common.ac_len = sizeof(struct acct_close);	
 			break;
 	}
 
@@ -787,6 +793,155 @@ acct_exit(struct process *pr)
 
 
 void
+acct_close(struct process *pr, struct vnode *vn_cmp) 
+{
+	struct tree_node *find_node, *res;
+	/* Device not opened, no need to queue anything */
+	rw_enter_read(&rwl);
+
+	if (device_opened == 0) {
+		rw_exit_read(&rwl);
+		return;
+	}
+
+	/* If open accounting disabled, we outchea ... */
+	if ((acct_audit_stat & ACCT_ENA_CLOSE) == 0) {
+		rw_exit_read(&rwl);
+		return;		
+	}
+
+	/* Incase a vnode wasn't resolved */
+	if(vn_cmp == NULL) {
+		rw_exit_read(&rwl);
+		return;						
+	}
+
+	/* This file currently tracked ? */
+	find_node = malloc(sizeof(struct tree_node),  M_DEVBUF, M_WAITOK | M_ZERO);
+	find_node->v = vn_cmp;
+
+	/* Test for matching v_id in tree */
+	res = RB_FIND(vnodetree, &rb_head, find_node);
+
+	free(find_node, M_DEVBUF, sizeof(struct tree_node));
+
+	if (res == NULL) {
+		rw_exit_read(&rwl);
+		return;  			/* We aren't tracking this */
+	}
+
+	rw_exit_read(&rwl);
+}
+
+void
+remove_from_tree(struct tree_node *res)
+{
+	/* Release ref to vnode */
+	vrele(res->v);
+	RB_REMOVE(vnodetree,  &rb_head, res);
+	free(res, M_DEVBUF, sizeof(struct tree_node));
+}
+
+
+void 
+acct_unlink(struct process *pr, struct vnode *vn_cmp, int err)
+{
+	/* Device not opened, no need to queue anything */
+	// rw_enter_read(&rwl);
+	// rw_exit_read(&rwl);
+}
+
+void
+acct_rename(struct process *pr, struct vnode *vn_cmp, const char *new_path, int err) 
+{
+	struct message *acct_msg;
+	struct tree_node *find_node, *res;
+	uint32_t f_events, f_conds;			/* File Unique events */
+
+	
+	rw_enter_read(&rwl);
+
+	/* Avert bamboozle */
+	if(vn_cmp == NULL) {
+		rw_exit_read(&rwl);
+		return;						
+	}
+
+	/* This file currently tracked ? */
+	find_node = malloc(sizeof(struct tree_node),  M_DEVBUF, M_WAITOK | M_ZERO);
+	find_node->v = vn_cmp;
+
+	/* Test for matching v_id in tree */
+	res = RB_FIND(vnodetree, &rb_head, find_node);
+
+	free(find_node, M_DEVBUF, sizeof(struct tree_node));
+
+	if (res == NULL) {
+		rw_exit_read(&rwl);
+		return;  			/* We aren't tracking this */
+	}
+
+	/* At this point the file is tracked, so drop it before we return */
+	fcount--;
+
+	/* Rename acct globally disabled */
+	if ((acct_audit_stat & ACCT_ENA_RENAME) == 0) {	
+		remove_from_tree(res);
+		rw_exit_read(&rwl);
+		return;		
+	}
+
+	/* Device not opened, no need to queue anything */
+	if (device_opened == 0) {
+		rw_exit_read(&rwl);
+		return;
+	}
+
+	/* File conditions match the open call? */
+	f_events = res->audit_events;
+	f_conds = res->audit_conds;
+
+	/* File doesn't have open accounting set */
+	if ((f_events & ACCT_ENA_RENAME) == 0) {
+		remove_from_tree(res);
+		rw_exit_read(&rwl);
+		return;
+	}
+
+	if (acct_mode_ok(f_conds, err) == false) {
+		remove_from_tree(res);
+		rw_exit_read(&rwl);	 //TODO Check These
+		return;				/* Succes/Failure condition mismatch */
+	}
+
+	/* Construct message */
+	
+	/* Commited to processing the message now... */
+	acct_msg = malloc(sizeof(struct message), M_DEVBUF, M_WAITOK | M_ZERO);
+
+	/* Set internal message data */
+	acct_msg->type = ACCT_MSG_RENAME;
+	acct_msg->size = sizeof(struct acct_rename);
+
+	/* Update message common fields within this message */
+	acct_msg->data.rename_d.ac_common = construct_common(pr, ACCT_MSG_RENAME);
+
+	/* Update Rename message specific fields */
+	memcpy(acct_msg->data.rename_d.ac_new, new_path, PATH_MAX);
+	memcpy(acct_msg->data.rename_d.ac_path, res->path, PATH_MAX);
+	acct_msg->data.rename_d.ac_errno = err;
+
+	/* Add to queue */
+	TAILQ_INSERT_TAIL(&head, acct_msg, entries);
+	remove_from_tree(res);			/* Removing since rename event */
+	rw_exit_read(&rwl);
+
+	/* Wake up read, incase it was blocked */
+	wakeup(&head);
+	return;
+}
+
+void
 acct_open(struct process *pr, struct vnode *vn_cmp, int o_flags, int err) 
 {
 	struct message *acct_msg;
@@ -827,7 +982,6 @@ acct_open(struct process *pr, struct vnode *vn_cmp, int o_flags, int err)
 		return;  			/* We aren't tracking this */
 	}
 
-	uprintf("Found file\n");
 	/* File conditions match the open call? */
 	f_events = res->audit_events;
 	f_conds = res->audit_conds;
@@ -841,7 +995,7 @@ acct_open(struct process *pr, struct vnode *vn_cmp, int o_flags, int err)
 	uprintf("Open Flags: %d, Err: %d\n", o_flags, err);
 
 	if (acct_this_message(f_conds, o_flags, err) == false) {
-		rw_exit_read(&rwl);					//TODO Check These
+		rw_exit_read(&rwl);	 //TODO Check These
 		return;				/* Condition mismatch */
 	}
 
