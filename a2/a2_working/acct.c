@@ -748,11 +748,12 @@ acct_exit(struct process *pr)
 	
 	/* User & sys Time */
 	calctsru(&pr->ps_tu, &ut, &st, NULL);
+	
 	acct_msg->data.exit_d.ac_utime = ut;
 	acct_msg->data.exit_d.ac_stime = st;
 
 	/* Avg memory usage */
-	r = &pr->ps_mainproc->p_ru;								//TODO CHECK? /* ps_mainproc (struct proc) contains the  usage  details (?) */
+	r = &pr->ps_mainproc->p_ru;
 	timespecadd(&ut, &st, &tmp);
 	t = tmp.tv_sec * hz + tmp.tv_nsec / (1000 * tick); 		/* hz and tick are sys externs */
 
@@ -1035,8 +1036,10 @@ acct_rename(struct process *pr, struct vnode *vn_cmp, const char *new_path, int 
 	acct_msg->data.rename_d.ac_common = construct_common(pr, ACCT_MSG_RENAME);
 
 	/* Update Rename message specific fields */
-	memcpy(acct_msg->data.rename_d.ac_new, new_path, PATH_MAX);
+	/* sys_call userspace string -> kernel, causes (random) pagefaults else */
+	copyinstr(new_path, acct_msg->data.rename_d.ac_new, PATH_MAX, NULL);
 	memcpy(acct_msg->data.rename_d.ac_path, res->path, PATH_MAX);
+	
 	acct_msg->data.rename_d.ac_errno = err;
 
 	/* Add to queue */
