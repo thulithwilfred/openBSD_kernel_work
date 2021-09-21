@@ -595,6 +595,8 @@ construct_common(struct process *pdata, int type)
 			common.ac_len = sizeof(struct acct_exit);		
 			break;
 		case ACCT_MSG_OPEN:
+			common.ac_type = ACCT_MSG_OPEN;	
+			common.ac_len = sizeof(struct acct_open);	
 			break;
 		case ACCT_MSG_RENAME:
 			break;
@@ -748,7 +750,7 @@ acct_exit(struct process *pr)
 
 	/* Update message common fields within this message */
 	rw_enter_read(&rwl);
-	acct_msg->data.exit_d.ac_common = construct_common(pr, ACCT_MSG_EXIT);;
+	acct_msg->data.exit_d.ac_common = construct_common(pr, ACCT_MSG_EXIT);
 
 	/* 
 	 * Set exit struct additional data 
@@ -785,9 +787,9 @@ acct_exit(struct process *pr)
 
 
 void
-acct_open(struct process *p, struct vnode *vn_cmp, int o_flags, int err) 
+acct_open(struct process *pr, struct vnode *vn_cmp, int o_flags, int err) 
 {
-	//struct message *acct_msg;
+	struct message *acct_msg;
 	struct tree_node *find_node, *res;
 	uint32_t f_events, f_conds;			/* File Unique events */
 
@@ -805,6 +807,12 @@ acct_open(struct process *p, struct vnode *vn_cmp, int o_flags, int err)
 		return;		
 	}
 
+	/* Incase a vnode wasn't resolved */
+	if(vn_cmp == NULL) {
+		rw_exit_read(&rwl);
+		return;						
+	}
+
 	/* This file currently tracked ? */
 	find_node = malloc(sizeof(struct tree_node),  M_DEVBUF, M_WAITOK | M_ZERO);
 	find_node->v = vn_cmp;
@@ -819,6 +827,7 @@ acct_open(struct process *p, struct vnode *vn_cmp, int o_flags, int err)
 		return;  			/* We aren't tracking this */
 	}
 
+	uprintf("Found file\n");
 	/* File conditions match the open call? */
 	f_events = res->audit_events;
 	f_conds = res->audit_conds;
@@ -829,17 +838,33 @@ acct_open(struct process *p, struct vnode *vn_cmp, int o_flags, int err)
 		return;
 	}
 
+	uprintf("Open Flags: %d, Err: %d\n", o_flags, err);
+
 	if (acct_this_message(f_conds, o_flags, err) == false) {
-		rw_exit_read(&rwl);
+		rw_exit_read(&rwl);					//TODO Check These
 		return;				/* Condition mismatch */
 	}
 
 	/* Construct message */
 	uprintf("Conds Valid\n");
-	//TODO Test conditions OK
-	//TODO Build the message
+
+	/* Commited to processing the message now... */
+	acct_msg = malloc(sizeof(struct message), M_DEVBUF, M_WAITOK | M_ZERO);
+
+	/* Set internal message data */
+	acct_msg->type = ACCT_MSG_OPEN;
+	acct_msg->size = sizeof(struct acct_open);
+
+	/* Update message common fields within this message */
+	acct_msg->data.open_d.ac_common = construct_common(pr, ACCT_MSG_OPEN);
+
+	/* Update Open message specific fields */
+	memcpy(acct_msg->data.open_d.ac_path, res->path, PATH_MAX);
+	acct_msg->data.open_d.ac_mode = o_flags;
+	acct_msg->data.open_d.ac_errno = err;
 
 	/* Add to queue */
+	TAILQ_INSERT_TAIL(&head, acct_msg, entries);
 	rw_exit_read(&rwl);
 
 	/* Wake up read, incase it was blocked */
