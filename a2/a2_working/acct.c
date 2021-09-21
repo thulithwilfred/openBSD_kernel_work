@@ -271,23 +271,23 @@ acctioctl(dev_t dev, u_long cmd, caddr_t data, int flag, struct proc *p)
 
 	/* Support for generic ioctl requests */
 	switch(cmd) {
-		case FIONREAD:
-			/* Get the number of bytes that are immediately available for reading */
-			rw_enter_read(&rwl);
-			if (TAILQ_EMPTY(&head)) {
-				*(int *)data = 0; 			/* Queue is empty, nothing to read */
-			} else {
-				next_msg = TAILQ_FIRST(&head); 		/* Next available message FIFO */
-				*(int *)data = next_msg->size;
-			}
-			rw_exit_read(&rwl);
-			return (0);
-		case FIONBIO:
-			/*  Handled in the upper FS layer */
-			if (*(int *)data != 0) 				/* Attempting to set non-blocking, miss me with that... */
-				return (EOPNOTSUPP);
-		case FIOASYNC:
+	case FIONREAD:
+		/* Get the number of bytes that are immediately available for reading */
+		rw_enter_read(&rwl);
+		if (TAILQ_EMPTY(&head)) {
+			*(int *)data = 0; 			/* Queue is empty, nothing to read */
+		} else {
+			next_msg = TAILQ_FIRST(&head); 		/* Next available message FIFO */
+			*(int *)data = next_msg->size;
+		}
+		rw_exit_read(&rwl);
+		return (0);
+	case FIONBIO:
+		/*  Handled in the upper FS layer */
+		if (*(int *)data != 0) 				/* Attempting to set non-blocking, miss me with that... */
 			return (EOPNOTSUPP);
+	case FIOASYNC:
+		return (EOPNOTSUPP);
 	}
 
 	/* Device specific ioctls not accepted in read only mode */
