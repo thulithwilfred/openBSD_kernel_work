@@ -1,87 +1,91 @@
 ? cscope.out
-? microcode/atmel/atu-at76c503-i3863-ext
-? microcode/atmel/atu-at76c503-i3863-int
-? microcode/atmel/atu-at76c503-rfmd-acc-ext
-? microcode/atmel/atu-at76c503-rfmd-acc-int
-? microcode/atmel/atu-at76c505-rfmd-ext
-? microcode/atmel/atu-at76c505-rfmd-int
-? microcode/atmel/atu-intersil-ext
-? microcode/atmel/atu-intersil-int
-? microcode/atmel/atu-rfmd-ext
-? microcode/atmel/atu-rfmd-int
-? microcode/atmel/atu-rfmd2958-ext
-? microcode/atmel/atu-rfmd2958-int
-? microcode/atmel/atu-rfmd2958smc-ext
-? microcode/atmel/atu-rfmd2958smc-int
-? microcode/atmel/build
-? microcode/atmel/build.d
-? microcode/bnx/bnx-b06
-? microcode/bnx/bnx-b09
-? microcode/bnx/bnx-rv2p
-? microcode/bnx/bnx-xi-rv2p
-? microcode/bnx/bnx-xi90-rv2p
-? microcode/bnx/build
-? microcode/bnx/build.d
-? microcode/cirruslogic/build
-? microcode/cirruslogic/build.d
-? microcode/cirruslogic/cs4280
-? microcode/fxp/build
-? microcode/fxp/build.d
-? microcode/fxp/fxp-d101a
-? microcode/fxp/fxp-d101b0
-? microcode/fxp/fxp-d101ma
-? microcode/fxp/fxp-d101s
-? microcode/fxp/fxp-d102
-? microcode/fxp/fxp-d102c
-? microcode/fxp/fxp-d102e
-? microcode/kue/build
-? microcode/kue/build.d
-? microcode/kue/kue
-? microcode/myx/build
-? microcode/myx/build.d
-? microcode/myx/myx-eth_z8e
-? microcode/myx/myx-ethp_z8e
-? microcode/ral/build
-? microcode/ral/build.d
-? microcode/ral/ral-rt2561
-? microcode/ral/ral-rt2561s
-? microcode/ral/ral-rt2661
-? microcode/ral/ral-rt2860
-? microcode/ral/ral-rt3290
-? microcode/rum/build
-? microcode/rum/build.d
-? microcode/rum/rum-rt2573
-? microcode/rum/run-rt2870
-? microcode/rum/run-rt3071
-? microcode/tht/build
-? microcode/tht/build.d
-? microcode/tht/tht
-? microcode/tigon/build
-? microcode/tigon/build.d
-? microcode/tigon/tigon1
-? microcode/tigon/tigon2
-? microcode/tusb3410/build
-? microcode/tusb3410/build.d
-? microcode/tusb3410/tusb3410
-? microcode/typhoon/3c990
-? microcode/typhoon/build
-? microcode/typhoon/build.d
-? microcode/udl/build
-? microcode/udl/build.d
-? microcode/udl/udl_huffman
-? microcode/yds/build
-? microcode/yds/build.d
-? microcode/yds/yds
-? microcode/zydas/build
-? microcode/zydas/build.d
-? microcode/zydas/zd1211
-? microcode/zydas/zd1211b
-Index: acct.c
+? gnu/lib/libstdc++-v3/c++config.h
+? gnu/lib/libstdc++-v3/gthr-default.h
+? gnu/lib/libstdc++-v3/gthr-posix.h
+? gnu/lib/libstdc++-v3/gthr-single.h
+? gnu/lib/libstdc++-v3/gthr-tpf.h
+? gnu/lib/libstdc++-v3/gthr.h
+? gnu/usr.bin/cc/include/mm_malloc.h
+? gnu/usr.bin/cc/include/unwind.h
+? lib/libcrypto/obj_mac.h
+? lib/libcrypto/obj_mac.num.tmp
+? lib/librpcsvc/bootparam_prot.h
+? lib/librpcsvc/klm_prot.h
+? lib/librpcsvc/mount.h
+? lib/librpcsvc/nfs_prot.h
+? lib/librpcsvc/nlm_prot.h
+? lib/librpcsvc/rex.h
+? lib/librpcsvc/rnusers.h
+? lib/librpcsvc/rquota.h
+? lib/librpcsvc/rstat.h
+? lib/librpcsvc/rusers.h
+? lib/librpcsvc/rwall.h
+? lib/librpcsvc/sm_inter.h
+? lib/librpcsvc/spray.h
+? lib/librpcsvc/yp.h
+? lib/librpcsvc/yppasswd.h
+? sys/cscope.out
+Index: sys/arch/amd64/amd64/conf.c
 ===================================================================
-RCS file: acct.c
-diff -N acct.c
+RCS file: /cvs/src/sys/arch/amd64/amd64/conf.c,v
+retrieving revision 1.73
+diff -u -p -u -p -r1.73 conf.c
+--- sys/arch/amd64/amd64/conf.c	23 Jan 2021 05:08:34 -0000	1.73
++++ sys/arch/amd64/amd64/conf.c	21 Sep 2021 16:58:49 -0000
+@@ -102,6 +102,7 @@ int	nblkdev = nitems(bdevsw);
+ #define	mmwrite	mmrw
+ cdev_decl(mm);
+ cdev_decl(wd);
++#include "acct.h"
+ #include "bio.h"
+ #include "pty.h"
+ #include "com.h"
+@@ -202,7 +203,7 @@ struct cdevsw	cdevsw[] =
+ 	cdev_notdef(),			/* 21 */
+ 	cdev_fd_init(1,filedesc),	/* 22: file descriptor pseudo-device */
+ 	cdev_bpf_init(NBPFILTER,bpf),	/* 23: Berkeley packet filter */
+-	cdev_notdef(),			/* 24 */
++	cdev_acct_init(NACCT,acct),	/* 24: process accounting */
+ #if 0
+ 	cdev_ocis_init(NPCMCIA,pcmcia), /* 25: PCMCIA Bus */
+ #else
+Index: sys/conf/GENERIC
+===================================================================
+RCS file: /cvs/src/sys/conf/GENERIC,v
+retrieving revision 1.275
+diff -u -p -u -p -r1.275 GENERIC
+--- sys/conf/GENERIC	7 Apr 2021 00:16:00 -0000	1.275
++++ sys/conf/GENERIC	21 Sep 2021 16:58:50 -0000
+@@ -115,5 +115,6 @@ pseudo-device	wg		# WireGuard
+ pseudo-device	bio	1	# ioctl multiplexing device
+ 
+ pseudo-device	fuse		# fuse device
++pseudo-device	acct		# process accounting device
+ 
+ option		BOOT_CONFIG	# add support for boot -c
+Index: sys/conf/files
+===================================================================
+RCS file: /cvs/src/sys/conf/files,v
+retrieving revision 1.702
+diff -u -p -u -p -r1.702 files
+--- sys/conf/files	16 Apr 2021 08:17:35 -0000	1.702
++++ sys/conf/files	21 Sep 2021 16:58:50 -0000
+@@ -630,6 +630,9 @@ file	dev/dt/dt_prov_profile.c	dt
+ file	dev/dt/dt_prov_syscall.c	dt
+ file	dev/dt/dt_prov_static.c		dt
+ 
++pseudo-device acct
++file	dev/acct.c			acct	needs-flag
++
+ # XXX machine-independent SCSI files should live somewhere here, maybe
+ 
+ # kernel sources
+Index: sys/dev/acct.c
+===================================================================
+RCS file: sys/dev/acct.c
+diff -N sys/dev/acct.c
 --- /dev/null	1 Jan 1970 00:00:00 -0000
-+++ acct.c	21 Sep 2021 13:05:40 -0000
++++ sys/dev/acct.c	21 Sep 2021 16:58:50 -0000
 @@ -0,0 +1,1230 @@
 +/**
 + * @file acct.c 
@@ -1314,12 +1318,12 @@ diff -N acct.c
 +	return EOPNOTSUPP;
 +}
 \ No newline at end of file
-Index: acct.h
+Index: sys/dev/acct.h
 ===================================================================
-RCS file: acct.h
-diff -N acct.h
+RCS file: sys/dev/acct.h
+diff -N sys/dev/acct.h
 --- /dev/null	1 Jan 1970 00:00:00 -0000
-+++ acct.h	21 Sep 2021 13:05:40 -0000
++++ sys/dev/acct.h	21 Sep 2021 16:58:50 -0000
 @@ -0,0 +1,217 @@
 +/*	$OpenBSD$ */
 +
@@ -1538,3 +1542,251 @@ diff -N acct.h
 +#endif /* _KERNEL */
 +
 +#endif /* __DEV_ACCT_H__ */
+Index: sys/kern/kern_descrip.c
+===================================================================
+RCS file: /cvs/src/sys/kern/kern_descrip.c,v
+retrieving revision 1.202
+diff -u -p -u -p -r1.202 kern_descrip.c
+--- sys/kern/kern_descrip.c	11 Jun 2020 13:23:18 -0000	1.202
++++ sys/kern/kern_descrip.c	21 Sep 2021 16:58:50 -0000
+@@ -64,6 +64,12 @@
+ 
+ #include <sys/pipe.h>
+ 
++
++#include "acct.h"
++#if NACCT > 0
++#include <dev/acct.h>
++#endif
++
+ /*
+  * Descriptor management.
+  *
+@@ -1259,7 +1265,9 @@ closef(struct file *fp, struct proc *p)
+ 		lf.l_type = F_UNLCK;
+ 		(void) VOP_ADVLOCK(vp, fdp, F_UNLCK, &lf, F_POSIX);
+ 	}
+-
++#if NACCT > 0
++	acct_close(p->p_p, fp->f_data, fp->f_flag);
++#endif
+ 	return (FRELE(fp, p));
+ }
+ 
+@@ -1283,7 +1291,6 @@ fdrop(struct file *fp, struct proc *p)
+ 	crfree(fp->f_cred);
+ 	atomic_dec_int(&numfiles);
+ 	pool_put(&file_pool, fp);
+-
+ 	return (error);
+ }
+ 
+Index: sys/kern/kern_exec.c
+===================================================================
+RCS file: /cvs/src/sys/kern/kern_exec.c,v
+retrieving revision 1.223
+diff -u -p -u -p -r1.223 kern_exec.c
+--- sys/kern/kern_exec.c	16 Mar 2021 16:32:22 -0000	1.223
++++ sys/kern/kern_exec.c	21 Sep 2021 16:58:50 -0000
+@@ -69,6 +69,11 @@
+ struct uvm_object *timekeep_object;
+ struct timekeep *timekeep;
+ 
++#include "acct.h"
++#if NACCT > 0
++#include <dev/acct.h>
++#endif
++
+ void	unveil_destroy(struct process *ps);
+ 
+ const struct kmem_va_mode kv_exec = {
+@@ -676,6 +681,10 @@ sys_execve(struct proc *p, void *v, regi
+ 	/* map the process's timekeep page, needs to be before e_fixup */
+ 	if (exec_timekeep_map(pr))
+ 		goto free_pack_abort;
++
++#if NACCT > 0
++	acct_exec(pr);
++#endif
+ 
+ 	/* setup new registers and do misc. setup. */
+ 	if (pack.ep_emul->e_fixup != NULL) {
+Index: sys/kern/kern_exit.c
+===================================================================
+RCS file: /cvs/src/sys/kern/kern_exit.c,v
+retrieving revision 1.199
+diff -u -p -u -p -r1.199 kern_exit.c
+--- sys/kern/kern_exit.c	12 Mar 2021 10:13:28 -0000	1.199
++++ sys/kern/kern_exit.c	21 Sep 2021 16:58:50 -0000
+@@ -70,6 +70,11 @@
+ 
+ #include <uvm/uvm_extern.h>
+ 
++#include "acct.h"
++#if NACCT > 0
++#include <dev/acct.h>
++#endif
++
+ #include "kcov.h"
+ #if NKCOV > 0
+ #include <sys/kcov.h>
+@@ -206,6 +211,9 @@ exit1(struct proc *p, int xexit, int xsi
+ 		semexit(pr);
+ #endif
+ 		killjobc(pr);
++#if NACCT > 0
++		acct_exit(pr);
++#endif
+ #ifdef ACCOUNTING
+ 		acct_process(p);
+ #endif
+Index: sys/kern/kern_fork.c
+===================================================================
+RCS file: /cvs/src/sys/kern/kern_fork.c,v
+retrieving revision 1.235
+diff -u -p -u -p -r1.235 kern_fork.c
+--- sys/kern/kern_fork.c	23 Mar 2021 10:30:40 -0000	1.235
++++ sys/kern/kern_fork.c	21 Sep 2021 16:58:50 -0000
+@@ -65,6 +65,13 @@
+ #include <uvm/uvm.h>
+ #include <machine/tcb.h>
+ 
++#include "kcov.h"
++
++#include "acct.h"
++#if NACCT > 0
++#include <dev/acct.h>
++#endif
++
+ int	nprocesses = 1;		/* process 0 */
+ int	nthreads = 1;		/* proc 0 */
+ int	randompid;		/* when set to 1, pid's go random */
+@@ -469,6 +476,10 @@ fork1(struct proc *curp, int flags, void
+ 	 * Notify any interested parties about the new process.
+ 	 */
+ 	KNOTE(&curpr->ps_klist, NOTE_FORK | pr->ps_pid);
++
++#if NACCT > 0
++	acct_fork(pr);
++#endif
+ 
+ 	/*
+ 	 * Update stats now that we know the fork was successful.
+Index: sys/kern/vfs_syscalls.c
+===================================================================
+RCS file: /cvs/src/sys/kern/vfs_syscalls.c,v
+retrieving revision 1.349
+diff -u -p -u -p -r1.349 vfs_syscalls.c
+--- sys/kern/vfs_syscalls.c	11 Feb 2021 12:08:21 -0000	1.349
++++ sys/kern/vfs_syscalls.c	21 Sep 2021 16:58:51 -0000
+@@ -63,6 +63,11 @@
+ 
+ #include <sys/syscallargs.h>
+ 
++#include "acct.h"
++#if NACCT > 0
++#include <dev/acct.h>
++#endif
++
+ extern int suid_clear;
+ 
+ static int change_dir(struct nameidata *, struct proc *);
+@@ -1144,6 +1149,9 @@ doopenat(struct proc *p, int fd, const c
+ 			fdpunlock(fdp);
+ 			closef(fp, p);
+ 			*retval = indx;
++#if NACCT > 0
++			acct_open(p->p_p, nd.ni_vp, oflags, error);
++#endif
+ 			return (error);
+ 		}
+ 		if (error == ERESTART)
+@@ -1151,6 +1159,9 @@ doopenat(struct proc *p, int fd, const c
+ 		fdremove(fdp, indx);
+ 		fdpunlock(fdp);
+ 		closef(fp, p);
++#if NACCT > 0
++		acct_open(p->p_p, nd.ni_vp, oflags, error);
++#endif
+ 		return (error);
+ 	}
+ 	p->p_dupfd = 0;
+@@ -1178,6 +1189,9 @@ doopenat(struct proc *p, int fd, const c
+ 			fdremove(fdp, indx);
+ 			fdpunlock(fdp);
+ 			closef(fp, p);
++#if NACCT > 0
++			acct_open(p->p_p, vp, oflags, error);
++#endif
+ 			return (error);
+ 		}
+ 		vn_lock(vp, LK_EXCLUSIVE | LK_RETRY);
+@@ -1202,6 +1216,9 @@ doopenat(struct proc *p, int fd, const c
+ 			fdremove(fdp, indx);
+ 			fdpunlock(fdp);
+ 			closef(fp, p);
++#if NACCT > 0
++			acct_open(p->p_p, vp, oflags, error);
++#endif
+ 			return (error);
+ 		}
+ 	}
+@@ -1211,6 +1228,9 @@ doopenat(struct proc *p, int fd, const c
+ 	fdinsert(fdp, indx, cloexec, fp);
+ 	fdpunlock(fdp);
+ 	FRELE(fp, p);
++#if NACCT > 0
++	acct_open(p->p_p, vp, oflags, error);
++#endif
+ 	return (error);
+ }
+ 
+@@ -1902,6 +1922,9 @@ out:
+ 			vput(nd.ni_dvp);
+ 		vput(vp);
+ 	}
++#if NACCT > 0
++	acct_unlink(p->p_p, vp, error);
++#endif
+ 	return (error);
+ }
+ 
+@@ -3013,6 +3036,9 @@ out1:
+ 	if (fromnd.ni_startdir)
+ 		vrele(fromnd.ni_startdir);
+ 	pool_put(&namei_pool, fromnd.ni_cnd.cn_pnbuf);
++#if NACCT > 0
++	acct_rename(p->p_p, fvp, to, error);
++#endif
+ 	if (error == -1)
+ 		return (0);
+ 	return (error);
+Index: sys/sys/conf.h
+===================================================================
+RCS file: /cvs/src/sys/sys/conf.h,v
+retrieving revision 1.156
+diff -u -p -u -p -r1.156 conf.h
+--- sys/sys/conf.h	23 Jan 2021 05:08:36 -0000	1.156
++++ sys/sys/conf.h	21 Sep 2021 16:58:51 -0000
+@@ -504,6 +504,13 @@ extern struct cdevsw cdevsw[];
+ 	(dev_type_stop((*))) enodev, 0, selfalse, \
+ 	(dev_type_mmap((*))) enodev, 0, D_CLONE }
+ 
++/* open, close, read, write, ioctl, poll, kqfilter */
++#define cdev_acct_init(c,n) { \
++	dev_init(c,n,open), dev_init(c,n,close), dev_init(c,n,read), \
++	dev_init(c,n,write), dev_init(c,n,ioctl), \
++	(dev_type_stop((*))) enodev, 0, dev_init(c,n,poll), \
++	(dev_type_mmap((*))) enodev, 0, 0, dev_init(c,n,kqfilter) }
++
+ #endif
+ 
+ /*
+@@ -643,6 +650,7 @@ cdev_decl(fuse);
+ cdev_decl(pvbus);
+ cdev_decl(ipmi);
+ cdev_decl(kcov);
++cdev_decl(acct);
+ 
+ #endif
+ 
