@@ -11,11 +11,13 @@
 
 #include <sys/param.h>
 #include <sys/pfexec.h>
+#include <sys/limits.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <err.h>
 
 /* Define buffer limits */
 #define EXE_MAXLEN 256
@@ -27,16 +29,19 @@
 #define	PFEXEC_N		(1 << 2)
 
 struct pfexec_data {
-	char executable_name[EXE_MAXLEN];
-	char args_list[ARGS_MAXLEN];
+	char executable_name[PATH_MAX];
 	char username[LOGIN_NAME_MAX];
+	char **args;
+	uint32_t args_count; //To be used when freeing.
 };
 
 /* Define errors and errvals used in pfexec */
 enum pfexec_errno
 {
 		E_BADARGS = 1,
-		E_BADUNAME = 2
+		E_BADUNAME = 2,
+		E_BADEXE = 3,
+		E_TOOLONG = 4
 };
 
 /**
@@ -53,6 +58,16 @@ usage(void)
 		fprintf(stderr, "\t-s\tExecute a shell, rather than a specific command\n");
 
 		exit(E_BADARGS);
+}
+
+void
+free_args(char** args, uint32_t num_elements)
+{
+		for (int i = 0; i < num_elements; ++i) {
+			free(args[i]);
+		}
+
+		free(args);
 }
 
 /**
@@ -116,6 +131,7 @@ int
 process_pfexec(uint32_t opt_flag, struct pfexec_data *d)
 {
 		struct pfexecve_opts p_opts;
+		int err = 0;
 
 		/* Exexute Shell */
 		if (opt_flag & PFEXEC_S)
@@ -127,10 +143,18 @@ process_pfexec(uint32_t opt_flag, struct pfexec_data *d)
 		if (opt_flag & PFEXEC_U) 		
 			strcpy(p_opts.pfo_user, d->username);	
 
-		/* Call to pfexecve ? */
-		printf("UNAME: %s\nEXEC: %s, ARGS: %s\n", p_opts.pfo_user, d->executable_name, d->args_list);
+		/* Call to pfexecve */
 
-		return (0);
+		/*
+		 * If argv[0] starts with "/" (absolute path) this is the path.
+		 *
+		 * Otherwise if argv[0] contains "/" (relative path) append it to cwd (assuming it hasn't been changed yet).
+		 *
+		 * Otherwise search directories in $PATH for executable argv[0].
+		 */
+
+		err = pfexecvp(&p_opts, d->executable_name, d->args);
+		return (err);
 }
 
 /**
@@ -142,13 +166,14 @@ int
 main(int argc, char** argv) 
 {
 		struct pfexec_data *d;
-		int ch, err = 0;
+		int ch, errno = 0;
 		uint32_t opt_flag = 0;
 
 		if (argc <= 1)
 			usage();
 		
 		d = malloc(sizeof(struct pfexec_data));
+		bzero(d, sizeof(struct pfexec_data));
 
 		while((ch = getopt(argc, argv, "u:ns")) != -1) {
 			switch(ch) {
@@ -184,17 +209,40 @@ main(int argc, char** argv)
 			usage(); 
 
 		/* Copy in executable name */
-		strcpy(d->executable_name, *argv);
+		if (strlen(*argv) > EXE_MAXLEN)
+			return E_BADEXE;
+
+		strlcpy(d->executable_name, *argv, PATH_MAX);
+
+		/* 
+		 * Arguments Array 
+		 * 	argc here holds prog name and remaining args, +1 to add NUL terminate.
+		 */
+		d->args =  malloc(sizeof(char*) * ((argc) + 1));
+
+		/* Args first element should be progname */
+		d->args[0] = malloc(sizeof(char) * strlen(*argv));
+		strlcpy(d->args[0], *argv, EXE_MAXLEN);
 
 		/* Create an args list */
 		for(int i = 1; i < argc ; ++i) {
-			strcat(d->args_list, argv[i]);
-			strcat(d->args_list, " ");
+			if (strlen(argv[i]) > ARG_MAX)
+				return E_TOOLONG;
+			d->args[i] = malloc(sizeof(char) * strlen(argv[i]));
+			strcpy(d->args[i], argv[i]);
+			d->args_count++;
+			printf("args_new: %s, count: %d\n", d->args[i], d->args_count);
 		}
 
-		err = process_pfexec(opt_flag, d);
+		/* Null terminate args */
+		d->args[d->args_count + 1] = (char*)0; 
 
+		errno = process_pfexec(opt_flag, d);
+
+		if (errno)
+			err(errno, "pfexec");
+		
+		free_args(d->args, d->args_count);
 		free(d);
-		return (err);
+		return(0);
 }
-

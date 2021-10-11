@@ -49,7 +49,14 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	            syscallarg(char *const *) envp;
         } */ *uap = v;
 
-        struct pfexecve_opts opts = {0};
+        struct sys_execve_args /* {
+	            syscallarg(const char *)  path;
+	            syscallarg(char *const *) argp;
+	            syscallarg(char *const *) envp;
+        } */ args;
+
+        char path[128];
+        struct pfexecve_opts opts;
         int err;
 
         if (SCARG(uap, opts) == NULL) 
@@ -57,12 +64,25 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
     
         if ((err = copyin(SCARG(uap, opts), &opts, sizeof(struct pfexecve_opts))))
             return err;
-    
+
+        
+        
+        SCARG(&args, path) = SCARG(uap, path);
+        SCARG(&args, argp) = SCARG(uap, argp);
+        SCARG(&args, envp) = SCARG(uap, envp);
+
+
+        copyin(SCARG(uap, path), path, sizeof(path));
+        uprintf("PATH IS: %s\n", path);
+
+        sys_execve(p, (void *)&args, retVal);
+        uprintf("DID IT \n");
+
         /* Resolve pfexecve logic based on opts.pfo_flags */
         if (opts.pfo_flags & PFEXECVE_USER) {
             /* Use user privs and not root */
 
-            if (opts.pfo_user == NULL)
+            if (*opts.pfo_user == '\0')
                 return EINVAL;
             
             /* Resolve User Privs */
