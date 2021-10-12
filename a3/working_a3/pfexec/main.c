@@ -1,13 +1,27 @@
-/**
- * COMP3301 - Assingment 3
- *
- * pfexec is a commandline utility that processes it's arguments and calls the pfexecve() system call.
- * 
- * Author	: Wilfred MK
- * SID		: S4428042
- * Riv		: 0.1
- * Last Updated	: 8/10/2021
- */
+/*
+* COMP3301 - Assingment 3
+*
+* pfexec is a commandline utility that processes it's arguments and calls the pfexecve() system call.
+* 
+* Author	: Wilfred MK
+* SID		: S4428042
+* Riv		: 0.1
+* Last Updated	: 12/10/2021
+*
+* THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+* ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+* FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+* DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+* OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+* SUCH DAMAGE.
+*
+* @(#)main.c v0.1 (UQ) - Wilfred MK
+*/
+
 
 #include <sys/param.h>
 #include <sys/pfexec.h>
@@ -41,7 +55,8 @@ enum pfexec_errno
 		E_BADARGS = 1,
 		E_BADUNAME = 2,
 		E_BADEXE = 3,
-		E_TOOLONG = 4
+		E_TOOLONG = 4,
+		E_FAILED_PFEXEC = 5
 };
 
 /**
@@ -60,6 +75,10 @@ usage(void)
 		exit(E_BADARGS);
 }
 
+/**
+ * @brief Free allocated memory for pfexec arguments
+ * 
+ */
 void
 free_args(char** args, uint32_t num_elements)
 {
@@ -144,16 +163,7 @@ process_pfexec(uint32_t opt_flag, struct pfexec_data *d)
 			strcpy(p_opts.pfo_user, d->username);	
 
 		/* Call to pfexecve */
-
-		/*
-		 * If argv[0] starts with "/" (absolute path) this is the path.
-		 *
-		 * Otherwise if argv[0] contains "/" (relative path) append it to cwd (assuming it hasn't been changed yet).
-		 *
-		 * Otherwise search directories in $PATH for executable argv[0].
-		 */
-
-		err = pfexecvp(&p_opts, d->executable_name, d->args);
+		err = pfexecvpe(&p_opts, d->executable_name, d->args, NULL);
 		return (err);
 }
 
@@ -242,7 +252,8 @@ main(int argc, char** argv)
 		if (errno)
 			err(errno, "pfexec");
 		
+		/* Will only get here if pfexecve failed */
 		free_args(d->args, d->args_count);
 		free(d);
-		return(0);
+		return(E_FAILED_PFEXEC);
 }

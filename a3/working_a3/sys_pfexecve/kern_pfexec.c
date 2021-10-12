@@ -1,4 +1,13 @@
 /*
+* COMP3301 - Assingment 3
+*
+* syscall handler for pfexecve.
+* 
+* Author	: Wilfred MK
+* SID		: S4428042
+* Riv		: 0.1
+* Last Updated	: 12/10/2021
+*
 * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
 * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -10,7 +19,7 @@
 * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 * SUCH DAMAGE.
 *
-* @(#)kern_pfexec.c 0.1 (UQ) - Wilfred MK
+* @(#)kern_pfexec.c v0.1 (UQ) - Wilfred MK
 */
 
 #include <sys/param.h>
@@ -57,26 +66,21 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 
         char path[128];
         struct pfexecve_opts opts;
-        int err;
+        int err = 0;
 
         if (SCARG(uap, opts) == NULL) 
             return EINVAL;
     
         if ((err = copyin(SCARG(uap, opts), &opts, sizeof(struct pfexecve_opts))))
             return err;
-
-        
         
         SCARG(&args, path) = SCARG(uap, path);
         SCARG(&args, argp) = SCARG(uap, argp);
         SCARG(&args, envp) = SCARG(uap, envp);
 
-
         copyin(SCARG(uap, path), path, sizeof(path));
-        uprintf("PATH IS: %s\n", path);
 
-        sys_execve(p, (void *)&args, retVal);
-        uprintf("DID IT \n");
+        uprintf("TRYING_PATH: %s\n", path);
 
         /* Resolve pfexecve logic based on opts.pfo_flags */
         if (opts.pfo_flags & PFEXECVE_USER) {
@@ -93,6 +97,8 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
             /* Don't prompt pws */
             
         }
-        return (0);
+
+        err = sys_execve(p, (void *)&args, retVal);
+        return (err);
 }
 
