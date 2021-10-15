@@ -44,9 +44,38 @@
 #include <sys/atomic.h>
 #include <sys/pledge.h>
 #include <sys/unistd.h>
-#include <sys/pfexec.h>
 
+#include <sys/pfexec.h>
 #include <sys/syscallargs.h>
+#include <sys/namei.h>
+#include <sys/pfexecvar.h>
+#include <sys/ucred.h>
+
+const struct kmem_va_mode kv_pfexec = {
+	.kv_wait = 1,
+	.kv_map = &exec_map
+};
+
+
+static int
+lookup_path(const char *path, struct proc *p, struct vnode **vpp)
+{
+	struct nameidata ndi;
+	int rc;
+	struct vnode *vp;
+
+	NDINIT(&ndi, LOOKUP, FOLLOW | LOCKLEAF, UIO_USERSPACE, path, p);
+	rc = namei(&ndi);
+	if (rc != 0)
+		return (rc);
+	vp = ndi.ni_vp;
+
+	VOP_UNLOCK(vp);
+
+	*vpp = vp;
+
+	return (0);
+}
 
 int
 sys_pfexecve(struct proc *p, void *v, register_t *retVal)
@@ -64,41 +93,155 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	            syscallarg(char *const *) envp;
         } */ args;
 
-        char path[128];
-        struct pfexecve_opts opts;
-        int err = 0;
 
+        struct process *pr = p->p_p;                   /* Should this be tested ? */
+        struct ucred *cred = p->p_ucred;
+        struct vnode *vp = NULL;
+        struct pfexec_req *req;
+        const char *file_path;
+        
+        struct pfexecve_opts opts;
+        size_t len;
+        int error = 0, rc = 0, argc;
+        uint32_t offset;
+
+        char *const *cpp, *dp, *sp;
+        char *argp;
+
+        /* 1. Validity Checks */
         if (SCARG(uap, opts) == NULL) 
             return EINVAL;
     
-        if ((err = copyin(SCARG(uap, opts), &opts, sizeof(struct pfexecve_opts))))
-            return err;
+        if ((error = copyin(SCARG(uap, opts), &opts, sizeof(struct pfexecve_opts))))
+            return error;
+
+        /* Check the path to be executed is valid */
+        file_path = SCARG(uap, path);
+
+        if (file_path == NULL)
+            return ENOENT;
+
+        error = lookup_path(file_path, p, &vp);
         
+		if (error != 0)
+			return (error);        /* vnode cannot be resolved */
+
         SCARG(&args, path) = SCARG(uap, path);
         SCARG(&args, argp) = SCARG(uap, argp);
         SCARG(&args, envp) = SCARG(uap, envp);
 
-        copyin(SCARG(uap, path), path, sizeof(path));
+        //copyin(SCARG(uap, path), path, sizeof(path));   //! Debug Only
 
-        uprintf("TRYING_PATH: %s\n", path);
+        //uprintf("TRYING_PATH: %s\n", path);             //! Debug Only
 
-        /* Resolve pfexecve logic based on opts.pfo_flags */
+        /* 2. Setup request packet */
+        req = malloc(sizeof(struct pfexec_req), M_EXEC, M_WAITOK | M_ZERO); 
+  
+        req->pfr_pid = pr->ps_pid;
+        req->pfr_uid = cred->cr_uid;
+        req->pfr_gid = cred->cr_gid;
+        req->pfr_ngroups = cred->cr_ngroups;
+        memcpy(req->pfr_groups, cred->cr_groups, req->pfr_ngroups * sizeof (gid_t));
+
+        req->pfr_req_flags = opts.pfo_flags;
+
         if (opts.pfo_flags & PFEXECVE_USER) {
-            /* Use user privs and not root */
 
-            if (*opts.pfo_user == '\0')
-                return EINVAL;
+            if (*opts.pfo_user == '\0') {
+                error = EINVAL;
+                goto bad;
+            }
             
-            /* Resolve User Privs */
-
+            memcpy(req->pfr_req_user, opts.pfo_user, sizeof(char) * LOGIN_NAME_MAX);
         }
 
-        if (opts.pfo_flags & PFEXECVE_NOPROMPT) {
-            /* Don't prompt pws */
-            
+        copyin(file_path, req->pfr_path, sizeof(char) * PATH_MAX);
+
+        
+        
+        /* GET ARGV */
+        if(!(cpp = SCARG(uap, argp))) {
+            return EFAULT;
         }
 
-        err = sys_execve(p, (void *)&args, retVal);
-        return (err);
+    	/* allocate an argument buffer */
+	    argp = km_alloc(NCARGS, &kv_pfexec, &kp_pageable, &kd_waitok);
+        dp = argp;
+        argc = 0;
+        offset = 0;
+   
+
+        while (1) {
+		    len = argp + ARG_MAX - dp;
+
+		    if ((error = copyin(cpp, &sp, sizeof(sp))) != 0)
+			    goto bad;
+
+		    if (!sp)
+			    break;
+
+		    if ((error = copyinstr(sp, dp, len, &len)) != 0) {
+			    if (error == ENAMETOOLONG)
+				    error = E2BIG;
+			    goto bad;
+		    }
+
+            if (argc >= 1024){ 
+                error = E2BIG;
+                goto bad;
+            }
+            
+            
+
+            if (offset >= ARG_MAX) {
+                error = E2BIG;
+                goto bad;
+            }
+        
+            req->pfr_argp[argc].pfa_offset = offset;      
+            req->pfr_argp[argc].pfa_len = len - 1;                  /* Not including NUL */
+            /* Max len - current offset into buffer - ONE NUL at the end */
+            rc = strlcat(req->pfr_argarea, dp, ARG_MAX - offset - 1);          
+
+            if (rc >= (ARG_MAX - offset - 1)) {
+                error = E2BIG;
+                goto bad;
+            }
+        
+            //uprintf("Built: %s  -- offset: %d -- len: %d  -- argc: %d\n", dp, req->pfr_argp[argc].pfa_offset, req->pfr_argp[argc].pfa_len, argc);
+
+            offset += len - 1;                                  /* Not including NUL */
+		    dp += len;
+		    cpp++;
+		    argc++;             
+	    }
+
+	    /* must have at least one argument */
+	    if (argc == 0) {
+		    error = EINVAL;
+		    goto bad;
+	    }
+
+        req->pfr_argc = argc;
+       
+        //uprintf("final:%s--\n", req->pfr_argarea);    //!DEBUG
+        //uprintf("Argc: %d\n", argc);
+        /* 3. Socket to pdfexecd and send request */
+
+        /* 4. Wait response from daemon */
+
+        /* 5. Apply user credential changes to process */
+
+        /* 6. Exec */
+        error = sys_execve(p, (void *)&args, retVal);
+
+        /* 7. Apply chroot change (if any) */
+
+        /* 8. Clean up */
+        //! free vnoderef
+bad:
+        km_free(argp, NCARGS, &kv_pfexec, &kp_pageable);
+        free(req, M_EXEC, sizeof(struct pfexec_req));
+        return (error);
 }
 
