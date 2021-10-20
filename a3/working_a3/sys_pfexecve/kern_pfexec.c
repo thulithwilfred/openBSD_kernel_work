@@ -66,8 +66,6 @@ void transceive_pfexecd(void *);
 /* Used for debug messaging to process tty */
 struct tty *tty;
 
-//TODO: Aim to finish out going connections by sunday
-//TODO: Monday is daemon
 const struct kmem_va_mode kv_pfexec = {
 	.kv_wait = 1,
 	.kv_map = &exec_map
@@ -101,7 +99,7 @@ build_mbuf2(void *buf, int tot_len)
 
 		if (m == NULL || !ISSET(m->m_flags, M_EXT)) {
 			ttyprintf(tty, "FAILED\n");
-			m_freem(m);
+			m_freem(top);			//!!CHANGE FROM M to TOP
 			return NULL;
 		}
 
@@ -229,16 +227,17 @@ transceive_pfexecd(void *arg)
 		goto close;
 	}
 	
+	//TODO: See that the data received is ok! 
+	//! START HERE //
+
 	/* Release recv chain */
 	m_freem(recv_top);
 
 close:
 	m_free(mopts);
 	m_freem(nam);
-	//!FREE N
-	//soclose(so, MSG_DONTWAIT);
+	soclose(so, MSG_DONTWAIT);
 	ttyprintf(tty, "ERROR VALUE:%d\n", error);
-
 	/* Signal Completion and Error */
 	t_pfr->state = TASK_ISCOMPLETE;
 	t_pfr->error = error;
