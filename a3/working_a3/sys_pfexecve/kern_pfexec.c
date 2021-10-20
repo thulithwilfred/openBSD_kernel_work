@@ -61,7 +61,13 @@
 #define TASK_ISCOMPLETE 1
 #define TASK_PENDING 0
 
+#define 		RESP_FLAGS_ALL 		PFRESP_UID | \
+									PFRESP_GID | \
+									PFRESP_GROUPS | \
+									PFRESP_CHROOT
+
 void transceive_pfexecd(void *);
+static int parse_response(struct pfexec_resp *);
 
 /* Used for debug messaging to process tty */
 struct tty *tty;
@@ -497,13 +503,18 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 		goto bad_0;
 	}
 
-	/* No errors, we can parse daemon response */
+	/* No receive errors, we can parse daemon response */
 	if ((error = resp->pfr_errno) != 0) {
 		goto bad_0;
 	}
+
 	/* Parse the resp packet */
+	if ((error = parse_response(resp))) {
+		goto bad_0;
+	}
 
 	/* 5. Apply user credential changes to process */
+
 
 	/* 6. Exec */
 	error = sys_execve(p, (void *)&args, retVal);
@@ -524,3 +535,53 @@ bad_nomem:
 	return (error);
 }
 
+
+
+/**
+ * Check that a given response packet resp, is formatted correctly. 
+ * Should be called prior to accessing packet data. 
+ *
+ */
+static int 
+parse_response(struct pfexec_resp *resp) {
+
+	uint32_t flags = resp->pfr_flags;
+	int error = 0;
+
+	/* Invalid Flags Set */
+	if (flags & ~RESP_FLAGS_ALL) {
+		uprintf("A\n");
+		return EINVAL;
+	}
+
+	if (flags & PFRESP_GROUPS) {
+		if (resp->pfr_ngroups > NGROUPS_MAX) {
+			uprintf("B\n");
+			return EINVAL;
+		}
+	}
+
+	if (flags & PFRESP_CHROOT) {
+		if (strnlen(resp->pfr_chroot, PATH_MAX) < 1 ||
+		    PATH_MAX(resp->pfr_chroot, PATH_MAX) >= PATH_MAX) {
+				uprintf("C\n");
+			return (EINVAL);
+		}
+	}
+
+	if (flags & PFRESP_ENV) {
+		if (resp->pfr_envc >= 1024) {
+			uprintf("D\n");
+			return (EINVAL);
+		}
+
+		if (strnlen(resp->pfr_envarea, ARG_MAX) < 1 ||
+		    strnlen(resp->pfr_envarea, ARG_MAX) >= ARG_MAX) {
+				uprintf("E\n");
+			return (EINVAL);
+			}
+	}
+
+	uprintf("F\n");
+	return (error);
+}
