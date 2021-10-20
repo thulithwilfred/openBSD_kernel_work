@@ -88,10 +88,6 @@ build_mbuf2(void *buf, int tot_len)
 	top = NULL;
 	mp = &top;
 
-	MGETHDR(m, M_WAIT, MT_DATA);
-	if (m == NULL)
-		return (NULL);
-
 	while (tot_len > 0) {
 
 		m = MCLGETL(NULL, M_WAIT, MAXMCLBYTES);
@@ -104,7 +100,7 @@ build_mbuf2(void *buf, int tot_len)
 		}
 
 		len = tot_len > MAXMCLBYTES ? MAXMCLBYTES : tot_len;
-		ttyprintf(tty, "LEN: %d\n", len);
+		//ttyprintf(tty, "LEN: %d\n", len);
 		bcopy(buf, mtod(m, void *), len);
 		buf += len;
 		m->m_len = len;
@@ -167,6 +163,7 @@ transceive_pfexecd(void *arg)
 	error = sosetopt(so, SOL_SOCKET, SO_RCVBUF, mopts);
 
 	if (error) {
+		error = ENOTCONN;
 		ttyprintf(tty,"opt err - %d\n", error);
 		sounlock(so, s);
 		goto close;
@@ -175,6 +172,7 @@ transceive_pfexecd(void *arg)
 	error = soconnect(so, nam);
 
 	if (error)  {
+		error = ENOTCONN;
 		ttyprintf(tty, "conn err 1 - %d\n", error);
 		sounlock(so, s);
 		goto close;
@@ -191,6 +189,7 @@ transceive_pfexecd(void *arg)
 	if (so->so_error) {
 		error = so->so_error;
 		so->so_error = 0;
+		error = ENOTCONN;
 		ttyprintf(tty, "conn err 2 - %d\n", error);
 		sounlock(so, s);
 		goto close;
@@ -209,8 +208,10 @@ transceive_pfexecd(void *arg)
 	/* Send Message and wait..., should free top*/
 	error = sosend(so, NULL, NULL, top, NULL, MSG_EOR);
 	
-	if (error) 
+	if (error) {
+		error = ENOTCONN;
 		goto close;
+	}
 	
 	/* Recv response, waiting for all data to be received */
 	bzero(&auio, sizeof(struct uio));
@@ -223,14 +224,17 @@ transceive_pfexecd(void *arg)
 	error = soreceive(so, NULL, &auio, &recv_top, NULL, &recvflags, 0);
 
 	if (error) {
+		error = ENOTCONN;
 		ttyprintf(tty, "recv error: %d\n", error);
 		goto close;
 	}
 	
-	//TODO: See that the data received is ok! 
-	//! START HERE //
+	/* Copy Daemon Response */
+	m_copydata(recv_top, 0, sizeof(struct pfexec_resp), resp);
+	
+	ttyprintf(tty, "Resp: %d  -- %d\n", resp->pfr_flags, resp->pfr_errno);
 
-	/* Release recv chain */
+	/* Release recv mbuf chain */
 	m_freem(recv_top);
 
 close:
@@ -488,9 +492,16 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	uprintf("Task Complete\n");
 
 	if (t_pfr.error) {
-		error = ENOTCONN;
+		/* t_pfr.error is set to ENOTCONN for all errors except socreate */
+		error = t_pfr.error;
 		goto bad_0;
 	}
+
+	/* No errors, we can parse daemon response */
+	if ((error = resp->pfr_errno) != 0) {
+		goto bad_0;
+	}
+	/* Parse the resp packet */
 
 	/* 5. Apply user credential changes to process */
 
