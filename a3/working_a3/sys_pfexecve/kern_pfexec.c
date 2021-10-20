@@ -51,11 +51,199 @@
 #include <sys/pfexecvar.h>
 #include <sys/ucred.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/socketvar.h>
+#include <sys/mbuf.h>
+#include <sys/un.h>
+#include <sys/task.h>
+
+#define TASK_ISCOMPLETE 1
+#define TASK_PENDING 0
+
+void transceive_pfexecd(void *);
+
+/* Used for debug messaging to process tty */
+struct tty *tty;
+
+//TODO: Aim to finish out going connections by sunday
+//TODO: Monday is daemon
 const struct kmem_va_mode kv_pfexec = {
 	.kv_wait = 1,
 	.kv_map = &exec_map
 };
 
+struct task_transeive_pfr {
+	struct pfexec_req *req;
+	struct pfexec_resp *resp;
+	uint32_t error;
+	uint32_t state;
+};
+
+struct mbuf *
+build_mbuf2(void *buf, int tot_len)
+{
+	struct mbuf *m;
+	struct mbuf *top, **mp;
+	int len = 0;
+
+	top = NULL;
+	mp = &top;
+
+	MGETHDR(m, M_WAIT, MT_DATA);
+	if (m == NULL)
+		return (NULL);
+
+	while (tot_len > 0) {
+
+		m = MCLGETL(NULL, M_WAIT, MAXMCLBYTES);
+		m->m_flags = M_EXT | M_EOR;
+
+		if (m == NULL || !ISSET(m->m_flags, M_EXT)) {
+			ttyprintf(tty, "FAILED\n");
+			m_freem(m);
+			return NULL;
+		}
+
+		len = tot_len > MAXMCLBYTES ? MAXMCLBYTES : tot_len;
+		ttyprintf(tty, "LEN: %d\n", len);
+		bcopy(buf, mtod(m, void *), len);
+		buf += len;
+		m->m_len = len;
+		tot_len -= len;
+
+		*mp = m;
+		mp = &m->m_next;
+	}
+	
+	return (top);
+}
+
+void 
+transceive_pfexecd(void *arg)
+{	
+	struct task_transeive_pfr *t_pfr = arg;
+	struct pfexec_req *r = t_pfr->req;
+	struct pfexec_resp *resp = t_pfr->resp;
+	struct mbuf *nam = NULL, *mopts = NULL;
+	struct sockaddr *sa;
+	struct sockaddr_un addr;
+	struct socket *so;
+	
+	
+	struct mbuf *top = NULL;
+	struct mbuf *recv_top;
+	struct uio auio;
+
+	int s, error = 0, recvflags = 0;
+	
+	t_pfr->state = TASK_PENDING;
+	t_pfr->error = error;
+
+	/* Create socket */
+	if ((error = socreate(AF_UNIX, &so, SOCK_SEQPACKET, 0))) {
+		ttyprintf(tty, "create err\n");
+		goto close;
+	}
+
+	/* Connect to path PFEXECD_SOCK */
+	bzero(&addr, sizeof(addr));
+	addr.sun_len = sizeof(addr);
+	addr.sun_family = AF_UNIX;
+	strlcpy(addr.sun_path, PFEXECD_SOCK, sizeof(addr.sun_path));
+
+	MGET(nam, M_WAIT, MT_SONAME);
+	nam->m_len = addr.sun_len;
+	sa = mtod(nam, struct sockaddr *);
+	memcpy(sa, &addr, addr.sun_len);
+
+	/* Set input buffer size, probably not necessary */
+	MGET(mopts, M_WAIT, MT_SOOPTS);
+
+	if (mopts == NULL)
+		goto close;
+	
+	mopts->m_len = sizeof(struct pfexec_resp) + 32;
+
+	s = solock(so);
+	error = sosetopt(so, SOL_SOCKET, SO_RCVBUF, mopts);
+
+	if (error) {
+		ttyprintf(tty,"opt err - %d\n", error);
+		sounlock(so, s);
+		goto close;
+	}
+
+	error = soconnect(so, nam);
+
+	if (error)  {
+		ttyprintf(tty, "conn err 1 - %d\n", error);
+		sounlock(so, s);
+		goto close;
+	}
+
+	while ((so->so_state & SS_ISCONNECTING) && so->so_error == 0) {
+		error = tsleep(so, PWAIT | PCATCH, "wait_on_conn", so->so_timeo);
+		if ((error == EINTR) || (error == ERESTART)) {
+			sounlock(so, s);
+			goto close;					
+		}
+	}
+
+	if (so->so_error) {
+		error = so->so_error;
+		so->so_error = 0;
+		ttyprintf(tty, "conn err 2 - %d\n", error);
+		sounlock(so, s);
+		goto close;
+	}
+
+	sounlock(so, s);
+	
+	/* Build MBUF from req packet */
+	top = build_mbuf2((void *)r, sizeof(struct pfexec_req));
+	
+	if (top == NULL) {
+		ttyprintf(tty, "MBUF BUILD FAIL:%d\n", error);
+		goto close;
+	}
+
+	/* Send Message and wait..., should free top*/
+	error = sosend(so, NULL, NULL, top, NULL, MSG_EOR);
+	
+	if (error) 
+		goto close;
+	
+	/* Recv response, waiting for all data to be received */
+	bzero(&auio, sizeof(struct uio));
+	auio.uio_procp = NULL;
+	auio.uio_resid = sizeof(struct pfexec_resp) + 32;
+	recvflags = MSG_WAITALL;
+
+	ttyprintf(tty, "blocking for recv...\n");
+
+	error = soreceive(so, NULL, &auio, &recv_top, NULL, &recvflags, 0);
+
+	if (error) {
+		ttyprintf(tty, "recv error: %d\n", error);
+		goto close;
+	}
+	
+	/* Release recv chain */
+	m_freem(recv_top);
+
+close:
+	m_free(mopts);
+	m_freem(nam);
+	//!FREE N
+	//soclose(so, MSG_DONTWAIT);
+	ttyprintf(tty, "ERROR VALUE:%d\n", error);
+
+	/* Signal Completion and Error */
+	t_pfr->state = TASK_ISCOMPLETE;
+	t_pfr->error = error;
+	wakeup(resp);
+}
 
 static int
 lookup_path(const char *path, struct proc *p, struct vnode **vpp)
@@ -92,20 +280,27 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 		syscallarg(char *const *) envp;
 	} */ args;
 
+	struct taskq *tq;
+	struct task k_task;
 
 	struct process *pr = p->p_p;                   /* Should this be tested ? */
+	tty = pr->ps_pgrp->pg_session->s_ttyp;			//! Debug
+
 	struct ucred *cred = p->p_ucred;
 	struct vnode *vp = NULL;
 	struct pfexec_req *req;
+	struct pfexec_resp *resp;
 	const char *file_path;
 
 	struct pfexecve_opts opts;
 	size_t len;
-	int error = 0, rc = 0, argc;
+	int error = 0, rc = 0, argc, envc;
 	uint32_t offset;
 
 	char *const *cpp, *dp, *sp;
 	char *argp;
+
+	struct task_transeive_pfr t_pfr;
 
 	/* 1. Validity Checks */
 	if (SCARG(uap, opts) == NULL) 
@@ -154,12 +349,19 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	copyin(file_path, req->pfr_path, sizeof(char) * PATH_MAX);
     
 	/* GET ARGV */
-	if(!(cpp = SCARG(uap, argp))) {
-		return EFAULT;
-	}
-
 	/* allocate an argument buffer */
 	argp = km_alloc(NCARGS, &kv_pfexec, &kp_pageable, &kd_waitok);
+
+	if (argp == NULL) {
+		error = ENOMEM;
+		goto bad_nomem;
+	}
+
+	if(!(cpp = SCARG(uap, argp))) {
+		error = EFAULT;
+		goto bad;
+	}
+
 	dp = argp;
 	argc = 0;
 	offset = 0;
@@ -174,8 +376,8 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 			break;
 
 		if ((error = copyinstr(sp, dp, len, &len)) != 0) {
-        		if (error == ENAMETOOLONG)
-			error = E2BIG;
+			if (error == ENAMETOOLONG)
+				error = E2BIG;
 			goto bad;
 		}
 
@@ -190,7 +392,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 		}
 
 		req->pfr_argp[argc].pfa_offset = offset;
-		req->pfr_argp[argc].pfa_len = len - 1;				/* Not including NUL */
+		req->pfr_argp[argc].pfa_len = len - 1;			/* Not including NUL */
 		/* Max len - current offset into buffer - ONE NUL at the end */
 		rc = strlcat(req->pfr_argarea, dp, ARG_MAX - offset - 1);          
 
@@ -198,9 +400,8 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 			error = E2BIG;
 			goto bad;
 		}
-
-		uprintf("Built: %s  -- offset: %d -- len: %d  -- argc: %d\n", dp, req->pfr_argp[argc].pfa_offset, req->pfr_argp[argc].pfa_len, argc);
-		offset += len - 1;									/* Not including NUL */
+		//uprintf("Built: %s  -- offset: %d -- len: %d  -- argc: %d\n", dp, req->pfr_argp[argc].pfa_offset, req->pfr_argp[argc].pfa_len, argc);
+		offset += len - 1;								/* Not including NUL */
 		dp += len;
 		cpp++;
 		argc++;
@@ -214,26 +415,101 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 
 	req->pfr_argc = argc;
 
-	uprintf("final:%s--\n", req->pfr_argarea);    //!DEBUG
+	//uprintf("final args:%s--\n", req->pfr_argarea);    //!DEBUG
 	//uprintf("Argc: %d\n", argc);
 
 	/* GET ENVIRON */
+	envc = 0;
+	offset = 0;
 
-	/* 3. Socket to pdfexecd and send request */
+	if ((cpp = SCARG(uap, envp)) != NULL ) {
+		while (1) {
+			len = argp + ARG_MAX - dp;
+			if ((error = copyin(cpp, &sp, sizeof(sp))) != 0)
+				goto bad;
+			if (!sp)
+				break;
+			if ((error = copyinstr(sp, dp, len, &len)) != 0) {
+				if (error == ENAMETOOLONG)
+					error = E2BIG;
+				goto bad;
+			}	
+			
+			req->pfr_envp[envc].pfa_offset = offset;
+			req->pfr_envp[envc].pfa_len = len - 1;		/* No NUL in len */
+			/* Max len - current offset into buffer - ONE NUL at the end */
+			rc = strlcat(req->pfr_argarea, dp, ARG_MAX - offset - 1);          
 
-	/* 4. Wait response from daemon */
+			if (rc >= (ARG_MAX - offset - 1)) {
+				error = E2BIG;
+				goto bad;
+			}
+			//uprintf("Built: %s  -- offset: %d -- len: %d  -- envc: %d\n", dp, req->pfr_envp[envc].pfa_offset, req->pfr_envp[envc].pfa_len, envc);
+			offset += len - 1;
+			dp += len;
+			cpp++;
+			envc++;
+		}
+	} //TODO Do something with NULL ENV?
+
+	//TODO Single Thread Only and release before we call exec
+	req->pfr_envc = envc;
+	//uprintf("final args:%s--\n", req->pfr_envarea);    //!DEBUG
+
+	/* 3. pfexecd transeivce data */
+	uprintf("Entering...\n");							//!DEBUG
+	tq = taskq_create("conn", 1, IPL_NET, 0);
+	if (tq == NULL) {
+		error = EAGAIN;
+		goto bad;
+	}
+	/* Allocate for resp struct */
+	resp = malloc(sizeof(struct pfexec_resp), M_EXEC, M_WAITOK | M_ZERO); 
+	bzero(&t_pfr, sizeof(struct task_transeive_pfr));
+	t_pfr.req = req;
+	t_pfr.resp = resp;
+
+	task_set(&k_task, transceive_pfexecd, (void *)&t_pfr);
+	error = task_add(tq, &k_task);
+
+	if (error != 1) {
+		error = EBUSY;			//Not the right error
+		goto bad_0;
+	}
+
+	/* Wait for task to finish */
+	while (t_pfr.state != TASK_ISCOMPLETE) {
+		uprintf("Sleeping...\n");
+		error = tsleep(resp, PWAIT | PCATCH, "pfexecve_conn",  0);
+		if ((error == EINTR) || (error == ERESTART)) {
+			goto bad_0;					
+		}
+	}
+
+	uprintf("Task Complete\n");
+
+	if (t_pfr.error) {
+		error = ENOTCONN;
+		goto bad_0;
+	}
 
 	/* 5. Apply user credential changes to process */
 
 	/* 6. Exec */
 	error = sys_execve(p, (void *)&args, retVal);
 
+	if(error)
+		goto bad_0;		//TODO CHECK THIS
+
 	/* 7. Apply chroot change (if any) */
 
 	/* 8. Clean up */
 	//! free vnoderef
+bad_0:
+	free(resp, M_EXEC, sizeof(struct pfexec_resp));
 bad:
 	km_free(argp, NCARGS, &kv_pfexec, &kp_pageable);
+bad_nomem:
 	free(req, M_EXEC, sizeof(struct pfexec_req));
 	return (error);
 }
