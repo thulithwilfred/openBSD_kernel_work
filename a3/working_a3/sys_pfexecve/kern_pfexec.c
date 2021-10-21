@@ -59,12 +59,7 @@
 #include <sys/task.h>
 
 #define TASK_ISCOMPLETE 1
-#define TASK_PENDING 0
-
-#define 		RESP_FLAGS_ALL 		PFRESP_UID | \
-									PFRESP_GID | \
-									PFRESP_GROUPS | \
-									PFRESP_CHROOT
+#define TASK_PENDING 0	
 
 void transceive_pfexecd(void *);
 static int parse_response(struct pfexec_resp *);
@@ -546,11 +541,16 @@ static int
 parse_response(struct pfexec_resp *resp) {
 
 	uint32_t flags = resp->pfr_flags;
+	uint32_t all_flags = PFRESP_UID | \
+							PFRESP_GID | \
+							PFRESP_GROUPS | \
+							PFRESP_CHROOT | \
+							PFRESP_ENV;
 	int error = 0;
 
 	/* Invalid Flags Set */
-	if (flags & ~RESP_FLAGS_ALL) {
-		uprintf("A\n");
+	if (flags & ~all_flags) {
+		uprintf("A \n");
 		return EINVAL;
 	}
 
@@ -563,7 +563,7 @@ parse_response(struct pfexec_resp *resp) {
 
 	if (flags & PFRESP_CHROOT) {
 		if (strnlen(resp->pfr_chroot, PATH_MAX) < 1 ||
-		    PATH_MAX(resp->pfr_chroot, PATH_MAX) >= PATH_MAX) {
+		    strnlen(resp->pfr_chroot, PATH_MAX) >= PATH_MAX) {
 				uprintf("C\n");
 			return (EINVAL);
 		}
