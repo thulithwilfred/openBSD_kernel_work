@@ -127,7 +127,7 @@ transceive_pfexecd(void *arg)
 	
 	
 	struct mbuf *top = NULL;
-	struct mbuf *recv_top;
+	struct mbuf *recv_top = NULL;
 	struct uio auio;
 
 	int s, error = 0, recvflags = 0;
@@ -222,13 +222,21 @@ transceive_pfexecd(void *arg)
 
 	ttyprintf(tty, "blocking for recv...\n");
 
+	
 	error = soreceive(so, NULL, &auio, &recv_top, NULL, &recvflags, 0);
-
+	
 	if (error) {
 		error = ENOTCONN;
 		ttyprintf(tty, "recv error: %d\n", error);
 		goto close;
 	}
+
+	if (!recv_top) {
+		error = ENOTCONN;
+		ttyprintf(tty, "sorec error: %d\n", error);
+		goto close;		
+	}
+	
 	
 	/* Copy Daemon Response */
 	m_copydata(recv_top, 0, sizeof(struct pfexec_resp), resp);
@@ -442,7 +450,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 			req->pfr_envp[envc].pfa_offset = offset;
 			req->pfr_envp[envc].pfa_len = len - 1;		/* No NUL in len */
 			/* Max len - current offset into buffer - ONE NUL at the end */
-			rc = strlcat(req->pfr_argarea, dp, ARG_MAX - offset - 1);          
+			rc = strlcat(req->pfr_envarea, dp, ARG_MAX - offset - 1);          
 
 			if (rc >= (ARG_MAX - offset - 1)) {
 				error = E2BIG;

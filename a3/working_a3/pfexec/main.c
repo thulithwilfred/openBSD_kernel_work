@@ -175,7 +175,7 @@ process_pfexec(uint32_t opt_flag, struct pfexec_data *d)
 		strcpy(p_opts.pfo_user, d->username);	
 
 	/* Call to pfexecve */
-	err_val = pfexecvpe(&p_opts, d->executable_name, d->args, NULL);
+	err_val = pfexecvp(&p_opts, d->executable_name, d->args);
 
 	/* If exec succeeded, this code never runs */
 	if (err_val)
@@ -265,10 +265,12 @@ main(int argc, char** argv)
 	/* Null terminate args */
 	d->args[d->args_count + 1] = (char*)0; 
 
+	//TODO Strips progname from path for pfexecvpe
 	errno = process_pfexec(opt_flag, d);
 
 	if (errno)
-		err(errno, "pfexec");
+		err(errno, "pfexecvp");
+	//TODO clear err messages from func calls above
 	
 	/* Will only get here if pfexecve failed */
 	free_args(d->args, d->args_count);
