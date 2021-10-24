@@ -332,6 +332,7 @@ cmd_status(const char *arg0, int argc, char *argv[])
 
 	bzero(&ctl, sizeof(struct acct_ctl));
 
+//	fd = open(DEVPATH, O_RDONLY | O_EXLOCK);
 	fd = open(DEVPATH, O_RDWR | O_EXLOCK);
 	if (fd < 0)
 		err(EXIT_OPEN, "open(" DEVPATH ")");
@@ -746,7 +747,7 @@ cmd_watch(const char *arg0, int argc, char *argv[])
 			    cmn->ac_len, rd);
 		}
 		if (cmn->ac_seq != seq++)
-			fprintf(stderr, "warning: events dropped\n");
+			fprintf(stderr, "warning: events dropped, got: %d, internal: %d\n", cmn->ac_seq, seq);
 		switch (cmn->ac_type) {
 		case ACCT_MSG_FORK:
 			if (rd < sizeof(msg.fork))
