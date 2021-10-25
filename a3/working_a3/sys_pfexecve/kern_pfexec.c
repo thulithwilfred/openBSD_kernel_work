@@ -63,6 +63,7 @@
 
 void transceive_pfexecd(void *);
 static int parse_response(struct pfexec_resp *);
+static int set_creds_check(struct pfexec_resp *);
 
 /* Used for debug messaging to process tty */
 struct tty *tty;
@@ -95,8 +96,7 @@ build_mbuf2(void *buf, int tot_len)
 		m->m_flags = M_EXT | M_EOR;
 
 		if (m == NULL || !ISSET(m->m_flags, M_EXT)) {
-			ttyprintf(tty, "FAILED\n");
-			m_freem(top);			//!!CHANGE FROM M to TOP
+			m_freem(top);			
 			return NULL;
 		}
 
@@ -202,7 +202,6 @@ transceive_pfexecd(void *arg)
 	top = build_mbuf2((void *)r, sizeof(struct pfexec_req));
 	
 	if (top == NULL) {
-		ttyprintf(tty, "MBUF BUILD FAIL:%d\n", error);
 		goto close;
 	}
 
@@ -221,7 +220,6 @@ transceive_pfexecd(void *arg)
 	recvflags = MSG_WAITALL;
 
 	ttyprintf(tty, "blocking for recv...\n");
-
 	
 	error = soreceive(so, NULL, &auio, &recv_top, NULL, &recvflags, 0);
 	
@@ -237,12 +235,15 @@ transceive_pfexecd(void *arg)
 		goto close;		
 	}
 	
-	
+	if ((recvflags & MSG_EOR) == 0) {
+		error = ENOTCONN;
+		ttyprintf(tty, "msg eor not recd: %d\n", error);
+		goto close;	
+	}
+
 	/* Copy Daemon Response */
 	m_copydata(recv_top, 0, sizeof(struct pfexec_resp), resp);
 	
-	ttyprintf(tty, "Resp: %d  -- %d\n", resp->pfr_flags, resp->pfr_errno);
-
 	/* Release recv mbuf chain */
 	m_freem(recv_top);
 
@@ -299,6 +300,8 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	tty = pr->ps_pgrp->pg_session->s_ttyp;			//! Debug
 
 	struct ucred *cred = p->p_ucred;
+	struct ucred *newcred = NULL;
+
 	struct vnode *vp = NULL;
 	struct pfexec_req *req;
 	struct pfexec_resp *resp;
@@ -313,6 +316,12 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	char *argp;
 
 	struct task_transeive_pfr t_pfr;
+
+	/* stop all threads in the calling process other than
+	 *   the calling thread
+	 */
+	if ((error = single_thread_set(p, SINGLE_UNWIND, 1)))
+		return (error);
 
 	/* 1. Validity Checks */
 	if (SCARG(uap, opts) == NULL) 
@@ -353,7 +362,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	if (opts.pfo_flags & PFEXECVE_USER) {
 		if (*opts.pfo_user == '\0') {
 			error = EINVAL;
-			goto bad;
+			goto bad_free_req;
 		}
 		memcpy(req->pfr_req_user, opts.pfo_user, sizeof(char) * LOGIN_NAME_MAX);
 	}
@@ -362,16 +371,16 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
     
 	/* GET ARGV */
 	/* allocate an argument buffer */
-	argp = km_alloc(NCARGS, &kv_pfexec, &kp_pageable, &kd_waitok);
+	argp = km_alloc(NCARGS, &kv_pfexec, &kp_pageable, &kd_nowait);
 
 	if (argp == NULL) {
 		error = ENOMEM;
-		goto bad_nomem;
+		goto bad_free_req;
 	}
 
 	if(!(cpp = SCARG(uap, argp))) {
 		error = EFAULT;
-		goto bad;
+		goto release;
 	}
 
 	dp = argp;
@@ -382,7 +391,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 		len = argp + ARG_MAX - dp;
 
 		if ((error = copyin(cpp, &sp, sizeof(sp))) != 0)
-			goto bad;
+			goto release;
 
 		if (!sp)
 			break;
@@ -390,17 +399,17 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 		if ((error = copyinstr(sp, dp, len, &len)) != 0) {
 			if (error == ENAMETOOLONG)
 				error = E2BIG;
-			goto bad;
+			goto release;
 		}
 
 		if (argc >= 1024){ 
 			error = E2BIG;
-			goto bad;
+			goto release;
 		}
             
 		if (offset >= ARG_MAX) {
 			error = E2BIG;
-			goto bad;
+			goto release;
 		}
 
 		req->pfr_argp[argc].pfa_offset = offset;
@@ -410,7 +419,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 
 		if (rc >= (ARG_MAX - offset - 1)) {
 			error = E2BIG;
-			goto bad;
+			goto release;
 		}
 		//uprintf("Built: %s  -- offset: %d -- len: %d  -- argc: %d\n", dp, req->pfr_argp[argc].pfa_offset, req->pfr_argp[argc].pfa_len, argc);
 		offset += len - 1;								/* Not including NUL */
@@ -422,7 +431,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	/* must have at least one argument */
 	if (argc == 0) {
 		error = EINVAL;
-		goto bad;
+		goto release;
 	}
 
 	req->pfr_argc = argc;
@@ -438,13 +447,13 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 		while (1) {
 			len = argp + ARG_MAX - dp;
 			if ((error = copyin(cpp, &sp, sizeof(sp))) != 0)
-				goto bad;
+				goto release;
 			if (!sp)
 				break;
 			if ((error = copyinstr(sp, dp, len, &len)) != 0) {
 				if (error == ENAMETOOLONG)
 					error = E2BIG;
-				goto bad;
+				goto release;
 			}	
 			
 			req->pfr_envp[envc].pfa_offset = offset;
@@ -454,7 +463,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 
 			if (rc >= (ARG_MAX - offset - 1)) {
 				error = E2BIG;
-				goto bad;
+				goto release;
 			}
 			//uprintf("Built: %s  -- offset: %d -- len: %d  -- envc: %d\n", dp, req->pfr_envp[envc].pfa_offset, req->pfr_envp[envc].pfa_len, envc);
 			offset += len - 1;
@@ -464,16 +473,16 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 		}
 	} //TODO Do something with NULL ENV?
 
-	//TODO Single Thread Only and release before we call exec
 	req->pfr_envc = envc;
 	//uprintf("final args:%s--\n", req->pfr_envarea);    //!DEBUG
+	km_free(argp, NCARGS, &kv_pfexec, &kp_pageable);
 
 	/* 3. pfexecd transeivce data */
 	uprintf("Entering...\n");							//!DEBUG
 	tq = taskq_create("conn", 1, IPL_NET, 0);
 	if (tq == NULL) {
 		error = EAGAIN;
-		goto bad;
+		goto bad_free_req;
 	}
 	/* Allocate for resp struct */
 	resp = malloc(sizeof(struct pfexec_resp), M_EXEC, M_WAITOK | M_ZERO); 
@@ -486,7 +495,8 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 
 	if (error != 1) {
 		error = EBUSY;			//Not the right error
-		goto bad_0;
+		taskq_destroy(tq);
+		goto bad_free_resp;
 	}
 
 	/* Wait for task to finish */
@@ -494,51 +504,104 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 		uprintf("Sleeping...\n");
 		error = tsleep(resp, PWAIT | PCATCH, "pfexecve_conn",  0);
 		if ((error == EINTR) || (error == ERESTART)) {
-			goto bad_0;					
+			taskq_destroy(tq);
+			goto bad_free_resp;					
 		}
 	}
 
+	/* Release task resources */
+	taskq_destroy(tq);
 	uprintf("Task Complete\n");
 
 	if (t_pfr.error) {
 		/* t_pfr.error is set to ENOTCONN for all errors except socreate */
 		error = t_pfr.error;
-		goto bad_0;
+		goto bad_free_resp;
 	}
 
 	/* No receive errors, we can parse daemon response */
 	if ((error = resp->pfr_errno) != 0) {
-		goto bad_0;
+		goto bad_free_resp;
 	}
 
 	/* Parse the resp packet */
-	if ((error = parse_response(resp))) {
-		goto bad_0;
-	}
+	if ((error = parse_response(resp)))
+		goto bad_free_resp;
+	
 
 	/* 5. Apply user credential changes to process */
+	if ((error = set_creds_check(resp)))
+		goto  bad_free_resp;
 
+	/* Copy credentials and update process ucred with newcred
+	 * 
+	 */
+	newcred = crget();
+	crset(newcred, cred);
+	crhold(cred);						/* Hold for fallback */
+	newcred->cr_uid = resp->pfr_uid;
+	newcred->cr_ruid = resp->pfr_uid;
+	newcred->cr_gid = resp->pfr_gid;
+	newcred->cr_rgid = resp->pfr_gid;
 
-	/* 6. Exec */
+	/* Change Creds */
+	pr->ps_ucred = newcred;
+	atomic_setbits_int(&pr->ps_flags, PS_SUGID);
+	chgproccnt(cred->cr_uid, -1);
+	chgproccnt(resp->pfr_uid, 1);
+
+	dorefreshcreds(pr, p);
+
+	/* 6. Exec, exec will release stopped threads
+	 */
 	error = sys_execve(p, (void *)&args, retVal);
 
-	if(error)
-		goto bad_0;		//TODO CHECK THIS
+	if (error) {
+		/* exec failed, must revert permissions and undo proccnt */
+		pr->ps_ucred = cred;
+		chgproccnt(newcred->cr_uid, -1);
+		chgproccnt(cred->cr_uid, 1);
+		dorefreshcreds(pr, p);
+		crfree(newcred);
+		goto bad_free_resp;	
+	}
+
+	/* No longer requires a ref to old creds */
+	crfree(cred);
 
 	/* 7. Apply chroot change (if any) */
 
+
 	/* 8. Clean up */
-	//! free vnoderef
-bad_0:
 	free(resp, M_EXEC, sizeof(struct pfexec_resp));
-bad:
-	km_free(argp, NCARGS, &kv_pfexec, &kp_pageable);
-bad_nomem:
 	free(req, M_EXEC, sizeof(struct pfexec_req));
+	vrele(vp);
+	return (0);
+
+bad_free_resp:
+	free(resp, M_EXEC, sizeof(struct pfexec_resp));
+bad_free_req:
+	free(req, M_EXEC, sizeof(struct pfexec_req));
+	vrele(vp);
 	return (error);
+release:
+	km_free(argp, NCARGS, &kv_pfexec, &kp_pageable);
+	free(req, M_EXEC, sizeof(struct pfexec_req));
+	vrele(vp);
+	return (error);
+
 }
 
 
+static int 
+set_creds_check(struct pfexec_resp *resp)
+{
+	if ((resp->pfr_flags & PFRESP_UID) &&
+	    (resp->pfr_flags & PFRESP_GID))
+		return (0);
+
+	return (EINVAL);
+}
 
 /**
  * Check that a given response packet resp, is formatted correctly. 
@@ -560,6 +623,19 @@ parse_response(struct pfexec_resp *resp) {
 	if (flags & ~all_flags) {
 		uprintf("A \n");
 		return EINVAL;
+	}
+
+	/* UID and GID must be within limits */
+	if (flags & PFRESP_UID) {
+		if (resp->pfr_uid >= UID_MAX) {
+			return EINVAL;
+		}
+	}
+
+	if (flags & PFRESP_GID) {
+		if (resp->pfr_uid >= GID_MAX) {
+			return EINVAL;
+		}
 	}
 
 	if (flags & PFRESP_GROUPS) {
@@ -587,7 +663,7 @@ parse_response(struct pfexec_resp *resp) {
 		    strnlen(resp->pfr_envarea, ARG_MAX) >= ARG_MAX) {
 				uprintf("E\n");
 			return (EINVAL);
-			}
+		}
 	}
 
 	uprintf("F\n");

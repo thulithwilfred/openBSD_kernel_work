@@ -69,11 +69,14 @@ static int	process_request(const struct pfexec_req *,
 static void	log_request(const struct pfexec_req *,
     const struct pfexec_resp *);
 
-static int permit(const struct pfexec_req *, const struct rule **);
-static int match(const struct pfexec_req *, struct rule *);
+static int permit(const struct pfexec_req *, struct pfexec_resp *,
+    const struct rule **);
+static int match(const struct pfexec_req *, struct pfexec_resp *,
+    struct rule *);
 static int parsegid(const char *, gid_t *);
 static int uidcheck(const char *, uid_t);
 static int parseuid(const char *, uid_t *);
+static int gid_from_uid(const char *, gid_t *); 
 
 void __dead
 usage(const char *arg0)
@@ -486,23 +489,23 @@ process_request(const struct pfexec_req *req, struct pfexec_resp *resp)
 	}
 
 	/* TODO: determine whether this request should be allowed */	
-	if (!permit(req, &rule)) {
+	if (!permit(req, resp, &rule)) {
 		syslog(LOG_AUTHPRIV | LOG_INFO, "Request denied");
 		return (EPERM);
 	}
 
-	resp->pfr_flags = 31;
+	/* A matching rule is found, permission is granted */
 	return (0);
 }
 
 static int 
-permit(const struct pfexec_req *req, const struct rule **lastr) 
+permit(const struct pfexec_req *req, struct pfexec_resp *resp, const struct rule **lastr) 
 {
 	size_t i;
 	*lastr = NULL;
 
 	for (i = 0; i < nrules; i++) {
-		if (match(req, rules[i]))
+		if (match(req, resp, rules[i]))
 			*lastr = rules[i];
 	}
 	if (!*lastr)
@@ -513,7 +516,7 @@ permit(const struct pfexec_req *req, const struct rule **lastr)
 
 
 static int
-match(const struct pfexec_req *req, struct rule *r)
+match(const struct pfexec_req *req, struct pfexec_resp *resp, struct rule *r)
 {
 
 	uint32_t uid = req->pfr_uid;
@@ -522,7 +525,7 @@ match(const struct pfexec_req *req, struct rule *r)
 	uint32_t *groups = (uint32_t *)req->pfr_groups;
 	
 	uid_t uid_req_user;
-	gid_t rgid;
+	gid_t rgid, target_gid;
 	char* test_arg;
 
 	int i;
@@ -541,17 +544,38 @@ match(const struct pfexec_req *req, struct rule *r)
 			return 0;		
 	}
 
-	/* Run as other user..? */
-	if (r->target && (req->pfr_req_flags & PFEXECVE_USER)) {		
-		if (parseuid(req->pfr_req_user, &uid_req_user) != 0)
+	/* If target specified and target requested, these must match user */
+	if (r->target && (req->pfr_req_flags & PFEXECVE_USER) != 0) {	
+		if (parseuid(req->pfr_req_user, &uid_req_user) != 0) 
 			return 0;
-		if (uidcheck(r->target, uid_req_user) != 0)
+		
+		if (uidcheck(r->target, uid_req_user) != 0) 
+			return 0;	
+		
+		/* Target UID matched with reqeusted */
+		if (gid_from_uid(r->target, &target_gid) != 0) 
+			return 0;
+
+	} else if ((req->pfr_req_flags & PFEXECVE_USER) != 0){
+		/* Run as requested target, no rule restrictions */
+		if (parseuid(req->pfr_req_user, &uid_req_user) != 0) 
+			return 0;
+
+		if (gid_from_uid(req->pfr_req_user, &target_gid) != 0) 
+			return 0;	
+
+	} else {
+		/* If no target specified, set default to root */
+		if (parseuid("root", &uid_req_user) != 0)
+			return 0;
+
+		if (gid_from_uid("root", &target_gid) != 0) 
 			return 0;
 	}
+	
 
 	/* Check for command specifications */
 	if (r->cmd) {
-	
 		if (strcmp(r->cmd, req->pfr_path)) 
 			return 0;
 		
@@ -574,8 +598,8 @@ match(const struct pfexec_req *req, struct rule *r)
 				test_arg[req->pfr_argp[i+1].pfa_len + 1] = '\0';
 
 				if (strcmp(r->cmdargs[i], test_arg)) {
-					return 0;
 					free(test_arg);
+					return 0;
 				}
 				bzero(test_arg, sizeof(char) * ARG_MAX);
 			}
@@ -586,6 +610,12 @@ match(const struct pfexec_req *req, struct rule *r)
 			}
 		}
 	}
+
+	/* Update response IDs and flags */
+	resp->pfr_flags = (PFRESP_UID | PFRESP_GID);
+	resp->pfr_uid = uid_req_user;
+	resp->pfr_gid = target_gid;
+
 	return 1;
 }
 
@@ -637,6 +667,26 @@ parseuid(const char *s, uid_t *uid)
 		return -1;
 	return 0;
 }
+
+
+static int
+gid_from_uid(const char *s, gid_t *gid) 
+{
+	struct passwd *pw;
+	const char *errstr;
+
+	if ((pw = getpwnam(s)) != NULL) {
+		*gid = pw->pw_gid;
+		if (*gid == GID_MAX)
+			return -1;
+		return 0;
+	}
+	*gid = strtonum(s, 0, GID_MAX - 1, &errstr);
+	if (errstr)
+		return -1;
+	return 0;
+}
+
 
 static void
 log_request(const struct pfexec_req *req, const struct pfexec_resp *resp)
