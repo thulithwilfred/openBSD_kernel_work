@@ -187,11 +187,16 @@ option:		TNOPASS {
 			$$.options = SETGROUPS;
 			$$.envlist = NULL;
 			$$.grplist = $3.strlist;
+		} | TCHROOT /* empty */ {
+			$$.options = CHROOT;
+			$$.envlist = NULL;
+			$$.chroot_path = NULL;		
 		} | TCHROOT '{' TSTRING '}' {
 			$$.options = CHROOT;
 			$$.envlist = NULL;
 			$$.chroot_path = $3.str;
 		} ;
+
 
 strlist:	/* empty */ {
 			if (!($$.strlist = calloc(1, sizeof(char *))))

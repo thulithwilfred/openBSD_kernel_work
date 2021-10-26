@@ -73,7 +73,8 @@ usage(void)
 	     "of \"root\"\n");
 	fprintf(stderr, "\t-n\tNon-iteractive/batch mode: no prompts are used\n\t\t"
 	    "if prompts are required, will fail\n");
-	fprintf(stderr, "\t-s\tExecute a shell, rather than a specific command\n");
+	fprintf(stderr, "\t-s\tExecute a shell, rather than a specific command,"
+	    " no options\n");
 
 	exit(E_BADARGS);
 }
@@ -122,14 +123,21 @@ int
 execute_shell(uint32_t opt_flag, struct pfexec_data *d) 
 {
 	struct pfexecve_opts p_opts;
-	int err_val = 0;
+	int err_val = 0, i;
 	char *shell_path = malloc(sizeof(char) * 128);
+	char **args = malloc(sizeof(char *) * 2);
+	args[0] = malloc(sizeof(char) * 512);
+	args[1] = malloc(sizeof(char) * 12);
 
 	/* Evaluate SHELL env variable */
 	if (getenv("SHELL") == NULL ) 
 		strcpy(shell_path, "/bin/ksh");
 	else
-		shell_path = getenv("SHELL");
+		strcpy(shell_path, getenv("SHELL"));
+
+	/* Setup args */
+	strncpy(args[0], shell_path, 512);
+	args[1] = NULL;
 
 	p_opts.pfo_flags = gen_pfo_flags(opt_flag);	
 
@@ -137,18 +145,17 @@ execute_shell(uint32_t opt_flag, struct pfexec_data *d)
 	if (opt_flag & PFEXEC_U) 
 		strcpy(p_opts.pfo_user, d->username);
 		
-	/* Call to pfexecve ? */
-	printf("UNAME: %s\nSHELL: %s\n", p_opts.pfo_user, shell_path);
-
 	/* Call to pfexecve */
-	//err_val = pfexecvpe(&p_opts, shell_path, NULL, NULL);
-	err_val = pfexecvp(&p_opts, shell_path, NULL);
+	err_val = pfexecvp(&p_opts, shell_path, args);
 
 	/* If exec succeeded, this code never runs */
-	if (err_val)
-		err(err_val, "pfexecvp");
+	free(shell_path);
+	for (i = 0; i < 2; ++i)
+		free(args[i]);
 
-	return 0;
+	free(args);
+
+	return err_val;
 }
 
 /**
@@ -178,14 +185,12 @@ process_pfexec(uint32_t opt_flag, struct pfexec_data *d)
 	err_val = pfexecvp(&p_opts, d->executable_name, d->args);
 
 	/* If exec succeeded, this code never runs */
-	if (err_val)
-		err(err_val, "pfexecvp");
-
 	return (err_val);
 }
 
 /**
-* @brief pfexec is a commandline utility that processes it's arguments and calls the pfexecve() system call.
+* @brief pfexec is a commandline utility that processes
+*		 it's arguments and calls the pfexecve() system call.
 * 
 * @return int 0 on success or errno
 */
@@ -228,8 +233,12 @@ main(int argc, char** argv)
 	if (opt_flag & PFEXEC_S) {
 		/* Should not have any remaining args */
 		if (argc != 0)
-			usage(); 
-		return process_pfexec(opt_flag, d);
+			usage();
+		
+		errno = execute_shell(opt_flag, d);
+
+		if (errno)
+			goto early_close;
 	}
 
 	if (argc == 0)
@@ -265,15 +274,15 @@ main(int argc, char** argv)
 	/* Null terminate args */
 	d->args[d->args_count + 1] = (char*)0; 
 
-	//TODO Strips progname from path for pfexecvpe
 	errno = process_pfexec(opt_flag, d);
 
-	if (errno)
-		err(errno, "pfexecvp");
-	//TODO clear err messages from func calls above
-	
 	/* Will only get here if pfexecve failed */
 	free_args(d->args, d->args_count);
+
+early_close:
 	free(d);
-	return(E_FAILED_PFEXEC);
+	if (errno)
+		err(errno, "pfexecvp");
+
+	return(0);
 }

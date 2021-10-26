@@ -45,7 +45,8 @@ struct env {
 
 struct env req_envnode;
 
-static void fillenv(struct env *env, const char **envlist);
+static void fillenv(struct env *, const char **);
+void remove_dups_from_basic(char *, struct env *);
 
 static int
 envcmp(struct envnode *a, struct envnode *b)
@@ -135,6 +136,11 @@ createenv(const struct rule *rule, const struct passwd *mypw,
 			continue;
 		memcpy(name, e, len);
 		name[len] = '\0';
+		
+		/* Removes Duplicated from default env tree */
+		if(rule->options & KEEPENV) {
+			remove_dups_from_basic(name, env);		
+		}
 
 		node = createnode(name, eq + 1);
 		if (RB_INSERT(envtree, &req_envnode.root, node)) {
@@ -146,6 +152,22 @@ createenv(const struct rule *rule, const struct passwd *mypw,
 	}
 	return env;
 }
+/*
+ * Remove duplicates from the default set created.
+ *	only to be used when keepenv is set. 
+ */
+void
+remove_dups_from_basic(char *name, struct env *env)
+{
+	struct envnode *node, key;
+
+	key.key = name;
+	if ((node = RB_FIND(envtree, &env->root, &key))) {
+		RB_REMOVE(envtree, &env->root, node);	
+		freenode(node);
+	}
+
+}
 
 static char **
 flattenenv(struct env *env, const struct rule *rule)
@@ -154,10 +176,16 @@ flattenenv(struct env *env, const struct rule *rule)
 	struct envnode *node, *next;
 	u_int i;
 
-	envp = reallocarray(NULL, env->count + 1, sizeof(char *));
+	if (rule->options & KEEPENV)
+		envp = reallocarray(NULL, env->count + req_envnode.count + 1,
+	    	sizeof(char *));
+	else 
+		envp = reallocarray(NULL, env->count + 1, sizeof(char *));	
+
 	if (!envp)
 		err(1, NULL);
 	i = 0;
+
 	/* Append default env */
 	RB_FOREACH_SAFE(node, envtree, &env->root, next) {
 		if (asprintf(&envp[i], "%s=%s", node->key, node->value) == -1)
@@ -166,13 +194,15 @@ flattenenv(struct env *env, const struct rule *rule)
 		freenode(node);
 		i++;
 	}
-	
+
+	node = NULL;
+	next = NULL;
 	/* Append KEEP env */
 	if (rule->options & KEEPENV) {
 		RB_FOREACH_SAFE(node, envtree, &req_envnode.root, next) {
 			if (asprintf(&envp[i], "%s=%s", node->key, node->value) == -1)
 				err(1, NULL);
-			RB_REMOVE(envtree, &env->root, node);
+			RB_REMOVE(envtree, &req_envnode.root, node);
 			freenode(node);
 			i++;
 		}
@@ -180,7 +210,6 @@ flattenenv(struct env *env, const struct rule *rule)
 
 	envp[i] = NULL;
 	free(env);
-
 	return envp;
 }
 
@@ -253,8 +282,6 @@ fillenv(struct env *env, const char **envlist)
 	}
 }
 
-
-
 char **
 prepenv(const struct rule *rule, const struct passwd *mypw,
     const struct passwd *targpw)
@@ -263,8 +290,9 @@ prepenv(const struct rule *rule, const struct passwd *mypw,
 
 	env = createenv(rule, mypw, targpw);
 	
-	if (rule->envlist)
+	if (rule->envlist) {
 		fillenv(env, rule->envlist);
+	}
 
 	return flattenenv(env, rule);
 }

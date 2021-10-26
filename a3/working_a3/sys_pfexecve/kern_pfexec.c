@@ -64,6 +64,9 @@
 void transceive_pfexecd(void *);
 static int parse_response(struct pfexec_resp *);
 static int set_creds_check(struct pfexec_resp *);
+static int dochroot_tings(struct proc *, struct pfexec_resp *);
+char **build_new_env(struct pfexec_resp *);
+void free_env(char **,  struct pfexec_resp *);
 
 /* Used for debug messaging to process tty */
 struct tty *tty;
@@ -80,30 +83,35 @@ struct task_transeive_pfr {
 	uint32_t state;
 };
 
+/**
+ * Create and return and mbuf cluster chain from the buffer in buf,
+ * based on the buffer size tot_len. 
+ */
 struct mbuf *
 build_mbuf2(void *buf, int tot_len)
 {
 	struct mbuf *m;
 	struct mbuf *top, **mp;
-	int len = 0;
+	int len = 0, offset = 0;
 
 	top = NULL;
 	mp = &top;
 
 	while (tot_len > 0) {
 
-		m = MCLGETL(NULL, M_WAIT, MAXMCLBYTES);
-		m->m_flags = M_EXT | M_EOR;
+		len = (tot_len > MAXMCLBYTES) ? MAXMCLBYTES : tot_len;
 
-		if (m == NULL || !ISSET(m->m_flags, M_EXT)) {
+		m = MCLGETL(NULL, M_WAIT, len);
+
+		if (m == NULL) {
 			m_freem(top);			
 			return NULL;
 		}
 
-		len = tot_len > MAXMCLBYTES ? MAXMCLBYTES : tot_len;
-		//ttyprintf(tty, "LEN: %d\n", len);
-		bcopy(buf, mtod(m, void *), len);
-		buf += len;
+		bzero(m->m_data, len);
+		memcpy(m->m_data, buf + offset, len);
+
+		offset += len;
 		m->m_len = len;
 		tot_len -= len;
 
@@ -114,6 +122,11 @@ build_mbuf2(void *buf, int tot_len)
 	return (top);
 }
 
+/**
+ * Attemp a connection with the daemon and sent a message, block whilst
+ * waiting for a response. If any errors are occured, ENOTCONN is set in the 
+ * arg errors.
+ */
 void 
 transceive_pfexecd(void *arg)
 {	
@@ -199,7 +212,7 @@ transceive_pfexecd(void *arg)
 	sounlock(so, s);
 	
 	/* Build MBUF from req packet */
-	top = build_mbuf2((void *)r, sizeof(struct pfexec_req));
+	top = build_mbuf2((void *)r, sizeof(*r));
 	
 	if (top == NULL) {
 		goto close;
@@ -250,7 +263,7 @@ transceive_pfexecd(void *arg)
 close:
 	m_free(mopts);
 	m_freem(nam);
-	soclose(so, MSG_DONTWAIT);
+	soclose(so, 0);
 	ttyprintf(tty, "ERROR VALUE:%d\n", error);
 	/* Signal Completion and Error */
 	t_pfr->state = TASK_ISCOMPLETE;
@@ -258,6 +271,9 @@ close:
 	wakeup(resp);
 }
 
+/**
+ * Validate that a path exists.
+ */
 static int
 lookup_path(const char *path, struct proc *p, struct vnode **vpp)
 {
@@ -277,6 +293,9 @@ lookup_path(const char *path, struct proc *p, struct vnode **vpp)
 	return (0);
 }
 
+/*
+ * pfexec system call.
+ */
 int
 sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 {
@@ -296,7 +315,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	struct taskq *tq;
 	struct task k_task;
 
-	struct process *pr = p->p_p;                   /* Should this be tested ? */
+	struct process *pr = p->p_p;                  
 	tty = pr->ps_pgrp->pg_session->s_ttyp;			//! Debug
 
 	struct ucred *cred = p->p_ucred;
@@ -312,6 +331,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	int error = 0, rc = 0, argc, envc;
 	uint32_t offset;
 
+	char **new_env = NULL;
 	char *const *cpp, *dp, *sp;
 	char *argp;
 
@@ -341,16 +361,12 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	if (error != 0)
 		return (error);        /* vnode cannot be resolved */
 
-	SCARG(&args, path) = SCARG(uap, path);
-	SCARG(&args, argp) = SCARG(uap, argp);
-	SCARG(&args, envp) = SCARG(uap, envp);
-
 	//copyin(SCARG(uap, path), path, sizeof(path));	//! Debug Only
 	//uprintf("TRYING_PATH: %s\n", path);			//! Debug Only
 
 	/* 2. Setup request packet */
 	req = malloc(sizeof(struct pfexec_req), M_EXEC, M_WAITOK | M_ZERO); 
-  
+	bzero(req, sizeof(struct pfexec_req));
 	req->pfr_pid = pr->ps_pid;
 	req->pfr_uid = cred->cr_uid;
 	req->pfr_gid = cred->cr_gid;
@@ -371,7 +387,8 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
     
 	/* GET ARGV */
 	/* allocate an argument buffer */
-	argp = km_alloc(NCARGS, &kv_pfexec, &kp_pageable, &kd_nowait);
+	argp =  malloc(NCARGS, M_EXEC, M_WAITOK | M_ZERO | M_CANFAIL); 
+	//argp = km_alloc(NCARGS, &kv_pfexec, &kp_pageable, &kd_nowait);
 
 	if (argp == NULL) {
 		error = ENOMEM;
@@ -459,7 +476,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 			req->pfr_envp[envc].pfa_offset = offset;
 			req->pfr_envp[envc].pfa_len = len - 1;		/* No NUL in len */
 			/* Max len - current offset into buffer - ONE NUL at the end */
-			rc = strlcat(req->pfr_envarea, dp, ARG_MAX - offset - 1);          
+			rc = strlcat(req->pfr_envarea, dp, ARG_MAX - offset - 1);
 
 			if (rc >= (ARG_MAX - offset - 1)) {
 				error = E2BIG;
@@ -474,9 +491,9 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	} //TODO Do something with NULL ENV?
 
 	req->pfr_envc = envc;
-	//uprintf("final args:%s--\n", req->pfr_envarea);    //!DEBUG
-	km_free(argp, NCARGS, &kv_pfexec, &kp_pageable);
-
+	/* Free argp buffer */
+	free(argp, M_EXEC, NCARGS);
+	
 	/* 3. pfexecd transeivce data */
 	uprintf("Entering...\n");							//!DEBUG
 	tq = taskq_create("conn", 1, IPL_NET, 0);
@@ -494,7 +511,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	error = task_add(tq, &k_task);
 
 	if (error != 1) {
-		error = EBUSY;			//Not the right error
+		error = EBUSY;		
 		taskq_destroy(tq);
 		goto bad_free_resp;
 	}
@@ -508,7 +525,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 			goto bad_free_resp;					
 		}
 	}
-
+	
 	/* Release task resources */
 	taskq_destroy(tq);
 	uprintf("Task Complete\n");
@@ -524,10 +541,26 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 		goto bad_free_resp;
 	}
 
+	/* 4. Validate Response and Extract data */
+	
 	/* Parse the resp packet */
 	if ((error = parse_response(resp)))
 		goto bad_free_resp;
 	
+	/* Unpack envp */
+	uprintf("\nNew Env: %s\n", resp->pfr_envarea);
+///!!
+	//!START HERE
+	new_env = build_new_env(resp);
+
+	if (new_env == NULL) {
+		error = EINVAL;
+		goto bad_free_resp;
+	}
+
+	for (int k = 0; new_env[k] != NULL; ++k)
+		uprintf("NEW: %s[]\n",  new_env[k]);
+///!!
 
 	/* 5. Apply user credential changes to process */
 	if ((error = set_creds_check(resp)))
@@ -536,6 +569,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	/* Copy credentials and update process ucred with newcred
 	 * 
 	 */
+	 //TODO Actual groups isnt changed 
 	newcred = crget();
 	crset(newcred, cred);
 	crhold(cred);						/* Hold for fallback */
@@ -552,9 +586,16 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 
 	dorefreshcreds(pr, p);
 
-	/* 6. Exec, exec will release stopped threads
+	/* 
+	 * 6. Exec, exec will release stopped threads
 	 */
-	error = sys_execve(p, (void *)&args, retVal);
+	SCARG(&args, path) = SCARG(uap, path);
+	SCARG(&args, argp) = SCARG(uap, argp);
+	SCARG(&args, envp) = new_env;
+	
+	error = sys_execve_from_pfexec(p, (void *)&args, retVal);
+
+	free_env(new_env, resp);
 
 	if (error) {
 		/* exec failed, must revert permissions and undo proccnt */
@@ -570,7 +611,11 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	crfree(cred);
 
 	/* 7. Apply chroot change (if any) */
-
+	if (resp->pfr_flags & PFRESP_CHROOT) {
+		if ((error = dochroot_tings(p, resp)) != 0){
+			goto bad_free_resp;
+		}
+	}
 
 	/* 8. Clean up */
 	free(resp, M_EXEC, sizeof(struct pfexec_resp));
@@ -585,13 +630,126 @@ bad_free_req:
 	vrele(vp);
 	return (error);
 release:
-	km_free(argp, NCARGS, &kv_pfexec, &kp_pageable);
+	free(argp, M_EXEC, NCARGS);
 	free(req, M_EXEC, sizeof(struct pfexec_req));
 	vrele(vp);
 	return (error);
 
 }
 
+/*
+ * Free internal environment array
+ */
+void
+free_env(char **new_env, struct pfexec_resp *resp)
+{
+	int i;
+	for (i = 0; new_env[i] != NULL; ++i) {
+		free(new_env[i], M_EXEC, sizeof(char *)
+		    * resp->pfr_envp[i].pfa_len + 1);
+	}
+	free(new_env, M_EXEC, sizeof(char **) *  resp->pfr_envc + 1);
+}
+
+/*
+ * Create an env array for resp and return a pointer to it. 
+ * 	array is terminated with NULL, and can be used to free it upto that. 
+ */
+char **
+build_new_env(struct pfexec_resp *resp)
+{
+	int i;
+	char **new_env = malloc(sizeof(char *) * resp->pfr_envc + 1,
+	    M_EXEC, M_WAITOK | M_ZERO); 
+
+	for (i = 0; i < resp->pfr_envc; ++i)  {
+		if (resp->pfr_envp[i].pfa_offset > ARG_MAX ||
+		    resp->pfr_envp[i].pfa_len > ARG_MAX) {
+			new_env[i] = NULL;	
+			goto free_env;	
+		}
+
+		new_env[i] = malloc(sizeof(char *) * resp->pfr_envp[i].pfa_len + 1,
+		    M_EXEC, M_WAITOK | M_ZERO); 
+		strncpy(new_env[i], resp->pfr_envarea + resp->pfr_envp[i].pfa_offset,
+		    resp->pfr_envp[i].pfa_len);
+	}	
+	/* Used for freeing later */
+	new_env[i] = NULL;		/* Indicate End of data */
+	return new_env;			/* Must be freed by caller */
+free_env:
+	for (i = 0; new_env[i] != NULL; ++i) {
+		free(new_env[i], M_EXEC, sizeof(char *)
+		    * resp->pfr_envp[i].pfa_len + 1);
+	}
+	free(new_env, M_EXEC, sizeof(char **) *  resp->pfr_envc + 1);
+	return NULL;
+}
+
+/*
+ * Check that dir change can be applied 
+ */
+static int
+change_dir(struct nameidata *ndp, struct proc *p)
+{
+	struct vnode *vp;
+	int error;
+
+	if ((error = namei(ndp)) != 0)
+		return (error);
+
+	vp = ndp->ni_vp;
+
+	if (vp->v_type != VDIR) 
+		error = ENOTDIR;
+
+	if (error)
+		vput(vp);
+	else 
+		VOP_UNLOCK(vp);
+
+	return (error);
+}
+
+/* 
+ * Change process root directory
+ */
+static int
+dochroot_tings(struct proc *p, struct pfexec_resp *resp)
+{
+	struct vnode *old_cdir, *old_rdir;
+	struct filedesc *fdp = p->p_fd;
+	struct nameidata nd;
+	int error = 0;
+
+	NDINIT(&nd, LOOKUP, FOLLOW | LOCKLEAF, UIO_SYSSPACE, resp->pfr_chroot, p);
+
+	if ((error = change_dir(&nd, p)) != 0) {
+		uprintf("No path or dir error\n");
+		return error;
+	}
+	
+	/* Off to jail u go */
+	if (fdp->fd_rdir != NULL) {
+		vref(nd.ni_vp);
+		old_rdir = fdp->fd_rdir;
+		old_cdir = fdp->fd_cdir;
+		fdp->fd_rdir = fdp->fd_cdir = nd.ni_vp;
+		vrele(old_rdir);
+
+		if (old_cdir != NULL)
+			vrele(old_cdir);
+	} else {
+		vref(nd.ni_vp);
+		fdp->fd_rdir = nd.ni_vp;
+		fdp->fd_cdir = nd.ni_vp;
+	}
+
+
+
+	uprintf("Path found %s .. chrooted\n", resp->pfr_chroot);
+	return (0);
+}
 
 static int 
 set_creds_check(struct pfexec_resp *resp)
@@ -664,6 +822,9 @@ parse_response(struct pfexec_resp *resp) {
 				uprintf("E\n");
 			return (EINVAL);
 		}
+	} else {
+		/* ENVIRON must always be valid */
+		return EINVAL; 
 	}
 
 	uprintf("F\n");

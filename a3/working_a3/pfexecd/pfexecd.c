@@ -1,18 +1,26 @@
 /*
- * Copyright 2021, the University of Queensland
- *
- * Permission to use, copy, modify, and distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- */
+* COMP3301 - Assingment 3
+*
+* pfexecve response daemon
+* 
+* Author	: Wilfred MK
+* SID		: S4428042
+* Riv		: 0.1
+* Last Updated	: 12/10/2021
+*
+* THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+* ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+* FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+* DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+* OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+* SUCH DAMAGE.
+*
+* @(#)main.c v0.1 (UQ) - Wilfred MK
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -66,9 +74,9 @@ static char				*pfd_configbuf;
 static void	on_lsock_acceptable(int, short, void *);
 static void	on_client_readable(int, short, void *);
 static int	process_request(const struct pfexec_req *,
-    struct pfexec_resp *);
+    struct pfexec_resp *, short *);
 static void	log_request(const struct pfexec_req *,
-    const struct pfexec_resp *);
+    const struct pfexec_resp *, short);
 
 static int permit(const struct pfexec_req *, struct pfexec_resp *,
     const struct rule **);
@@ -145,6 +153,10 @@ drop_privs(void)
 	}
 }
 
+/**
+ * Parse a given .y config file and indicate syntax errors.
+ * 
+ */
 static void
 parse_config(FILE *f)
 {	
@@ -160,7 +172,6 @@ parse_config(FILE *f)
 		exit(1);
 	}
 
-	//fprintf(stderr, "Action: %d Options: %d User: %s\n", rules[0]->action, rules[0]->options, rules[0]->ident);
 }
 
 int
@@ -279,10 +290,9 @@ main(int argc, char *argv[])
 		    "fmemopen failed: %d (%s)", errno, strerror(errno));
 		exit(1);		
 	}
-	//!parse
+
 	parse_config(config_stream);
 	fclose(config_stream);
-	//! Parse the YACC (Get done by tonight)
 
 	/* If we're in config test mode and config parsing was ok, exit now. */
 	if (testmode)
@@ -395,6 +405,7 @@ on_client_readable(int sock, short evt, void *arg)
 	struct msghdr hdr;
 	struct iovec iov;
 	ssize_t recvd;
+	short log_ok = 0;
 	int rc;
 
 	bzero(&hdr, sizeof(hdr));
@@ -405,7 +416,7 @@ on_client_readable(int sock, short evt, void *arg)
 	iov.iov_len = sizeof(struct pfexec_req);
 
 	recvd = recvmsg(sock, &hdr, MSG_DONTWAIT);
-	//!fprintf(stderr, "RECV %zd\n", recvd); DBG
+
 	if (recvd < 0) {
 		if (errno == EAGAIN)
 			goto out;
@@ -428,12 +439,12 @@ on_client_readable(int sock, short evt, void *arg)
 	}
 
 	bzero(&client->c_resp, sizeof(struct pfexec_resp));
-	rc = process_request(&client->c_req, &client->c_resp);
+	rc = process_request(&client->c_req, &client->c_resp, &log_ok);
 	if (rc != 0) {
 		bzero(&client->c_resp, sizeof(struct pfexec_resp));
 		client->c_resp.pfr_errno = rc;
 	}
-	log_request(&client->c_req, &client->c_resp);
+	log_request(&client->c_req, &client->c_resp, log_ok);
 
 	bzero(&hdr, sizeof(hdr));
 	bzero(&iov, sizeof(iov));
@@ -454,7 +465,8 @@ out:
 }
 
 static int
-process_request(const struct pfexec_req *req, struct pfexec_resp *resp)
+process_request(const struct pfexec_req *req, struct pfexec_resp *resp, 
+    short *log_ok)
 {
 	uint i;
 	const struct rule *rule;
@@ -508,19 +520,23 @@ process_request(const struct pfexec_req *req, struct pfexec_resp *resp)
 		syslog(LOG_AUTHPRIV | LOG_INFO, "Request denied, invalid args in conf");
 		return (EPERM);		
 	}
+	/* Indicate new env is set for response */
+	resp->pfr_flags |= PFRESP_ENV;
 
 	//! PASSWORD
 
 	/* Logging enable by defualt */
-	if ((rule->options & NOLOG) != 0) 
-		syslog(LOG_AUTHPRIV | LOG_INFO, "Permitted execution for\
-		    %s, as uid: %d, gid: %d", req->pfr_path, resp->pfr_uid,
-		    resp->pfr_gid);
-
+	if ((rule->options & NOLOG)) 
+		*log_ok = 0;
+	else 
+		*log_ok = 1;
 
 	return (0);
 }
 
+/**
+ * Updates particular response fields of the response packet
+ */
 static int
 set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
     const struct rule *r)
@@ -614,6 +630,7 @@ set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
 
 	req_environ = malloc(sizeof(char *) * req->pfr_envc + 1);
 
+	// fprintf(stderr, "\n\nGOT: %s\n", req->pfr_envarea);
 
 	for (i = 0; i < req->pfr_envc; ++i) {
 		if (req->pfr_envp[i].pfa_offset > ARG_MAX ||
@@ -622,7 +639,8 @@ set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
 			goto free_env;	
 		}
 
-		req_environ[i] = malloc(sizeof(char *) * req->pfr_envp[i].pfa_len + 1);
+		req_environ[i] = malloc(sizeof(char) * req->pfr_envp[i].pfa_len + 1);
+		memset(req_environ[i], 0, req->pfr_envp[i].pfa_len + 1);
 		strncpy(req_environ[i], req->pfr_envarea + req->pfr_envp[i].pfa_offset,
 		    req->pfr_envp[i].pfa_len);
 	}
@@ -634,25 +652,24 @@ set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
 	//  fprintf(stderr, "SENT: %s\n", req_environ[i]);
 
 	//!fprintf(stderr, "REQ: %s\n", req->pfr_envarea);
-	envp = prepenv(r, mypw, targpw);
-	
+	envp = prepenv(r, mypw, targpw);	
 //!!
-	// fprintf(stderr, "\n\n");
+// 	fprintf(stderr, "\n\n");
 
-	// for (i=0; envp[i]; ++i) {
-	// 	fprintf(stderr, "prep: %s\n", envp[i]);
-	// }
-//!!
+// 	for (i=0; envp[i]; ++i) {
+// 		fprintf(stderr, "prep: %s\n", envp[i]);
+// 	}
+// //!!
 	/* Update response env buffer */
 	if (update_resp_enva(resp, envp))
 		goto free_env2;
 
-	// /* Free all the things */
+	/* Free all the things */
 	for (i = 0; req_environ[i] != NULL ; ++i) {
 		free(req_environ[i]);
 	}
 
-	// /* Free envp string */
+	/* Free envp string */
 	for (i = 0; envp[i] != NULL; ++i) {
 		free(envp[i]);
 	}
@@ -670,6 +687,9 @@ free_env:
 	return EINVAL;
 }
 
+/**
+ * Update response packet environment area.
+ */
 static int
 update_resp_enva(struct pfexec_resp *resp, char **envp)
 {
@@ -690,13 +710,16 @@ update_resp_enva(struct pfexec_resp *resp, char **envp)
 
 		resp->pfr_envc++;
 		resp->pfr_envp[i].pfa_offset = offset;
-		resp->pfr_envp[i].pfa_offset = len;
+		resp->pfr_envp[i].pfa_len = len;
 
 		offset += len; 
 	}
 	return (0);
 }
 
+/**
+ * Validate if a given rule is permitted or not
+ */
 static int 
 permit(const struct pfexec_req *req, struct pfexec_resp *resp,
     const struct rule **lastr) 
@@ -714,7 +737,9 @@ permit(const struct pfexec_req *req, struct pfexec_resp *resp,
 	return (*lastr)->action == PERMIT;
 }
 
-
+/**
+ * Match a specified to pfexec request.
+ */
 static int
 match(const struct pfexec_req *req, struct pfexec_resp *resp, struct rule *r)
 {
@@ -819,7 +844,9 @@ match(const struct pfexec_req *req, struct pfexec_resp *resp, struct rule *r)
 	return 1;
 }
 
-
+/**
+ * Validate a specified gid 
+ */
 static int
 parsegid(const char *s, gid_t *gid)
 {
@@ -838,7 +865,9 @@ parsegid(const char *s, gid_t *gid)
 	return 0;
 }
 
-
+/**
+ * Test a desired uid matches username
+ */
 static int
 uidcheck(const char *s, uid_t desired)
 {
@@ -850,6 +879,9 @@ uidcheck(const char *s, uid_t desired)
 	return 0;
 }
 
+/**
+ * Get a uid from username 
+ */
 static int
 parseuid(const char *s, uid_t *uid)
 {
@@ -868,7 +900,9 @@ parseuid(const char *s, uid_t *uid)
 	return 0;
 }
 
-
+/**
+ * Get gid from a given username
+ */
 static int
 gid_from_uid(const char *s, gid_t *gid) 
 {
@@ -889,11 +923,12 @@ gid_from_uid(const char *s, gid_t *gid)
 
 
 static void
-log_request(const struct pfexec_req *req, const struct pfexec_resp *resp)
+log_request(const struct pfexec_req *req, const struct pfexec_resp *resp,
+    short log_ok)
 {
 	const char *requser = (req->pfr_req_flags & PFEXECVE_USER) ?
 	    req->pfr_req_user : "root";
-	if (resp->pfr_errno == 0) {
+	if (resp->pfr_errno == 0 && log_ok) {
 		syslog(LOG_AUTHPRIV | LOG_INFO,
 		    "uid %d ran command %s as %s (pid %d)",
 		    req->pfr_uid, req->pfr_path, requser, req->pfr_pid);
