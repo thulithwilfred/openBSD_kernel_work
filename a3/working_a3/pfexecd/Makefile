@@ -1,5 +1,5 @@
 PROG=	pfexecd
-SRCS=	pfexecd.c parse.y
+SRCS=	pfexecd.c parse.y env.c
 MAN=	pfexecd.8 pfexecd.conf.5
 
 LDADD=	-levent

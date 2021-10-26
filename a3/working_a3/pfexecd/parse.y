@@ -35,6 +35,8 @@ typedef struct {
 			const char *cmd;
 			const char **cmdargs;
 			const char **envlist;
+			const char **grplist;	
+			const char *chroot_path;
 		};
 		const char **strlist;
 		const char *str;
@@ -72,6 +74,7 @@ arraylen(const char **arr)
 %token TPERMIT TDENY TAS TCMD TARGS
 %token TNOPASS TNOLOG TPERSIST TKEEPENV TSETENV
 %token TSTRING
+%token TKEEPGROUPS TSETGROUPS TSETENV TCHROOT
 
 %%
 
@@ -89,6 +92,8 @@ rule:		action ident target cmd {
 			r->action = $1.action;
 			r->options = $1.options;
 			r->envlist = $1.envlist;
+			r->grplist = $1.grplist;
+			r->chroot_path = $1.chroot_path;
 			r->ident = $2.str;
 			r->target = $3.str;
 			r->cmd = $4.cmd;
@@ -109,20 +114,32 @@ action:		TPERMIT options {
 			$$.action = PERMIT;
 			$$.options = $2.options;
 			$$.envlist = $2.envlist;
+			$$.grplist = $2.grplist;
+			$$.chroot_path = $2.chroot_path;
 		} | TDENY {
 			$$.action = DENY;
 			$$.options = 0;
 			$$.envlist = NULL;
+			$$.grplist = NULL;
+			$$.chroot_path = NULL;
 		} ;
 
 options:	/* none */ {
 			$$.options = 0;
 			$$.envlist = NULL;
+			$$.grplist = NULL;
+			$$.chroot_path = NULL;
 		} | options option {
 			$$.options = $1.options | $2.options;
 			$$.envlist = $1.envlist;
+			$$.grplist = $1.grplist;
+			$$.chroot_path = $1.chroot_path;
 			if (($$.options & (NOPASS|PERSIST)) == (NOPASS|PERSIST)) {
 				yyerror("can't combine nopass and persist");
+				YYERROR;
+			}
+			if (($$.options & (KEEPGROUPS|SETGROUPS)) == (KEEPGROUPS|SETGROUPS)) {
+				yyerror("can't combine keepgroups and setgroups");
 				YYERROR;
 			}
 			if ($2.envlist) {
@@ -132,6 +149,21 @@ options:	/* none */ {
 				} else
 					$$.envlist = $2.envlist;
 			}
+			if ($2.grplist) {
+				if ($$.grplist) {
+					yyerror("can't have two setgroup sections");
+					YYERROR;
+				} else
+					$$.grplist = $2.grplist;
+			}
+			if ($2.chroot_path) {
+				if ($$.chroot_path) {
+					yyerror("can't have two chroots");
+					YYERROR;
+				} else
+					$$.chroot_path = $2.chroot_path;
+			}
+
 		} ;
 option:		TNOPASS {
 			$$.options = NOPASS;
@@ -146,8 +178,19 @@ option:		TNOPASS {
 			$$.options = KEEPENV;
 			$$.envlist = NULL;
 		} | TSETENV '{' strlist '}' {
-			$$.options = 0;
+			$$.options = SETENV;
 			$$.envlist = $3.strlist;
+		} | TKEEPGROUPS {
+			$$.options = KEEPGROUPS;
+			$$.envlist = NULL;
+		} | TSETGROUPS '{' strlist '}' {
+			$$.options = SETGROUPS;
+			$$.envlist = NULL;
+			$$.grplist = $3.strlist;
+		} | TCHROOT '{' TSTRING '}' {
+			$$.options = CHROOT;
+			$$.envlist = NULL;
+			$$.chroot_path = $3.str;
 		} ;
 
 strlist:	/* empty */ {
@@ -216,6 +259,9 @@ static struct keyword {
 	{ "persist", TPERSIST },
 	{ "keepenv", TKEEPENV },
 	{ "setenv", TSETENV },
+	{ "keepgroups", TKEEPGROUPS},
+	{ "setgroups", TSETGROUPS},
+	{ "chroot", TCHROOT},
 };
 
 int

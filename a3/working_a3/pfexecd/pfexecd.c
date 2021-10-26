@@ -40,6 +40,7 @@
 #include <event.h>
 #include <limits.h>
 #include <grp.h>
+#include <strings.h>
 
 #include "pfexecd.h"
 //!
@@ -73,10 +74,18 @@ static int permit(const struct pfexec_req *, struct pfexec_resp *,
     const struct rule **);
 static int match(const struct pfexec_req *, struct pfexec_resp *,
     struct rule *);
+
 static int parsegid(const char *, gid_t *);
 static int uidcheck(const char *, uid_t);
 static int parseuid(const char *, uid_t *);
 static int gid_from_uid(const char *, gid_t *); 
+static int set_resp_options(const struct pfexec_req *, struct pfexec_resp *,
+    const struct rule *);
+
+static int update_resp_enva(struct pfexec_resp *, char **);
+
+/* Updated by the environment of a request packet */
+char **req_environ;
 
 void __dead
 usage(const char *arg0)
@@ -488,18 +497,209 @@ process_request(const struct pfexec_req *req, struct pfexec_resp *resp)
 			return (EINVAL);
 	}
 
-	/* TODO: determine whether this request should be allowed */	
+	/* Determine whether this request should be allowed */	
 	if (!permit(req, resp, &rule)) {
 		syslog(LOG_AUTHPRIV | LOG_INFO, "Request denied");
 		return (EPERM);
 	}
 
-	/* A matching rule is found, permission is granted */
+	/* At this point the *last* matching rule is found */
+	if (set_resp_options(req, resp, rule)) {
+		syslog(LOG_AUTHPRIV | LOG_INFO, "Request denied, invalid args in conf");
+		return (EPERM);		
+	}
+
+	//! PASSWORD
+
+	/* Logging enable by defualt */
+	if ((rule->options & NOLOG) != 0) 
+		syslog(LOG_AUTHPRIV | LOG_INFO, "Permitted execution for\
+		    %s, as uid: %d, gid: %d", req->pfr_path, resp->pfr_uid,
+		    resp->pfr_gid);
+
+
+	return (0);
+}
+
+static int
+set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
+    const struct rule *r)
+{
+	const char* errstr;
+	const char *safepath = "/bin:/sbin:/usr/bin:/usr/sbin:"
+	    "/usr/local/bin:/usr/local/sbin";
+	char **envp;
+	char mypwbuf[_PW_BUF_LEN], targpwbuf[_PW_BUF_LEN];
+	struct passwd mypwstore, targpwstore;
+	struct passwd *mypw, *targpw;
+	int i, rv;
+	uint32_t gid;
+
+	if (r->options & KEEPGROUPS) {
+		resp->pfr_gid = req->pfr_gid;
+		resp->pfr_flags |= PFRESP_GID;
+	}
+
+	if (r->options & SETGROUPS) {
+		for (i = 0; r->grplist[i]; ++i) {
+
+			if (i >= NGROUPS_MAX) 
+				return EINVAL;
+
+			gid = strtonum(r->grplist[i], 0, GID_MAX - 1, &errstr);
+
+			if (errstr)
+				return EINVAL;
+
+			resp->pfr_groups[i] = gid;
+		}
+		resp->pfr_ngroups = i + 1; 			/* Count of actual elements */
+		resp->pfr_flags |= PFRESP_GROUPS;
+	}
+
+	if (r->options & CHROOT) {
+		if (r->chroot_path) {
+			if (strnlen(r->chroot_path, PATH_MAX) >= PATH_MAX - 1)
+				return EINVAL;
+
+			strncpy(resp->pfr_chroot, r->chroot_path, PATH_MAX - 1);
+		} else {
+			strcpy(resp->pfr_chroot, "/var/empty");
+		}
+		resp->pfr_flags |= PFRESP_CHROOT;
+	}
+
+	/* Generate default environ, update current PATH to a safer path */
+	if (setenv("PATH", safepath, 1) == -1) {
+		syslog(LOG_AUTHPRIV | LOG_INFO,
+		    "failed to set PATH '%s'", safepath);
+		return EINVAL;
+	}
+
+	/* Calling proc */
+	rv = getpwuid_r(req->pfr_uid, &mypwstore, mypwbuf, sizeof(mypwbuf), &mypw);
+
+	if (rv != 0) {
+		syslog(LOG_AUTHPRIV | LOG_INFO,
+		    "getpwuid_r failed for calling proc");
+		return EINVAL;
+	}
+	if (mypw == NULL) {
+		syslog(LOG_AUTHPRIV | LOG_INFO,
+		    "no passwd entry for calling uid: %d", req->pfr_uid);
+		return EINVAL;
+	}
+	
+	if (req->pfr_req_flags & PFEXECVE_USER) {
+		/* Run as proc (Target) */
+		rv = getpwnam_r(req->pfr_req_user, &targpwstore, targpwbuf,
+		    sizeof(targpwbuf), &targpw);
+	} else {
+		/* Run as root by def */
+		rv = getpwnam_r("root", &targpwstore, targpwbuf,
+		    sizeof(targpwbuf), &targpw);				
+	}
+
+	if (rv != 0) {
+		syslog(LOG_AUTHPRIV | LOG_INFO,
+		    "getpwuid_r failed for target proc");
+		return EINVAL;
+	}
+
+	if (targpw == NULL) {
+		syslog(LOG_AUTHPRIV | LOG_INFO,
+		    "no passwd entry for target uid: %d", req->pfr_uid);
+		return EINVAL;
+	}
+
+	req_environ = malloc(sizeof(char *) * req->pfr_envc + 1);
+
+
+	for (i = 0; i < req->pfr_envc; ++i) {
+		if (req->pfr_envp[i].pfa_offset > ARG_MAX ||
+		    req->pfr_envp[i].pfa_len > ARG_MAX) {
+			req_environ[i] = NULL;	
+			goto free_env;	
+		}
+
+		req_environ[i] = malloc(sizeof(char *) * req->pfr_envp[i].pfa_len + 1);
+		strncpy(req_environ[i], req->pfr_envarea + req->pfr_envp[i].pfa_offset,
+		    req->pfr_envp[i].pfa_len);
+	}
+
+	/* Used for freeing later */
+	req_environ[i] = NULL;		/* Indicate End of data */
+//!
+	// for (i = 0; i < req->pfr_envc; ++i)
+	//  fprintf(stderr, "SENT: %s\n", req_environ[i]);
+
+	//!fprintf(stderr, "REQ: %s\n", req->pfr_envarea);
+	envp = prepenv(r, mypw, targpw);
+	
+//!!
+	// fprintf(stderr, "\n\n");
+
+	// for (i=0; envp[i]; ++i) {
+	// 	fprintf(stderr, "prep: %s\n", envp[i]);
+	// }
+//!!
+	/* Update response env buffer */
+	if (update_resp_enva(resp, envp))
+		goto free_env2;
+
+	// /* Free all the things */
+	for (i = 0; req_environ[i] != NULL ; ++i) {
+		free(req_environ[i]);
+	}
+
+	// /* Free envp string */
+	for (i = 0; envp[i] != NULL; ++i) {
+		free(envp[i]);
+	}
+	return (0);
+
+	/* Bad returns */
+free_env2:
+	for (i = 0; envp[i] != NULL; ++i) {
+		free(envp[i]);
+	}
+free_env:
+	for (i = 0; req_environ[i] != NULL ; ++i) {
+		free(req_environ[i]);
+	}
+	return EINVAL;
+}
+
+static int
+update_resp_enva(struct pfexec_resp *resp, char **envp)
+{
+	int i, rc;
+	size_t len = 0, offset = 0;
+	resp->pfr_envc = 0;
+
+	for (i = 0; envp[i] != NULL; ++i) {
+		len = strnlen(envp[i], ARG_MAX);
+
+		if (len > ARG_MAX - offset - 1)
+			return E2BIG;
+
+		rc = strlcat(resp->pfr_envarea, envp[i], ARG_MAX - offset - 1);
+
+		if (rc >= (ARG_MAX - offset - 1)) 
+			return E2BIG;		
+
+		resp->pfr_envc++;
+		resp->pfr_envp[i].pfa_offset = offset;
+		resp->pfr_envp[i].pfa_offset = len;
+
+		offset += len; 
+	}
 	return (0);
 }
 
 static int 
-permit(const struct pfexec_req *req, struct pfexec_resp *resp, const struct rule **lastr) 
+permit(const struct pfexec_req *req, struct pfexec_resp *resp,
+    const struct rule **lastr) 
 {
 	size_t i;
 	*lastr = NULL;
@@ -510,7 +710,7 @@ permit(const struct pfexec_req *req, struct pfexec_resp *resp, const struct rule
 	}
 	if (!*lastr)
 		return 0;
-
+	
 	return (*lastr)->action == PERMIT;
 }
 

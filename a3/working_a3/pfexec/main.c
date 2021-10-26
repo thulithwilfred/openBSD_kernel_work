@@ -125,7 +125,6 @@ execute_shell(uint32_t opt_flag, struct pfexec_data *d)
 	int err_val = 0;
 	char *shell_path = malloc(sizeof(char) * 128);
 
-
 	/* Evaluate SHELL env variable */
 	if (getenv("SHELL") == NULL ) 
 		strcpy(shell_path, "/bin/ksh");
@@ -142,11 +141,12 @@ execute_shell(uint32_t opt_flag, struct pfexec_data *d)
 	printf("UNAME: %s\nSHELL: %s\n", p_opts.pfo_user, shell_path);
 
 	/* Call to pfexecve */
-	err_val = pfexecvpe(&p_opts, shell_path, NULL, NULL);
+	//err_val = pfexecvpe(&p_opts, shell_path, NULL, NULL);
+	err_val = pfexecvp(&p_opts, shell_path, NULL);
 
 	/* If exec succeeded, this code never runs */
 	if (err_val)
-		err(err_val, "pfexec failed");
+		err(err_val, "pfexecvp");
 
 	return 0;
 }
@@ -179,7 +179,7 @@ process_pfexec(uint32_t opt_flag, struct pfexec_data *d)
 
 	/* If exec succeeded, this code never runs */
 	if (err_val)
-		err(err_val, "pfexec failed");
+		err(err_val, "pfexecvp");
 
 	return (err_val);
 }
