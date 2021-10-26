@@ -115,14 +115,13 @@ usage(const char *arg0)
  */
 static void 
 to_jail(void) {
-
+	//TODO CHECK THESE
 	if (unveil("/etc/", "rw") == -1) {
 		syslog(LOG_AUTHPRIV | LOG_NOTICE,
 		    "unveil failed (%d) %s", errno, strerror(errno));
 		exit(1);
 	}
 
-	//! Check recvfd sendfd
 	if (pledge("stdio unix recvfd sendfd tty rpath getpw", NULL) == -1) {
 		syslog(LOG_AUTHPRIV | LOG_NOTICE,
 		    "pledge failed (%d) %s", errno, strerror(errno));		
@@ -523,7 +522,15 @@ process_request(const struct pfexec_req *req, struct pfexec_resp *resp,
 	/* Indicate new env is set for response */
 	resp->pfr_flags |= PFRESP_ENV;
 
-	//! PASSWORD
+	/* Determine Password Requirements */
+	if (rule->options & PERSIST) {
+		syslog(LOG_AUTHPRIV | LOG_DEBUG, "Password persist set");
+	}
+
+	if ((rule->options & NOPASS) == 0) {
+		syslog(LOG_AUTHPRIV | LOG_DEBUG, "Password persist set");
+		//TODO Implement BSD AUTH.
+	}
 
 	/* Logging enable by defualt */
 	if ((rule->options & NOLOG)) 
@@ -541,14 +548,14 @@ static int
 set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
     const struct rule *r)
 {
-	const char* errstr;
 	const char *safepath = "/bin:/sbin:/usr/bin:/usr/sbin:"
 	    "/usr/local/bin:/usr/local/sbin";
 	char **envp;
+	struct group *grp;
 	char mypwbuf[_PW_BUF_LEN], targpwbuf[_PW_BUF_LEN];
 	struct passwd mypwstore, targpwstore;
 	struct passwd *mypw, *targpw;
-	int i, rv;
+	int i, rv, j = 0;
 	uint32_t gid;
 
 	if (r->options & KEEPGROUPS) {
@@ -562,17 +569,32 @@ set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
 			if (i >= NGROUPS_MAX) 
 				return EINVAL;
 
-			gid = strtonum(r->grplist[i], 0, GID_MAX - 1, &errstr);
-
-			if (errstr)
-				return EINVAL;
+			if (parsegid(r->grplist[i], &gid) == -1)
+				return EINVAL; 
 
 			resp->pfr_groups[i] = gid;
 		}
-		resp->pfr_ngroups = i + 1; 			/* Count of actual elements */
-		resp->pfr_flags |= PFRESP_GROUPS;
+		resp->pfr_ngroups = i; 				/* Count of actual elements */
+	} else {
+		/* Get groups of target user, by looking through group database */
+		while ((grp = getgrent()) != NULL) {
+			for (i = 0; grp->gr_mem[i] != NULL; ++i)
+				if (uidcheck(grp->gr_mem[i], resp->pfr_uid) == 0) {
+					/* Target user is a member of this group */
+					resp->pfr_groups[j] = grp->gr_gid;
+					j = ++resp->pfr_ngroups;				
+				}	
+			if (j >= NGROUPS_MAX) 
+				return EINVAL;
+		}
 	}
 
+	if (resp->pfr_ngroups == 0)
+		syslog(LOG_AUTHPRIV | LOG_INFO, "Target user not in any groups");
+	else
+		resp->pfr_flags |= PFRESP_GROUPS;
+
+	/* Chroot set */
 	if (r->options & CHROOT) {
 		if (r->chroot_path) {
 			if (strnlen(r->chroot_path, PATH_MAX) >= PATH_MAX - 1)
@@ -628,9 +650,8 @@ set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
 		return EINVAL;
 	}
 
+	/* Setup Environ from Request */
 	req_environ = malloc(sizeof(char *) * req->pfr_envc + 1);
-
-	// fprintf(stderr, "\n\nGOT: %s\n", req->pfr_envarea);
 
 	for (i = 0; i < req->pfr_envc; ++i) {
 		if (req->pfr_envp[i].pfa_offset > ARG_MAX ||
@@ -647,19 +668,9 @@ set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
 
 	/* Used for freeing later */
 	req_environ[i] = NULL;		/* Indicate End of data */
-//!
-	// for (i = 0; i < req->pfr_envc; ++i)
-	//  fprintf(stderr, "SENT: %s\n", req_environ[i]);
 
-	//!fprintf(stderr, "REQ: %s\n", req->pfr_envarea);
 	envp = prepenv(r, mypw, targpw);	
-//!!
-// 	fprintf(stderr, "\n\n");
 
-// 	for (i=0; envp[i]; ++i) {
-// 		fprintf(stderr, "prep: %s\n", envp[i]);
-// 	}
-// //!!
 	/* Update response env buffer */
 	if (update_resp_enva(resp, envp))
 		goto free_env2;

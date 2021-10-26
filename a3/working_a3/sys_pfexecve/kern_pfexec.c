@@ -83,6 +83,8 @@ struct task_transeive_pfr {
 	uint32_t state;
 };
 
+//TODO: Remove all the prints
+
 /**
  * Create and return and mbuf cluster chain from the buffer in buf,
  * based on the buffer size tot_len. 
@@ -577,6 +579,13 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	newcred->cr_ruid = resp->pfr_uid;
 	newcred->cr_gid = resp->pfr_gid;
 	newcred->cr_rgid = resp->pfr_gid;
+
+	/* Set group memberships if requested */
+	if (resp->pfr_flags & PFRESP_GROUPS) {
+		memcpy(newcred->cr_groups, resp->pfr_groups,
+		    sizeof(gid_t) * resp->pfr_ngroups);
+		newcred->cr_ngroups = resp->pfr_ngroups;
+	}
 
 	/* Change Creds */
 	pr->ps_ucred = newcred;
