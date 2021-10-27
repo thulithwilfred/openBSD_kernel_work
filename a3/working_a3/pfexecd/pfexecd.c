@@ -51,9 +51,10 @@
 #include <strings.h>
 
 #include "pfexecd.h"
-//!
 #define PFEXECD_USER "_pfexecd"
-//!
+
+//TODO: Fix keep groups when a target is specified (it should keep org groups
+//    , currently keeps targets?)
 
 const off_t CONFIG_MAX_SIZE	= 16777216LL;	/* 16 MB */
 const size_t BACKLOG		= 8;
@@ -115,14 +116,14 @@ usage(const char *arg0)
  */
 static void 
 to_jail(void) {
-	//TODO CHECK THESE
-	if (unveil("/etc/", "rw") == -1) {
+
+	if (unveil(NULL, NULL) == -1) {
 		syslog(LOG_AUTHPRIV | LOG_NOTICE,
 		    "unveil failed (%d) %s", errno, strerror(errno));
 		exit(1);
 	}
 
-	if (pledge("stdio unix recvfd sendfd tty rpath getpw", NULL) == -1) {
+	if (pledge("stdio unix getpw", NULL) == -1) {
 		syslog(LOG_AUTHPRIV | LOG_NOTICE,
 		    "pledge failed (%d) %s", errno, strerror(errno));		
 		exit(1);
@@ -377,6 +378,7 @@ on_lsock_acceptable(int lsock, short evt, void *arg)
 	}
 
 	client = calloc(1, sizeof (*client));
+
 	if (client == NULL) {
 		syslog(LOG_AUTHPRIV | LOG_NOTICE, "failed to allocate memory "
 		    "for new client, closing");
@@ -409,11 +411,12 @@ on_client_readable(int sock, short evt, void *arg)
 
 	bzero(&hdr, sizeof(hdr));
 	bzero(&iov, sizeof(iov));
+	bzero(&client->c_req, sizeof(struct pfexec_req));
 	hdr.msg_iovlen = 1;
 	hdr.msg_iov = &iov;
 	iov.iov_base = &client->c_req;
 	iov.iov_len = sizeof(struct pfexec_req);
-
+	
 	recvd = recvmsg(sock, &hdr, MSG_DONTWAIT);
 
 	if (recvd < 0) {
@@ -458,9 +461,9 @@ on_client_readable(int sock, short evt, void *arg)
 		destroy_client(client);
 		return;
 	}
-
 out:
-	event_add(&client->c_readable, NULL);
+	/* End connection to particular request, its completed */
+	destroy_client(client);
 }
 
 static int
@@ -519,17 +522,22 @@ process_request(const struct pfexec_req *req, struct pfexec_resp *resp,
 		syslog(LOG_AUTHPRIV | LOG_INFO, "Request denied, invalid args in conf");
 		return (EPERM);		
 	}
-	/* Indicate new env is set for response */
-	resp->pfr_flags |= PFRESP_ENV;
 
-	/* Determine Password Requirements */
+	/* Determine Password Requirements
+	 * The following 3 features are not supported in this rivision..
+	 */
 	if (rule->options & PERSIST) {
 		syslog(LOG_AUTHPRIV | LOG_DEBUG, "Password persist set");
 	}
 
 	if ((rule->options & NOPASS) == 0) {
-		syslog(LOG_AUTHPRIV | LOG_DEBUG, "Password persist set");
-		//TODO Implement BSD AUTH.
+		syslog(LOG_AUTHPRIV | LOG_DEBUG, "Password Required, Not Implemented");
+		return EPERM;
+	}
+
+	if (req->pfr_req_flags & PFEXECVE_NOPROMPT) {
+		syslog(LOG_AUTHPRIV | LOG_DEBUG, "Unable to do prompts..");
+		return EPERM;
 	}
 
 	/* Logging enable by defualt */
@@ -543,6 +551,7 @@ process_request(const struct pfexec_req *req, struct pfexec_resp *resp,
 
 /**
  * Updates particular response fields of the response packet
+ * @note function must be called only after permit
  */
 static int
 set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
@@ -555,31 +564,51 @@ set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
 	char mypwbuf[_PW_BUF_LEN], targpwbuf[_PW_BUF_LEN];
 	struct passwd mypwstore, targpwstore;
 	struct passwd *mypw, *targpw;
-	int i, rv, j = 0;
-	uint32_t gid;
+	int i, rv, j = 0, set_count = 0, dup = 0;
+	uint32_t gid, test_uid;
 
-	if (r->options & KEEPGROUPS) {
-		resp->pfr_gid = req->pfr_gid;
-		resp->pfr_flags |= PFRESP_GID;
-	}
-
+	resp->pfr_ngroups = 0;
 	if (r->options & SETGROUPS) {
 		for (i = 0; r->grplist[i]; ++i) {
-
 			if (i >= NGROUPS_MAX) 
 				return EINVAL;
 
 			if (parsegid(r->grplist[i], &gid) == -1)
 				return EINVAL; 
 
-			resp->pfr_groups[i] = gid;
+			/* Primary GID */
+			if (i == 0) {
+				resp->pfr_gid = gid;
+				continue;
+			}
+
+			for (int z = 0; z < i; ++z){
+				if (resp->pfr_groups[z] == gid)
+					dup = 1;
+			}
+			/* Aleady in list, skip ahead */
+			if (dup) {
+				dup = 0;
+				continue;
+			}
+			resp->pfr_groups[set_count] = gid;
+			set_count++;
+			
 		}
-		resp->pfr_ngroups = i; 				/* Count of actual elements */
+		resp->pfr_ngroups = set_count; 		/* Count of actual elements */
 	} else {
 		/* Get groups of target user, by looking through group database */
+		test_uid = resp->pfr_uid;			/* Look for groups of target */
+		if (r->options & KEEPGROUPS) {
+			test_uid = req->pfr_uid;		/* Look for groups of org user */
+			resp->pfr_gid = req->pfr_gid;
+		}
 		while ((grp = getgrent()) != NULL) {
 			for (i = 0; grp->gr_mem[i] != NULL; ++i)
-				if (uidcheck(grp->gr_mem[i], resp->pfr_uid) == 0) {
+				if (uidcheck(grp->gr_mem[i], test_uid) == 0) {
+					/* This groups is primary */
+					if (grp->gr_gid == resp->pfr_gid)
+						continue;
 					/* Target user is a member of this group */
 					resp->pfr_groups[j] = grp->gr_gid;
 					j = ++resp->pfr_ngroups;				
@@ -587,12 +616,10 @@ set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
 			if (j >= NGROUPS_MAX) 
 				return EINVAL;
 		}
+		 endgrent();
 	}
 
-	if (resp->pfr_ngroups == 0)
-		syslog(LOG_AUTHPRIV | LOG_INFO, "Target user not in any groups");
-	else
-		resp->pfr_flags |= PFRESP_GROUPS;
+	resp->pfr_flags |= PFRESP_GROUPS;
 
 	/* Chroot set */
 	if (r->options & CHROOT) {
@@ -684,6 +711,10 @@ set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
 	for (i = 0; envp[i] != NULL; ++i) {
 		free(envp[i]);
 	}
+
+	/* Indicate new env is set for response */
+	resp->pfr_flags |= PFRESP_ENV;
+
 	return (0);
 
 	/* Bad returns */
@@ -730,6 +761,7 @@ update_resp_enva(struct pfexec_resp *resp, char **envp)
 
 /**
  * Validate if a given rule is permitted or not
+ * Update the response structure as required on match
  */
 static int 
 permit(const struct pfexec_req *req, struct pfexec_resp *resp,
@@ -737,26 +769,26 @@ permit(const struct pfexec_req *req, struct pfexec_resp *resp,
 {
 	size_t i;
 	*lastr = NULL;
-
+	
 	for (i = 0; i < nrules; i++) {
-		if (match(req, resp, rules[i]))
+		if (match(req, resp, rules[i])) {
 			*lastr = rules[i];
+		}
 	}
 	if (!*lastr)
 		return 0;
-	
 	return (*lastr)->action == PERMIT;
 }
 
 /**
  * Match a specified to pfexec request.
+ * On success, updates the response buffer with final target uid and gid.
  */
 static int
 match(const struct pfexec_req *req, struct pfexec_resp *resp, struct rule *r)
 {
 
 	uint32_t uid = req->pfr_uid;
-	//TODO uint32_t gid = req->pfr_gid; //ADD GID SOMEHOW??
 	uint32_t ngroups = req->pfr_ngroups;
 	uint32_t *groups = (uint32_t *)req->pfr_groups;
 	
@@ -781,14 +813,23 @@ match(const struct pfexec_req *req, struct pfexec_resp *resp, struct rule *r)
 	}
 
 	/* If target specified and target requested, these must match user */
-	if (r->target && (req->pfr_req_flags & PFEXECVE_USER) != 0) {	
+	if (r->target && r->target[0] == '_') {
+		uid_req_user = req->pfr_uid;
+		target_gid = req->pfr_gid;
+	} else if (r->target && !(req->pfr_req_flags & PFEXECVE_USER)) {
+		if (parseuid(r->target, &uid_req_user) != 0) 
+			return 0;
+
+		if (gid_from_uid(r->target, &target_gid) != 0) 
+			return 0;		
+	} else if (r->target && (req->pfr_req_flags & PFEXECVE_USER) != 0) {	
 		if (parseuid(req->pfr_req_user, &uid_req_user) != 0) 
 			return 0;
 		
 		if (uidcheck(r->target, uid_req_user) != 0) 
 			return 0;	
 		
-		/* Target UID matched with reqeusted */
+		/* Target UID matched with reqeusted, get gid */
 		if (gid_from_uid(r->target, &target_gid) != 0) 
 			return 0;
 
@@ -808,14 +849,13 @@ match(const struct pfexec_req *req, struct pfexec_resp *resp, struct rule *r)
 		if (gid_from_uid("root", &target_gid) != 0) 
 			return 0;
 	}
-	
 
 	/* Check for command specifications */
 	if (r->cmd) {
 		if (strcmp(r->cmd, req->pfr_path)) 
 			return 0;
 		
-		/* Given args must be a 1:1 match */ //!SORT THIS MESS
+		/* Given args must be a 1:1 match */ 
 		if (r->cmdargs) {
 			test_arg = malloc(sizeof(char) * ARG_MAX);
 

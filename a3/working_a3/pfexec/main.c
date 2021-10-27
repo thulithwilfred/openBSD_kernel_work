@@ -268,7 +268,6 @@ main(int argc, char** argv)
 		d->args[i] = malloc(sizeof(char) * strlen(argv[i]));
 		strcpy(d->args[i], argv[i]);
 		d->args_count++;
-		printf("args_new: %s, count: %d\n", d->args[i], d->args_count);
 	}
 
 	/* Null terminate args */

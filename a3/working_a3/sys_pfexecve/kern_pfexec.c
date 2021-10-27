@@ -61,12 +61,16 @@
 #define TASK_ISCOMPLETE 1
 #define TASK_PENDING 0	
 
-void transceive_pfexecd(void *);
+struct task_transeive_pfr;
+
+void connect_pfexecd(void *);
 static int parse_response(struct pfexec_resp *);
 static int set_creds_check(struct pfexec_resp *);
 static int dochroot_tings(struct proc *, struct pfexec_resp *);
 char **build_new_env(struct pfexec_resp *);
 void free_env(char **,  struct pfexec_resp *);
+static int lookup_chroot_path(struct proc *, struct pfexec_resp *);
+static int transceive_pfexecd(struct task_transeive_pfr *);
 
 /* Used for debug messaging to process tty */
 struct tty *tty;
@@ -76,14 +80,14 @@ const struct kmem_va_mode kv_pfexec = {
 	.kv_map = &exec_map
 };
 
+/* Combining struct for pfexec_connect task and transceive_pfexecd */
 struct task_transeive_pfr {
-	struct pfexec_req *req;
+	struct socket *so;					/* To be obtained by pfexec_connect */
+	struct pfexec_req *req;				/* Used in data transmission */
 	struct pfexec_resp *resp;
-	uint32_t error;
+	uint32_t error;						/* Task error indicators */
 	uint32_t state;
 };
-
-//TODO: Remove all the prints
 
 /**
  * Create and return and mbuf cluster chain from the buffer in buf,
@@ -125,94 +129,22 @@ build_mbuf2(void *buf, int tot_len)
 }
 
 /**
- * Attemp a connection with the daemon and sent a message, block whilst
- * waiting for a response. If any errors are occured, ENOTCONN is set in the 
- * arg errors.
+ * Send a request to a pfexecd and await response message.
+ * Can be interrupted by signals. 
  */
-void 
-transceive_pfexecd(void *arg)
-{	
-	struct task_transeive_pfr *t_pfr = arg;
+static int
+transceive_pfexecd(struct task_transeive_pfr *t_pfr)
+{
+	struct socket *so = t_pfr->so;
 	struct pfexec_req *r = t_pfr->req;
 	struct pfexec_resp *resp = t_pfr->resp;
-	struct mbuf *nam = NULL, *mopts = NULL;
-	struct sockaddr *sa;
-	struct sockaddr_un addr;
-	struct socket *so;
-	
-	
+
 	struct mbuf *top = NULL;
 	struct mbuf *recv_top = NULL;
 	struct uio auio;
-
-	int s, error = 0, recvflags = 0;
 	
-	t_pfr->state = TASK_PENDING;
-	t_pfr->error = error;
+	int error = 0, recvflags = 0;
 
-	/* Create socket */
-	if ((error = socreate(AF_UNIX, &so, SOCK_SEQPACKET, 0))) {
-		ttyprintf(tty, "create err\n");
-		goto close;
-	}
-
-	/* Connect to path PFEXECD_SOCK */
-	bzero(&addr, sizeof(addr));
-	addr.sun_len = sizeof(addr);
-	addr.sun_family = AF_UNIX;
-	strlcpy(addr.sun_path, PFEXECD_SOCK, sizeof(addr.sun_path));
-
-	MGET(nam, M_WAIT, MT_SONAME);
-	nam->m_len = addr.sun_len;
-	sa = mtod(nam, struct sockaddr *);
-	memcpy(sa, &addr, addr.sun_len);
-
-	/* Set input buffer size, probably not necessary */
-	MGET(mopts, M_WAIT, MT_SOOPTS);
-
-	if (mopts == NULL)
-		goto close;
-	
-	mopts->m_len = sizeof(struct pfexec_resp) + 32;
-
-	s = solock(so);
-	error = sosetopt(so, SOL_SOCKET, SO_RCVBUF, mopts);
-
-	if (error) {
-		error = ENOTCONN;
-		ttyprintf(tty,"opt err - %d\n", error);
-		sounlock(so, s);
-		goto close;
-	}
-
-	error = soconnect(so, nam);
-
-	if (error)  {
-		error = ENOTCONN;
-		ttyprintf(tty, "conn err 1 - %d\n", error);
-		sounlock(so, s);
-		goto close;
-	}
-
-	while ((so->so_state & SS_ISCONNECTING) && so->so_error == 0) {
-		error = tsleep(so, PWAIT | PCATCH, "wait_on_conn", so->so_timeo);
-		if ((error == EINTR) || (error == ERESTART)) {
-			sounlock(so, s);
-			goto close;					
-		}
-	}
-
-	if (so->so_error) {
-		error = so->so_error;
-		so->so_error = 0;
-		error = ENOTCONN;
-		ttyprintf(tty, "conn err 2 - %d\n", error);
-		sounlock(so, s);
-		goto close;
-	}
-
-	sounlock(so, s);
-	
 	/* Build MBUF from req packet */
 	top = build_mbuf2((void *)r, sizeof(*r));
 	
@@ -221,6 +153,11 @@ transceive_pfexecd(void *arg)
 	}
 
 	/* Send Message and wait..., should free top*/
+	if (!so) {
+		error = ENOTCONN;
+		goto close;
+	}
+
 	error = sosend(so, NULL, NULL, top, NULL, MSG_EOR);
 	
 	if (error) {
@@ -233,26 +170,20 @@ transceive_pfexecd(void *arg)
 	auio.uio_procp = NULL;
 	auio.uio_resid = sizeof(struct pfexec_resp) + 32;
 	recvflags = MSG_WAITALL;
-
-	ttyprintf(tty, "blocking for recv...\n");
-	
 	error = soreceive(so, NULL, &auio, &recv_top, NULL, &recvflags, 0);
 	
 	if (error) {
 		error = ENOTCONN;
-		ttyprintf(tty, "recv error: %d\n", error);
 		goto close;
 	}
 
 	if (!recv_top) {
 		error = ENOTCONN;
-		ttyprintf(tty, "sorec error: %d\n", error);
 		goto close;		
 	}
 	
 	if ((recvflags & MSG_EOR) == 0) {
 		error = ENOTCONN;
-		ttyprintf(tty, "msg eor not recd: %d\n", error);
 		goto close;	
 	}
 
@@ -263,10 +194,84 @@ transceive_pfexecd(void *arg)
 	m_freem(recv_top);
 
 close:
-	m_free(mopts);
+	soclose(so, MSG_DONTWAIT);
+	return (error);
+}
+
+
+/**
+ * Attemp a connection with the daemon and sent a message, block whilst
+ * waiting for a response. If any errors are occured, ENOTCONN is set in the 
+ * arg errors.
+ */
+void 
+connect_pfexecd(void *arg)
+{	
+	struct task_transeive_pfr *t_pfr = arg;
+	struct pfexec_resp *resp = t_pfr->resp;
+	struct mbuf *nam = NULL;
+	struct sockaddr *sa;
+	struct sockaddr_un addr;
+	struct socket *so;
+	
+	int s, error = 0;
+		
+	t_pfr->state = TASK_PENDING;
+	t_pfr->error = error;
+
+	/* Create socket */
+	if ((error = socreate(AF_UNIX, &so, SOCK_SEQPACKET, 0))) {
+		goto close;
+	}
+
+	/* Connect to path PFEXECD_SOCK */
+	bzero(&addr, sizeof(addr));
+	addr.sun_len = sizeof(addr);
+	addr.sun_family = AF_UNIX;
+	strlcpy(addr.sun_path, PFEXECD_SOCK, sizeof(addr.sun_path));
+
+	MGET(nam, M_WAIT, MT_SONAME);
+	if (nam == NULL)
+		goto close;
+	nam->m_len = addr.sun_len;
+	sa = mtod(nam, struct sockaddr *);
+	memcpy(sa, &addr, addr.sun_len);
+
+	s = solock(so);
+
+	error = soconnect(so, nam);
+
+	if (error)  {
+		error = ENOTCONN;
+		goto unlock_release;
+	}
+	
+	while ((so->so_state & SS_ISCONNECTING) && (so->so_error == 0)) {
+		error = sosleep_nsec(so, &so->so_timeo, PSOCK | PCATCH,
+		    "pfexecve_conn", INFSLP);
+
+		if (error) 
+			goto unlock_release;						
+	}
+
+	if (so->so_error) {
+		error = so->so_error;
+		so->so_error = 0;
+		error = ENOTCONN;
+		goto unlock_release;
+	}
+
+	if (error == 0)
+		t_pfr->so = so;
+	else {
+		soclose(so, MSG_DONTWAIT);
+		t_pfr->so = NULL;
+	}
+
+unlock_release:	
+	sounlock(so, s);
+close:
 	m_freem(nam);
-	soclose(so, 0);
-	ttyprintf(tty, "ERROR VALUE:%d\n", error);
 	/* Signal Completion and Error */
 	t_pfr->state = TASK_ISCOMPLETE;
 	t_pfr->error = error;
@@ -313,32 +318,32 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 		syscallarg(char *const *) argp;
 		syscallarg(char *const *) envp;
 	} */ args;
+	
 
 	struct taskq *tq;
 	struct task k_task;
 
-	struct process *pr = p->p_p;                  
-	tty = pr->ps_pgrp->pg_session->s_ttyp;			//! Debug
+	struct process *pr = p->p_p;    
 
 	struct ucred *cred = p->p_ucred;
 	struct ucred *newcred = NULL;
 
+	const char *file_path;
 	struct vnode *vp = NULL;
+
 	struct pfexec_req *req;
 	struct pfexec_resp *resp;
-	const char *file_path;
-
 	struct pfexecve_opts opts;
-	size_t len;
-	int error = 0, rc = 0, argc, envc;
-	uint32_t offset;
+	struct task_transeive_pfr t_pfr;
 
 	char **new_env = NULL;
 	char *const *cpp, *dp, *sp;
 	char *argp;
 
-	struct task_transeive_pfr t_pfr;
-
+	size_t len;
+	int error = 0, rc = 0, argc, envc;
+	uint32_t offset;
+	
 	/* stop all threads in the calling process other than
 	 *   the calling thread
 	 */
@@ -363,8 +368,6 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	if (error != 0)
 		return (error);        /* vnode cannot be resolved */
 
-	//copyin(SCARG(uap, path), path, sizeof(path));	//! Debug Only
-	//uprintf("TRYING_PATH: %s\n", path);			//! Debug Only
 
 	/* 2. Setup request packet */
 	req = malloc(sizeof(struct pfexec_req), M_EXEC, M_WAITOK | M_ZERO); 
@@ -387,10 +390,9 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 
 	copyin(file_path, req->pfr_path, sizeof(char) * PATH_MAX);
     
-	/* GET ARGV */
+	/* Get ARGV */
 	/* allocate an argument buffer */
 	argp =  malloc(NCARGS, M_EXEC, M_WAITOK | M_ZERO | M_CANFAIL); 
-	//argp = km_alloc(NCARGS, &kv_pfexec, &kp_pageable, &kd_nowait);
 
 	if (argp == NULL) {
 		error = ENOMEM;
@@ -440,7 +442,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 			error = E2BIG;
 			goto release;
 		}
-		//uprintf("Built: %s  -- offset: %d -- len: %d  -- argc: %d\n", dp, req->pfr_argp[argc].pfa_offset, req->pfr_argp[argc].pfa_len, argc);
+	
 		offset += len - 1;								/* Not including NUL */
 		dp += len;
 		cpp++;
@@ -454,9 +456,6 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	}
 
 	req->pfr_argc = argc;
-
-	//uprintf("final args:%s--\n", req->pfr_argarea);    //!DEBUG
-	//uprintf("Argc: %d\n", argc);
 
 	/* GET ENVIRON */
 	envc = 0;
@@ -484,21 +483,20 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 				error = E2BIG;
 				goto release;
 			}
-			//uprintf("Built: %s  -- offset: %d -- len: %d  -- envc: %d\n", dp, req->pfr_envp[envc].pfa_offset, req->pfr_envp[envc].pfa_len, envc);
+		
 			offset += len - 1;
 			dp += len;
 			cpp++;
 			envc++;
 		}
-	} //TODO Do something with NULL ENV?
+	} 
 
 	req->pfr_envc = envc;
 	/* Free argp buffer */
 	free(argp, M_EXEC, NCARGS);
 	
 	/* 3. pfexecd transeivce data */
-	uprintf("Entering...\n");							//!DEBUG
-	tq = taskq_create("conn", 1, IPL_NET, 0);
+	tq = taskq_create("conn", 1, IPL_NONE, TASKQ_MPSAFE);
 	if (tq == NULL) {
 		error = EAGAIN;
 		goto bad_free_req;
@@ -509,7 +507,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	t_pfr.req = req;
 	t_pfr.resp = resp;
 
-	task_set(&k_task, transceive_pfexecd, (void *)&t_pfr);
+	task_set(&k_task, connect_pfexecd, (void *)&t_pfr);
 	error = task_add(tq, &k_task);
 
 	if (error != 1) {
@@ -520,9 +518,9 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 
 	/* Wait for task to finish */
 	while (t_pfr.state != TASK_ISCOMPLETE) {
-		uprintf("Sleeping...\n");
-		error = tsleep(resp, PWAIT | PCATCH, "pfexecve_conn",  0);
-		if ((error == EINTR) || (error == ERESTART)) {
+		error = tsleep(resp, PCATCH | PWAIT, "pfexecve_conn",  0);
+		if (error) {
+			task_del(tq, &k_task);
 			taskq_destroy(tq);
 			goto bad_free_resp;					
 		}
@@ -530,13 +528,17 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	
 	/* Release task resources */
 	taskq_destroy(tq);
-	uprintf("Task Complete\n");
-
+	
 	if (t_pfr.error) {
 		/* t_pfr.error is set to ENOTCONN for all errors except socreate */
 		error = t_pfr.error;
 		goto bad_free_resp;
 	}
+
+	/* Error with tx/rx to pfexecd */
+	if ((error = transceive_pfexecd(&t_pfr))) 
+		goto bad_free_resp;
+	
 
 	/* No receive errors, we can parse daemon response */
 	if ((error = resp->pfr_errno) != 0) {
@@ -550,28 +552,25 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 		goto bad_free_resp;
 	
 	/* Unpack envp */
-	uprintf("\nNew Env: %s\n", resp->pfr_envarea);
-///!!
-	//!START HERE
 	new_env = build_new_env(resp);
 
 	if (new_env == NULL) {
 		error = EINVAL;
-		goto bad_free_resp;
+		goto bad_free_env;
 	}
 
-	for (int k = 0; new_env[k] != NULL; ++k)
-		uprintf("NEW: %s[]\n",  new_env[k]);
-///!!
+	/* Check that chroot path exists if required, pre exec */
+	if ((resp->pfr_flags & PFRESP_CHROOT) && 
+	    (error = lookup_chroot_path(p , resp))) 
+		goto bad_free_env;
 
 	/* 5. Apply user credential changes to process */
 	if ((error = set_creds_check(resp)))
-		goto  bad_free_resp;
+		goto  bad_free_env;
 
 	/* Copy credentials and update process ucred with newcred
 	 * 
 	 */
-	 //TODO Actual groups isnt changed 
 	newcred = crget();
 	crset(newcred, cred);
 	crhold(cred);						/* Hold for fallback */
@@ -582,9 +581,14 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 
 	/* Set group memberships if requested */
 	if (resp->pfr_flags & PFRESP_GROUPS) {
-		memcpy(newcred->cr_groups, resp->pfr_groups,
-		    sizeof(gid_t) * resp->pfr_ngroups);
-		newcred->cr_ngroups = resp->pfr_ngroups;
+		if (resp->pfr_ngroups == 0) {
+			bzero(newcred->cr_groups, sizeof(gid_t) * newcred->cr_ngroups);
+			newcred->cr_ngroups = 0;
+		} else {
+			memcpy(newcred->cr_groups, resp->pfr_groups,
+			    sizeof(gid_t) * resp->pfr_ngroups);
+			newcred->cr_ngroups = resp->pfr_ngroups;
+		}
 	}
 
 	/* Change Creds */
@@ -632,6 +636,9 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	vrele(vp);
 	return (0);
 
+	/* Bad Exits release alloced resources this run... */
+bad_free_env:
+	free_env(new_env, resp);
 bad_free_resp:
 	free(resp, M_EXEC, sizeof(struct pfexec_resp));
 bad_free_req:
@@ -643,7 +650,6 @@ release:
 	free(req, M_EXEC, sizeof(struct pfexec_req));
 	vrele(vp);
 	return (error);
-
 }
 
 /*
@@ -695,6 +701,37 @@ free_env:
 	return NULL;
 }
 
+
+/*
+ * lookup path in sysspace, will release vref on success
+ * dochroot_tings also does basically this, but this is used as a	
+ * prelim check prior to we exec. 
+ */
+static int
+lookup_chroot_path(struct proc *p, struct pfexec_resp *resp)
+{
+	struct nameidata ndi;
+	int rc;
+	struct vnode *vp;
+
+	NDINIT(&ndi, LOOKUP, FOLLOW | LOCKLEAF, UIO_SYSSPACE, resp->pfr_chroot, p);
+	rc = namei(&ndi);
+	if (rc != 0)
+		return (rc);
+
+	vp = ndi.ni_vp;
+
+	/* Chroot path does not exist*/
+	if (vp->v_type != VDIR) 
+		rc = ENOTDIR;
+
+	vp = ndi.ni_vp;
+
+	/* Unlock node and release ref */
+	vput(vp);
+	return (0);
+}
+
 /*
  * Check that dir change can be applied 
  */
@@ -734,7 +771,6 @@ dochroot_tings(struct proc *p, struct pfexec_resp *resp)
 	NDINIT(&nd, LOOKUP, FOLLOW | LOCKLEAF, UIO_SYSSPACE, resp->pfr_chroot, p);
 
 	if ((error = change_dir(&nd, p)) != 0) {
-		uprintf("No path or dir error\n");
 		return error;
 	}
 	
@@ -753,10 +789,6 @@ dochroot_tings(struct proc *p, struct pfexec_resp *resp)
 		fdp->fd_rdir = nd.ni_vp;
 		fdp->fd_cdir = nd.ni_vp;
 	}
-
-
-
-	uprintf("Path found %s .. chrooted\n", resp->pfr_chroot);
 	return (0);
 }
 
@@ -788,7 +820,6 @@ parse_response(struct pfexec_resp *resp) {
 
 	/* Invalid Flags Set */
 	if (flags & ~all_flags) {
-		uprintf("A \n");
 		return EINVAL;
 	}
 
@@ -807,7 +838,6 @@ parse_response(struct pfexec_resp *resp) {
 
 	if (flags & PFRESP_GROUPS) {
 		if (resp->pfr_ngroups > NGROUPS_MAX) {
-			uprintf("B\n");
 			return EINVAL;
 		}
 	}
@@ -815,20 +845,17 @@ parse_response(struct pfexec_resp *resp) {
 	if (flags & PFRESP_CHROOT) {
 		if (strnlen(resp->pfr_chroot, PATH_MAX) < 1 ||
 		    strnlen(resp->pfr_chroot, PATH_MAX) >= PATH_MAX) {
-				uprintf("C\n");
 			return (EINVAL);
 		}
 	}
 
 	if (flags & PFRESP_ENV) {
 		if (resp->pfr_envc >= 1024) {
-			uprintf("D\n");
 			return (EINVAL);
 		}
 
 		if (strnlen(resp->pfr_envarea, ARG_MAX) < 1 ||
 		    strnlen(resp->pfr_envarea, ARG_MAX) >= ARG_MAX) {
-				uprintf("E\n");
 			return (EINVAL);
 		}
 	} else {
@@ -836,6 +863,5 @@ parse_response(struct pfexec_resp *resp) {
 		return EINVAL; 
 	}
 
-	uprintf("F\n");
 	return (error);
 }
