@@ -1,26 +1,26 @@
 /*
-* COMP3301 - Assingment 3
-*
-* syscall handler for pfexecve.
-* 
-* Author	: Wilfred MK
-* SID		: S4428042
-* Riv		: 0.1
-* Last Updated	: 12/10/2021
-*
-* THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
-* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-* ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
-* FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-* DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-* OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-* SUCH DAMAGE.
-*
-* @(#)kern_pfexec.c v0.1 (UQ) - Wilfred MK
-*/
+ * COMP3301 - Assingment 3
+ *
+ * syscall handler for pfexecve.
+ *
+ * Author	: Wilfred MK
+ * SID		: S4428042
+ * Riv		: 0.1
+ * Last Updated	: 12/10/2021
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * SUCH DAMAGE.
+ *
+ * @(#)kern_pfexec.c v0.1 (UQ) - Wilfred MK
+ */
 
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -59,7 +59,7 @@
 #include <sys/task.h>
 
 #define TASK_ISCOMPLETE 1
-#define TASK_PENDING 0	
+#define TASK_PENDING 0
 
 struct task_transeive_pfr;
 
@@ -82,16 +82,16 @@ const struct kmem_va_mode kv_pfexec = {
 
 /* Combining struct for pfexec_connect task and transceive_pfexecd */
 struct task_transeive_pfr {
-	struct socket *so;					/* To be obtained by pfexec_connect */
-	struct pfexec_req *req;				/* Used in data transmission */
+	struct socket *so;
+	struct pfexec_req *req;		/* Used in data transmission */
 	struct pfexec_resp *resp;
-	uint32_t error;						/* Task error indicators */
+	uint32_t error;				/* Task error indicators */
 	uint32_t state;
 };
 
-/**
+/*
  * Create and return and mbuf cluster chain from the buffer in buf,
- * based on the buffer size tot_len. 
+ * based on the buffer size tot_len.
  */
 struct mbuf *
 build_mbuf2(void *buf, int tot_len)
@@ -110,7 +110,7 @@ build_mbuf2(void *buf, int tot_len)
 		m = MCLGETL(NULL, M_WAIT, len);
 
 		if (m == NULL) {
-			m_freem(top);			
+			m_freem(top);
 			return NULL;
 		}
 
@@ -124,13 +124,13 @@ build_mbuf2(void *buf, int tot_len)
 		*mp = m;
 		mp = &m->m_next;
 	}
-	
+
 	return (top);
 }
 
-/**
+/*
  * Send a request to a pfexecd and await response message.
- * Can be interrupted by signals. 
+ * Can be interrupted by signals.
  */
 static int
 transceive_pfexecd(struct task_transeive_pfr *t_pfr)
@@ -142,36 +142,36 @@ transceive_pfexecd(struct task_transeive_pfr *t_pfr)
 	struct mbuf *top = NULL;
 	struct mbuf *recv_top = NULL;
 	struct uio auio;
-	
+
 	int error = 0, recvflags = 0;
 
 	/* Build MBUF from req packet */
 	top = build_mbuf2((void *)r, sizeof(*r));
-	
+
 	if (top == NULL) {
 		goto close;
 	}
 
-	/* Send Message and wait..., should free top*/
+	/* Send Message and wait..., should free top */
 	if (!so) {
 		error = ENOTCONN;
 		goto close;
 	}
 
 	error = sosend(so, NULL, NULL, top, NULL, MSG_EOR);
-	
+
 	if (error) {
 		error = ENOTCONN;
 		goto close;
 	}
-	
+
 	/* Recv response, waiting for all data to be received */
 	bzero(&auio, sizeof(struct uio));
 	auio.uio_procp = NULL;
 	auio.uio_resid = sizeof(struct pfexec_resp) + 32;
 	recvflags = MSG_WAITALL;
 	error = soreceive(so, NULL, &auio, &recv_top, NULL, &recvflags, 0);
-	
+
 	if (error) {
 		error = ENOTCONN;
 		goto close;
@@ -179,17 +179,17 @@ transceive_pfexecd(struct task_transeive_pfr *t_pfr)
 
 	if (!recv_top) {
 		error = ENOTCONN;
-		goto close;		
+		goto close;
 	}
-	
+
 	if ((recvflags & MSG_EOR) == 0) {
 		error = ENOTCONN;
-		goto close;	
+		goto close;
 	}
 
 	/* Copy Daemon Response */
 	m_copydata(recv_top, 0, sizeof(struct pfexec_resp), resp);
-	
+
 	/* Release recv mbuf chain */
 	m_freem(recv_top);
 
@@ -199,23 +199,24 @@ close:
 }
 
 
-/**
+/*
  * Attemp a connection with the daemon and sent a message, block whilst
- * waiting for a response. If any errors are occured, ENOTCONN is set in the 
+ * waiting for a response. If any errors are occured, ENOTCONN is set in the
  * arg errors.
  */
-void 
+void
 connect_pfexecd(void *arg)
-{	
+{
+
 	struct task_transeive_pfr *t_pfr = arg;
 	struct pfexec_resp *resp = t_pfr->resp;
 	struct mbuf *nam = NULL;
 	struct sockaddr *sa;
 	struct sockaddr_un addr;
 	struct socket *so;
-	
+
 	int s, error = 0;
-		
+
 	t_pfr->state = TASK_PENDING;
 	t_pfr->error = error;
 
@@ -245,13 +246,13 @@ connect_pfexecd(void *arg)
 		error = ENOTCONN;
 		goto unlock_release;
 	}
-	
+
 	while ((so->so_state & SS_ISCONNECTING) && (so->so_error == 0)) {
 		error = sosleep_nsec(so, &so->so_timeo, PSOCK | PCATCH,
 		    "pfexecve_conn", INFSLP);
 
-		if (error) 
-			goto unlock_release;						
+		if (error)
+			goto unlock_release;
 	}
 
 	if (so->so_error) {
@@ -268,7 +269,7 @@ connect_pfexecd(void *arg)
 		t_pfr->so = NULL;
 	}
 
-unlock_release:	
+unlock_release:
 	sounlock(so, s);
 close:
 	m_freem(nam);
@@ -278,7 +279,7 @@ close:
 	wakeup(resp);
 }
 
-/**
+/*
  * Validate that a path exists.
  */
 static int
@@ -306,7 +307,7 @@ lookup_path(const char *path, struct proc *p, struct vnode **vpp)
 int
 sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 {
-	struct sys_pfexecve_args /*{
+	struct sys_pfexecve_args /* {
 		syscallarg(const struct pfexecve_opts *) opts;
 		syscallarg(const char *)  path;
 		syscallarg(char *const *) argp;
@@ -318,12 +319,11 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 		syscallarg(char *const *) argp;
 		syscallarg(char *const *) envp;
 	} */ args;
-	
 
 	struct taskq *tq;
 	struct task k_task;
 
-	struct process *pr = p->p_p;    
+	struct process *pr = p->p_p;
 
 	struct ucred *cred = p->p_ucred;
 	struct ucred *newcred = NULL;
@@ -343,18 +343,20 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	size_t len;
 	int error = 0, rc = 0, argc, envc;
 	uint32_t offset;
-	
-	/* stop all threads in the calling process other than
+
+	/*
+	 * Stop all threads in the calling process other than
 	 *   the calling thread
 	 */
 	if ((error = single_thread_set(p, SINGLE_UNWIND, 1)))
 		return (error);
 
 	/* 1. Validity Checks */
-	if (SCARG(uap, opts) == NULL) 
+	if (SCARG(uap, opts) == NULL)
 		return EINVAL;
 
-	if ((error = copyin(SCARG(uap, opts), &opts, sizeof(struct pfexecve_opts))))
+	if ((error = copyin(SCARG(uap, opts), &opts,
+	    sizeof(struct pfexecve_opts))))
 		return error;
 
 	/* Check the path to be executed is valid */
@@ -366,17 +368,21 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	error = lookup_path(file_path, p, &vp);
 
 	if (error != 0)
-		return (error);        /* vnode cannot be resolved */
+		return (error);			/* vnode cannot be resolved */
 
 
 	/* 2. Setup request packet */
-	req = malloc(sizeof(struct pfexec_req), M_EXEC, M_WAITOK | M_ZERO); 
+	req = malloc(sizeof(struct pfexec_req), M_EXEC,
+	    M_WAITOK | M_ZERO);
+
 	bzero(req, sizeof(struct pfexec_req));
 	req->pfr_pid = pr->ps_pid;
 	req->pfr_uid = cred->cr_uid;
 	req->pfr_gid = cred->cr_gid;
 	req->pfr_ngroups = cred->cr_ngroups;
-	memcpy(req->pfr_groups, cred->cr_groups, req->pfr_ngroups * sizeof (gid_t));
+
+	memcpy(req->pfr_groups, cred->cr_groups,
+	    req->pfr_ngroups * sizeof(gid_t));
 
 	req->pfr_req_flags = opts.pfo_flags;
 
@@ -385,21 +391,21 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 			error = EINVAL;
 			goto bad_free_req;
 		}
-		memcpy(req->pfr_req_user, opts.pfo_user, sizeof(char) * LOGIN_NAME_MAX);
+		memcpy(req->pfr_req_user, opts.pfo_user,
+		    sizeof(char) * LOGIN_NAME_MAX);
 	}
 
 	copyin(file_path, req->pfr_path, sizeof(char) * PATH_MAX);
-    
-	/* Get ARGV */
+
 	/* allocate an argument buffer */
-	argp =  malloc(NCARGS, M_EXEC, M_WAITOK | M_ZERO | M_CANFAIL); 
+	argp =  malloc(NCARGS, M_EXEC, M_WAITOK | M_ZERO | M_CANFAIL);
 
 	if (argp == NULL) {
 		error = ENOMEM;
 		goto bad_free_req;
 	}
 
-	if(!(cpp = SCARG(uap, argp))) {
+	if (!(cpp = SCARG(uap, argp))) {
 		error = EFAULT;
 		goto release;
 	}
@@ -407,7 +413,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	dp = argp;
 	argc = 0;
 	offset = 0;
-   
+
 	while (1) {
 		len = argp + ARG_MAX - dp;
 
@@ -423,27 +429,27 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 			goto release;
 		}
 
-		if (argc >= 1024){ 
+		if (argc >= 1024) {
 			error = E2BIG;
 			goto release;
 		}
-            
+
 		if (offset >= ARG_MAX) {
 			error = E2BIG;
 			goto release;
 		}
 
 		req->pfr_argp[argc].pfa_offset = offset;
-		req->pfr_argp[argc].pfa_len = len - 1;			/* Not including NUL */
+		req->pfr_argp[argc].pfa_len = len - 1;	/* Not including NUL */
 		/* Max len - current offset into buffer - ONE NUL at the end */
-		rc = strlcat(req->pfr_argarea, dp, ARG_MAX - offset - 1);          
+		rc = strlcat(req->pfr_argarea, dp, ARG_MAX - offset - 1);
 
 		if (rc >= (ARG_MAX - offset - 1)) {
 			error = E2BIG;
 			goto release;
 		}
-	
-		offset += len - 1;								/* Not including NUL */
+
+		offset += len - 1;			/* Not including NUL */
 		dp += len;
 		cpp++;
 		argc++;
@@ -461,7 +467,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	envc = 0;
 	offset = 0;
 
-	if ((cpp = SCARG(uap, envp)) != NULL ) {
+	if ((cpp = SCARG(uap, envp)) != NULL) {
 		while (1) {
 			len = argp + ARG_MAX - dp;
 			if ((error = copyin(cpp, &sp, sizeof(sp))) != 0)
@@ -472,29 +478,31 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 				if (error == ENAMETOOLONG)
 					error = E2BIG;
 				goto release;
-			}	
-			
+			}
+
 			req->pfr_envp[envc].pfa_offset = offset;
-			req->pfr_envp[envc].pfa_len = len - 1;		/* No NUL in len */
-			/* Max len - current offset into buffer - ONE NUL at the end */
-			rc = strlcat(req->pfr_envarea, dp, ARG_MAX - offset - 1);
+			/* No NUL in len */
+			req->pfr_envp[envc].pfa_len = len - 1;
+			/* Max len - current offset into buffer */
+			rc = strlcat(req->pfr_envarea, dp,
+			    ARG_MAX - offset - 1);
 
 			if (rc >= (ARG_MAX - offset - 1)) {
 				error = E2BIG;
 				goto release;
 			}
-		
+
 			offset += len - 1;
 			dp += len;
 			cpp++;
 			envc++;
 		}
-	} 
+	}
 
 	req->pfr_envc = envc;
 	/* Free argp buffer */
 	free(argp, M_EXEC, NCARGS);
-	
+
 	/* 3. pfexecd transeivce data */
 	tq = taskq_create("conn", 1, IPL_NONE, TASKQ_MPSAFE);
 	if (tq == NULL) {
@@ -502,7 +510,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 		goto bad_free_req;
 	}
 	/* Allocate for resp struct */
-	resp = malloc(sizeof(struct pfexec_resp), M_EXEC, M_WAITOK | M_ZERO); 
+	resp = malloc(sizeof(struct pfexec_resp), M_EXEC, M_WAITOK | M_ZERO);
 	bzero(&t_pfr, sizeof(struct task_transeive_pfr));
 	t_pfr.req = req;
 	t_pfr.resp = resp;
@@ -511,7 +519,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	error = task_add(tq, &k_task);
 
 	if (error != 1) {
-		error = EBUSY;		
+		error = EBUSY;
 		taskq_destroy(tq);
 		goto bad_free_resp;
 	}
@@ -522,23 +530,25 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 		if (error) {
 			task_del(tq, &k_task);
 			taskq_destroy(tq);
-			goto bad_free_resp;					
+			goto bad_free_resp;
 		}
 	}
-	
+
 	/* Release task resources */
 	taskq_destroy(tq);
-	
+
 	if (t_pfr.error) {
-		/* t_pfr.error is set to ENOTCONN for all errors except socreate */
+		/*
+		 * t_pfr.error is set to ENOTCONN
+		 * for all errors except socreate
+		 */
 		error = t_pfr.error;
 		goto bad_free_resp;
 	}
 
 	/* Error with tx/rx to pfexecd */
-	if ((error = transceive_pfexecd(&t_pfr))) 
+	if ((error = transceive_pfexecd(&t_pfr)))
 		goto bad_free_resp;
-	
 
 	/* No receive errors, we can parse daemon response */
 	if ((error = resp->pfr_errno) != 0) {
@@ -546,11 +556,11 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	}
 
 	/* 4. Validate Response and Extract data */
-	
+
 	/* Parse the resp packet */
 	if ((error = parse_response(resp)))
 		goto bad_free_resp;
-	
+
 	/* Unpack envp */
 	new_env = build_new_env(resp);
 
@@ -560,20 +570,20 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	}
 
 	/* Check that chroot path exists if required, pre exec */
-	if ((resp->pfr_flags & PFRESP_CHROOT) && 
-	    (error = lookup_chroot_path(p , resp))) 
+	if ((resp->pfr_flags & PFRESP_CHROOT) &&
+	    (error = lookup_chroot_path(p, resp)))
 		goto bad_free_env;
 
 	/* 5. Apply user credential changes to process */
 	if ((error = set_creds_check(resp)))
 		goto  bad_free_env;
 
-	/* Copy credentials and update process ucred with newcred
-	 * 
+	/*
+	 * Copy credentials and update process ucred with newcred
 	 */
 	newcred = crget();
 	crset(newcred, cred);
-	crhold(cred);						/* Hold for fallback */
+	crhold(cred);			/* Hold for fallback */
 	newcred->cr_uid = resp->pfr_uid;
 	newcred->cr_ruid = resp->pfr_uid;
 	newcred->cr_gid = resp->pfr_gid;
@@ -582,7 +592,8 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 	/* Set group memberships if requested */
 	if (resp->pfr_flags & PFRESP_GROUPS) {
 		if (resp->pfr_ngroups == 0) {
-			bzero(newcred->cr_groups, sizeof(gid_t) * newcred->cr_ngroups);
+			bzero(newcred->cr_groups, sizeof(gid_t)
+			    * newcred->cr_ngroups);
 			newcred->cr_ngroups = 0;
 		} else {
 			memcpy(newcred->cr_groups, resp->pfr_groups,
@@ -599,13 +610,13 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 
 	dorefreshcreds(pr, p);
 
-	/* 
+	/*
 	 * 6. Exec, exec will release stopped threads
 	 */
 	SCARG(&args, path) = SCARG(uap, path);
 	SCARG(&args, argp) = SCARG(uap, argp);
 	SCARG(&args, envp) = new_env;
-	
+
 	error = sys_execve_from_pfexec(p, (void *)&args, retVal);
 
 	free_env(new_env, resp);
@@ -617,7 +628,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 		chgproccnt(cred->cr_uid, 1);
 		dorefreshcreds(pr, p);
 		crfree(newcred);
-		goto bad_free_resp;	
+		goto bad_free_resp;
 	}
 
 	/* No longer requires a ref to old creds */
@@ -625,7 +636,7 @@ sys_pfexecve(struct proc *p, void *v, register_t *retVal)
 
 	/* 7. Apply chroot change (if any) */
 	if (resp->pfr_flags & PFRESP_CHROOT) {
-		if ((error = dochroot_tings(p, resp)) != 0){
+		if ((error = dochroot_tings(p, resp)) != 0) {
 			goto bad_free_resp;
 		}
 	}
@@ -667,28 +678,31 @@ free_env(char **new_env, struct pfexec_resp *resp)
 }
 
 /*
- * Create an env array for resp and return a pointer to it. 
- * 	array is terminated with NULL, and can be used to free it upto that. 
+ * Create an env array for resp and return a pointer to it.
+ * 	array is terminated with NULL, and can be used to free it upto that.
  */
 char **
 build_new_env(struct pfexec_resp *resp)
 {
 	int i;
 	char **new_env = malloc(sizeof(char *) * resp->pfr_envc + 1,
-	    M_EXEC, M_WAITOK | M_ZERO); 
+	    M_EXEC, M_WAITOK | M_ZERO);
 
 	for (i = 0; i < resp->pfr_envc; ++i)  {
 		if (resp->pfr_envp[i].pfa_offset > ARG_MAX ||
 		    resp->pfr_envp[i].pfa_len > ARG_MAX) {
-			new_env[i] = NULL;	
-			goto free_env;	
+			new_env[i] = NULL;
+			goto free_env;
 		}
 
-		new_env[i] = malloc(sizeof(char *) * resp->pfr_envp[i].pfa_len + 1,
-		    M_EXEC, M_WAITOK | M_ZERO); 
-		strncpy(new_env[i], resp->pfr_envarea + resp->pfr_envp[i].pfa_offset,
+		new_env[i] = malloc(sizeof(char *) *
+		    resp->pfr_envp[i].pfa_len + 1,
+		    M_EXEC, M_WAITOK | M_ZERO);
+
+		strncpy(new_env[i], resp->pfr_envarea +
+		    resp->pfr_envp[i].pfa_offset,
 		    resp->pfr_envp[i].pfa_len);
-	}	
+	}
 	/* Used for freeing later */
 	new_env[i] = NULL;		/* Indicate End of data */
 	return new_env;			/* Must be freed by caller */
@@ -704,8 +718,8 @@ free_env:
 
 /*
  * lookup path in sysspace, will release vref on success
- * dochroot_tings also does basically this, but this is used as a	
- * prelim check prior to we exec. 
+ * dochroot_tings also does basically this, but this is used as a
+ * prelim check prior to we exec.
  */
 static int
 lookup_chroot_path(struct proc *p, struct pfexec_resp *resp)
@@ -714,15 +728,16 @@ lookup_chroot_path(struct proc *p, struct pfexec_resp *resp)
 	int rc;
 	struct vnode *vp;
 
-	NDINIT(&ndi, LOOKUP, FOLLOW | LOCKLEAF, UIO_SYSSPACE, resp->pfr_chroot, p);
+	NDINIT(&ndi, LOOKUP, FOLLOW | LOCKLEAF,
+	    UIO_SYSSPACE, resp->pfr_chroot, p);
 	rc = namei(&ndi);
 	if (rc != 0)
 		return (rc);
 
 	vp = ndi.ni_vp;
 
-	/* Chroot path does not exist*/
-	if (vp->v_type != VDIR) 
+	/* Chroot path does not exist */
+	if (vp->v_type != VDIR)
 		rc = ENOTDIR;
 
 	vp = ndi.ni_vp;
@@ -733,7 +748,7 @@ lookup_chroot_path(struct proc *p, struct pfexec_resp *resp)
 }
 
 /*
- * Check that dir change can be applied 
+ * Check that dir change can be applied
  */
 static int
 change_dir(struct nameidata *ndp, struct proc *p)
@@ -746,18 +761,18 @@ change_dir(struct nameidata *ndp, struct proc *p)
 
 	vp = ndp->ni_vp;
 
-	if (vp->v_type != VDIR) 
+	if (vp->v_type != VDIR)
 		error = ENOTDIR;
 
 	if (error)
 		vput(vp);
-	else 
+	else
 		VOP_UNLOCK(vp);
 
 	return (error);
 }
 
-/* 
+/*
  * Change process root directory
  */
 static int
@@ -768,12 +783,13 @@ dochroot_tings(struct proc *p, struct pfexec_resp *resp)
 	struct nameidata nd;
 	int error = 0;
 
-	NDINIT(&nd, LOOKUP, FOLLOW | LOCKLEAF, UIO_SYSSPACE, resp->pfr_chroot, p);
+	NDINIT(&nd, LOOKUP, FOLLOW | LOCKLEAF,
+	    UIO_SYSSPACE, resp->pfr_chroot, p);
 
 	if ((error = change_dir(&nd, p)) != 0) {
 		return error;
 	}
-	
+
 	/* Off to jail u go */
 	if (fdp->fd_rdir != NULL) {
 		vref(nd.ni_vp);
@@ -792,7 +808,7 @@ dochroot_tings(struct proc *p, struct pfexec_resp *resp)
 	return (0);
 }
 
-static int 
+static int
 set_creds_check(struct pfexec_resp *resp)
 {
 	if ((resp->pfr_flags & PFRESP_UID) &&
@@ -802,20 +818,20 @@ set_creds_check(struct pfexec_resp *resp)
 	return (EINVAL);
 }
 
-/**
- * Check that a given response packet resp, is formatted correctly. 
- * Should be called prior to accessing packet data. 
- *
+/*
+ * Check that a given response packet resp, is formatted correctly.
+ * Should be called prior to accessing packet data.
  */
-static int 
-parse_response(struct pfexec_resp *resp) {
-
+static int
+parse_response(struct pfexec_resp *resp)
+{
 	uint32_t flags = resp->pfr_flags;
 	uint32_t all_flags = PFRESP_UID | \
-							PFRESP_GID | \
-							PFRESP_GROUPS | \
-							PFRESP_CHROOT | \
-							PFRESP_ENV;
+	    PFRESP_GID | \
+	    PFRESP_GROUPS | \
+	    PFRESP_CHROOT | \
+	    PFRESP_ENV;
+
 	int error = 0;
 
 	/* Invalid Flags Set */
@@ -860,8 +876,7 @@ parse_response(struct pfexec_resp *resp) {
 		}
 	} else {
 		/* ENVIRON must always be valid */
-		return EINVAL; 
+		return EINVAL;
 	}
-
 	return (error);
 }
