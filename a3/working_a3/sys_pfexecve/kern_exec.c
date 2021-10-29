@@ -1071,19 +1071,11 @@ sys_execve_from_pfexec(struct proc *p, void *v, register_t *retval)
 			len = argp + ARG_MAX - dp;
 			memcpy(&sp, cpp, sizeof(sp));
 
-			// if ((error = copyin(cpp, &sp, sizeof(sp))) != 0)
-			// 	goto bad;
 			if (!sp)
 				break;
 
 			strncpy(dp, sp, strlen(sp));
-			len = strlen(sp) + 1; /* For NUL */
-
-			// if ((error = copyinstr(sp, dp, len, &len)) != 0) {
-			// 	if (error == ENAMETOOLONG)
-			// 		error = E2BIG;
-			// 	goto bad;
-			// }
+			len = strlen(sp) + 1; 	/* For NUL */
 			dp += len;
 			cpp++;
 			envc++;
