@@ -36,8 +36,6 @@ struct envnode {
 	const char *value;
 };
 
-
-
 struct env {
 	RB_HEAD(envtree, envnode) root;
 	u_int count;

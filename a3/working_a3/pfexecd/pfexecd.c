@@ -821,8 +821,19 @@ match(const struct pfexec_req *req, struct pfexec_resp *resp, struct rule *r)
 
 	/* If target specified and target requested, these must match user */
 	if (r->target && r->target[0] == '_') {
-		uid_req_user = req->pfr_uid;
-		target_gid = req->pfr_gid;
+		/* Check that the requested user UID matched */
+		if (req->pfr_req_flags & PFEXECVE_USER)	{
+			if (parseuid(req->pfr_req_user, &uid_req_user) != 0) {
+				return 0;
+			}
+			if (uid_req_user != req->pfr_uid)
+				return 0;
+			uid_req_user = req->pfr_uid;
+			target_gid = req->pfr_gid;
+		} else {
+			uid_req_user = req->pfr_uid;
+			target_gid = req->pfr_gid;
+		}
 	} else if (r->target && !(req->pfr_req_flags & PFEXECVE_USER)) {
 		if (parseuid(r->target, &uid_req_user) != 0)
 			return 0;
@@ -903,7 +914,6 @@ match(const struct pfexec_req *req, struct pfexec_resp *resp, struct rule *r)
 	resp->pfr_flags = (PFRESP_UID | PFRESP_GID);
 	resp->pfr_uid = uid_req_user;
 	resp->pfr_gid = target_gid;
-
 	return 1;
 }
 
