@@ -1,26 +1,25 @@
 /*
-* COMP3301 - Assingment 3
-*
-* pfexecve response daemon
-* 
-* Author	: Wilfred MK
-* SID		: S4428042
-* Riv		: 0.1
-* Last Updated	: 12/10/2021
-*
-* THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
-* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-* ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
-* FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-* DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
-* OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-* HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-* LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-* SUCH DAMAGE.
-*
-* @(#)main.c v0.1 (UQ) - Wilfred MK
-*/
+ * COMP3301 - Assingment 3
+ *
+ * pfexecve response daemon
+ * Author	: Wilfred MK
+ * SID		: S4428042
+ * Riv		: 0.1
+ * Last Updated	: 12/10/2021
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * SUCH DAMAGE.
+ *
+ * @(#)main.c v0.1 (UQ) - Wilfred MK
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,9 +52,6 @@
 #include "pfexecd.h"
 #define PFEXECD_USER "_pfexecd"
 
-//TODO: Fix keep groups when a target is specified (it should keep org groups
-//    , currently keeps targets?)
-
 const off_t CONFIG_MAX_SIZE	= 16777216LL;	/* 16 MB */
 const size_t BACKLOG		= 8;
 
@@ -87,7 +83,7 @@ static int match(const struct pfexec_req *, struct pfexec_resp *,
 static int parsegid(const char *, gid_t *);
 static int uidcheck(const char *, uid_t);
 static int parseuid(const char *, uid_t *);
-static int gid_from_uid(const char *, gid_t *); 
+static int gid_from_uid(const char *, gid_t *);
 static int set_resp_options(const struct pfexec_req *, struct pfexec_resp *,
     const struct rule *);
 
@@ -111,11 +107,12 @@ usage(const char *arg0)
 	exit(1);
 }
 
-/**
+/*
  * Limit daemon functionality and visibility of vfs
  */
-static void 
-to_jail(void) {
+static void
+to_jail(void)
+{
 
 	if (unveil(NULL, NULL) == -1) {
 		syslog(LOG_AUTHPRIV | LOG_NOTICE,
@@ -125,14 +122,13 @@ to_jail(void) {
 
 	if (pledge("stdio unix getpw", NULL) == -1) {
 		syslog(LOG_AUTHPRIV | LOG_NOTICE,
-		    "pledge failed (%d) %s", errno, strerror(errno));		
+		    "pledge failed (%d) %s", errno, strerror(errno));
 		exit(1);
 	}
 }
 
-/**
+/*
  * Drop root privs and continue as _pfexecd (PFEXECD_USER)
- * 
  */
 static void
 drop_privs(void)
@@ -144,22 +140,22 @@ drop_privs(void)
 	/*
 	 * Drop root privs and continue as non-root user.
 	 */
-	 if (setgroups(1, &pw->pw_gid) ||
-	     setresgid(pw->pw_gid, pw->pw_gid, pw->pw_gid) ||
-		 setresuid(pw->pw_uid, pw->pw_uid, pw->pw_uid)) {
+	if (setgroups(1, &pw->pw_gid) ||
+	    setresgid(pw->pw_gid, pw->pw_gid, pw->pw_gid) ||
+	    setresuid(pw->pw_uid, pw->pw_uid, pw->pw_uid)) {
 			syslog(LOG_AUTHPRIV | LOG_NOTICE,
-			    "failed to drop privs: %d (%s)", errno, strerror(errno));
+			    "failed to drop privs: %d (%s)", errno,
+			    strerror(errno));
 			exit(1);
 	}
 }
 
-/**
+/*
  * Parse a given .y config file and indicate syntax errors.
- * 
  */
 static void
 parse_config(FILE *f)
-{	
+{
 	extern FILE *yyfp;
 	extern int yyparse(void);
 	yyfp = f;
@@ -168,10 +164,9 @@ parse_config(FILE *f)
 
 	if (parse_errors) {
 		syslog(LOG_AUTHPRIV | LOG_NOTICE,
-		    "failed to parse config file, it just DOESNT work\n");		
+		    "failed to parse config file, it just DOESNT work\n");
 		exit(1);
 	}
-
 }
 
 int
@@ -288,7 +283,7 @@ main(int argc, char *argv[])
 	if (config_stream == NULL) {
 		syslog(LOG_AUTHPRIV | LOG_NOTICE,
 		    "fmemopen failed: %d (%s)", errno, strerror(errno));
-		exit(1);		
+		exit(1);
 	}
 
 	parse_config(config_stream);
@@ -377,7 +372,7 @@ on_lsock_acceptable(int lsock, short evt, void *arg)
 		goto out;
 	}
 
-	client = calloc(1, sizeof (*client));
+	client = calloc(1, sizeof(*client));
 
 	if (client == NULL) {
 		syslog(LOG_AUTHPRIV | LOG_NOTICE, "failed to allocate memory "
@@ -416,7 +411,7 @@ on_client_readable(int sock, short evt, void *arg)
 	hdr.msg_iov = &iov;
 	iov.iov_base = &client->c_req;
 	iov.iov_len = sizeof(struct pfexec_req);
-	
+
 	recvd = recvmsg(sock, &hdr, MSG_DONTWAIT);
 
 	if (recvd < 0) {
@@ -467,7 +462,7 @@ out:
 }
 
 static int
-process_request(const struct pfexec_req *req, struct pfexec_resp *resp, 
+process_request(const struct pfexec_req *req, struct pfexec_resp *resp,
     short *log_ok)
 {
 	uint i;
@@ -511,7 +506,7 @@ process_request(const struct pfexec_req *req, struct pfexec_resp *resp,
 			return (EINVAL);
 	}
 
-	/* Determine whether this request should be allowed */	
+	/* Determine whether this request should be allowed */
 	if (!permit(req, resp, &rule)) {
 		syslog(LOG_AUTHPRIV | LOG_INFO, "Request denied");
 		return (EPERM);
@@ -519,11 +514,13 @@ process_request(const struct pfexec_req *req, struct pfexec_resp *resp,
 
 	/* At this point the *last* matching rule is found */
 	if (set_resp_options(req, resp, rule)) {
-		syslog(LOG_AUTHPRIV | LOG_INFO, "Request denied, invalid args in conf");
-		return (EPERM);		
+		syslog(LOG_AUTHPRIV | LOG_INFO, "Request denied,"
+		" invalid args in conf");
+		return (EPERM);
 	}
 
-	/* Determine Password Requirements
+	/*
+	 * Determine Password Requirements
 	 * The following 3 features are not supported in this rivision..
 	 */
 	if (rule->options & PERSIST) {
@@ -531,7 +528,8 @@ process_request(const struct pfexec_req *req, struct pfexec_resp *resp,
 	}
 
 	if ((rule->options & NOPASS) == 0) {
-		syslog(LOG_AUTHPRIV | LOG_DEBUG, "Password Required, Not Implemented");
+		syslog(LOG_AUTHPRIV | LOG_DEBUG, "Password Required,"
+		" Not Implemented");
 		return EPERM;
 	}
 
@@ -541,15 +539,15 @@ process_request(const struct pfexec_req *req, struct pfexec_resp *resp,
 	}
 
 	/* Logging enable by defualt */
-	if ((rule->options & NOLOG)) 
+	if ((rule->options & NOLOG))
 		*log_ok = 0;
-	else 
+	else
 		*log_ok = 1;
 
 	return (0);
 }
 
-/**
+/*
  * Updates particular response fields of the response packet
  * @note function must be called only after permit
  */
@@ -570,11 +568,11 @@ set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
 	resp->pfr_ngroups = 0;
 	if (r->options & SETGROUPS) {
 		for (i = 0; r->grplist[i]; ++i) {
-			if (i >= NGROUPS_MAX) 
+			if (i >= NGROUPS_MAX)
 				return EINVAL;
 
 			if (parsegid(r->grplist[i], &gid) == -1)
-				return EINVAL; 
+				return EINVAL;
 
 			/* Primary GID */
 			if (i == 0) {
@@ -582,7 +580,7 @@ set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
 				continue;
 			}
 
-			for (int z = 0; z < i; ++z){
+			for (int z = 0; z < i; ++z) {
 				if (resp->pfr_groups[z] == gid)
 					dup = 1;
 			}
@@ -593,14 +591,18 @@ set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
 			}
 			resp->pfr_groups[set_count] = gid;
 			set_count++;
-			
 		}
-		resp->pfr_ngroups = set_count; 		/* Count of actual elements */
+		resp->pfr_ngroups = set_count; 	/* Count of actual elements */
 	} else {
-		/* Get groups of target user, by looking through group database */
-		test_uid = resp->pfr_uid;			/* Look for groups of target */
+		/*
+		 * Get groups of target user,
+		 * by looking through group database
+		 */
+		/* Look for groups of target */
+		test_uid = resp->pfr_uid;
 		if (r->options & KEEPGROUPS) {
-			test_uid = req->pfr_uid;		/* Look for groups of org user */
+			/* Look for groups of org user */
+			test_uid = req->pfr_uid;
 			resp->pfr_gid = req->pfr_gid;
 		}
 		while ((grp = getgrent()) != NULL) {
@@ -609,14 +611,16 @@ set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
 					/* This groups is primary */
 					if (grp->gr_gid == resp->pfr_gid)
 						continue;
-					/* Target user is a member of this group */
+					/*
+					 * Target user is a member of this group
+					 */
 					resp->pfr_groups[j] = grp->gr_gid;
-					j = ++resp->pfr_ngroups;				
-				}	
-			if (j >= NGROUPS_MAX) 
+					j = ++resp->pfr_ngroups;
+				}
+			if (j >= NGROUPS_MAX)
 				return EINVAL;
 		}
-		 endgrent();
+		endgrent();
 	}
 
 	resp->pfr_flags |= PFRESP_GROUPS;
@@ -642,7 +646,8 @@ set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
 	}
 
 	/* Calling proc */
-	rv = getpwuid_r(req->pfr_uid, &mypwstore, mypwbuf, sizeof(mypwbuf), &mypw);
+	rv = getpwuid_r(req->pfr_uid, &mypwstore, mypwbuf,
+	    sizeof(mypwbuf), &mypw);
 
 	if (rv != 0) {
 		syslog(LOG_AUTHPRIV | LOG_INFO,
@@ -654,7 +659,7 @@ set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
 		    "no passwd entry for calling uid: %d", req->pfr_uid);
 		return EINVAL;
 	}
-	
+
 	if (req->pfr_req_flags & PFEXECVE_USER) {
 		/* Run as proc (Target) */
 		rv = getpwnam_r(req->pfr_req_user, &targpwstore, targpwbuf,
@@ -662,7 +667,7 @@ set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
 	} else {
 		/* Run as root by def */
 		rv = getpwnam_r("root", &targpwstore, targpwbuf,
-		    sizeof(targpwbuf), &targpw);				
+		    sizeof(targpwbuf), &targpw);
 	}
 
 	if (rv != 0) {
@@ -683,27 +688,29 @@ set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
 	for (i = 0; i < req->pfr_envc; ++i) {
 		if (req->pfr_envp[i].pfa_offset > ARG_MAX ||
 		    req->pfr_envp[i].pfa_len > ARG_MAX) {
-			req_environ[i] = NULL;	
-			goto free_env;	
+			req_environ[i] = NULL;
+			goto free_env;
 		}
 
-		req_environ[i] = malloc(sizeof(char) * req->pfr_envp[i].pfa_len + 1);
+		req_environ[i] = malloc(sizeof(char) *
+		    req->pfr_envp[i].pfa_len + 1);
+
 		memset(req_environ[i], 0, req->pfr_envp[i].pfa_len + 1);
-		strncpy(req_environ[i], req->pfr_envarea + req->pfr_envp[i].pfa_offset,
-		    req->pfr_envp[i].pfa_len);
+		strncpy(req_environ[i], req->pfr_envarea +
+		    req->pfr_envp[i].pfa_offset, req->pfr_envp[i].pfa_len);
 	}
 
 	/* Used for freeing later */
 	req_environ[i] = NULL;		/* Indicate End of data */
 
-	envp = prepenv(r, mypw, targpw);	
+	envp = prepenv(r, mypw, targpw);
 
 	/* Update response env buffer */
 	if (update_resp_enva(resp, envp))
 		goto free_env2;
 
 	/* Free all the things */
-	for (i = 0; req_environ[i] != NULL ; ++i) {
+	for (i = 0; req_environ[i] != NULL; ++i) {
 		free(req_environ[i]);
 	}
 
@@ -723,13 +730,13 @@ free_env2:
 		free(envp[i]);
 	}
 free_env:
-	for (i = 0; req_environ[i] != NULL ; ++i) {
+	for (i = 0; req_environ[i] != NULL; ++i) {
 		free(req_environ[i]);
 	}
 	return EINVAL;
 }
 
-/**
+/*
  * Update response packet environment area.
  */
 static int
@@ -747,29 +754,29 @@ update_resp_enva(struct pfexec_resp *resp, char **envp)
 
 		rc = strlcat(resp->pfr_envarea, envp[i], ARG_MAX - offset - 1);
 
-		if (rc >= (ARG_MAX - offset - 1)) 
-			return E2BIG;		
+		if (rc >= (ARG_MAX - offset - 1))
+			return E2BIG;
 
 		resp->pfr_envc++;
 		resp->pfr_envp[i].pfa_offset = offset;
 		resp->pfr_envp[i].pfa_len = len;
 
-		offset += len; 
+		offset += len;
 	}
 	return (0);
 }
 
-/**
+/*
  * Validate if a given rule is permitted or not
  * Update the response structure as required on match
  */
-static int 
+static int
 permit(const struct pfexec_req *req, struct pfexec_resp *resp,
-    const struct rule **lastr) 
+    const struct rule **lastr)
 {
 	size_t i;
 	*lastr = NULL;
-	
+
 	for (i = 0; i < nrules; i++) {
 		if (match(req, resp, rules[i])) {
 			*lastr = rules[i];
@@ -780,7 +787,7 @@ permit(const struct pfexec_req *req, struct pfexec_resp *resp,
 	return (*lastr)->action == PERMIT;
 }
 
-/**
+/*
  * Match a specified to pfexec request.
  * On success, updates the response buffer with final target uid and gid.
  */
@@ -791,14 +798,14 @@ match(const struct pfexec_req *req, struct pfexec_resp *resp, struct rule *r)
 	uint32_t uid = req->pfr_uid;
 	uint32_t ngroups = req->pfr_ngroups;
 	uint32_t *groups = (uint32_t *)req->pfr_groups;
-	
+
 	uid_t uid_req_user;
 	gid_t rgid, target_gid;
-	char* test_arg;
+	char *test_arg;
 
 	int i;
 
-	if (r->ident[0] == ':') {	
+	if (r->ident[0] == ':') {
 		if (parsegid(r->ident + 1, &rgid) == -1)
 			return 0;
 		for (i = 0; i < ngroups; i++) {
@@ -808,8 +815,8 @@ match(const struct pfexec_req *req, struct pfexec_resp *resp, struct rule *r)
 		if (i == ngroups)
 			return 0;
 	} else {
-		if (uidcheck(r->ident, uid) != 0) 
-			return 0;		
+		if (uidcheck(r->ident, uid) != 0)
+			return 0;
 	}
 
 	/* If target specified and target requested, these must match user */
@@ -817,58 +824,60 @@ match(const struct pfexec_req *req, struct pfexec_resp *resp, struct rule *r)
 		uid_req_user = req->pfr_uid;
 		target_gid = req->pfr_gid;
 	} else if (r->target && !(req->pfr_req_flags & PFEXECVE_USER)) {
-		if (parseuid(r->target, &uid_req_user) != 0) 
+		if (parseuid(r->target, &uid_req_user) != 0)
 			return 0;
 
-		if (gid_from_uid(r->target, &target_gid) != 0) 
-			return 0;		
-	} else if (r->target && (req->pfr_req_flags & PFEXECVE_USER) != 0) {	
-		if (parseuid(req->pfr_req_user, &uid_req_user) != 0) 
+		if (gid_from_uid(r->target, &target_gid) != 0)
 			return 0;
-		
-		if (uidcheck(r->target, uid_req_user) != 0) 
-			return 0;	
-		
+	} else if (r->target && (req->pfr_req_flags & PFEXECVE_USER) != 0) {
+		if (parseuid(req->pfr_req_user, &uid_req_user) != 0)
+			return 0;
+
+		if (uidcheck(r->target, uid_req_user) != 0)
+			return 0;
+
 		/* Target UID matched with reqeusted, get gid */
-		if (gid_from_uid(r->target, &target_gid) != 0) 
+		if (gid_from_uid(r->target, &target_gid) != 0)
 			return 0;
 
-	} else if ((req->pfr_req_flags & PFEXECVE_USER) != 0){
+	} else if ((req->pfr_req_flags & PFEXECVE_USER) != 0) {
 		/* Run as requested target, no rule restrictions */
-		if (parseuid(req->pfr_req_user, &uid_req_user) != 0) 
+		if (parseuid(req->pfr_req_user, &uid_req_user) != 0)
 			return 0;
 
-		if (gid_from_uid(req->pfr_req_user, &target_gid) != 0) 
-			return 0;	
+		if (gid_from_uid(req->pfr_req_user, &target_gid) != 0)
+			return 0;
 
 	} else {
 		/* If no target specified, set default to root */
 		if (parseuid("root", &uid_req_user) != 0)
 			return 0;
 
-		if (gid_from_uid("root", &target_gid) != 0) 
+		if (gid_from_uid("root", &target_gid) != 0)
 			return 0;
 	}
 
 	/* Check for command specifications */
 	if (r->cmd) {
-		if (strcmp(r->cmd, req->pfr_path)) 
+		if (strcmp(r->cmd, req->pfr_path))
 			return 0;
-		
-		/* Given args must be a 1:1 match */ 
+
+		/* Given args must be a 1:1 match */
 		if (r->cmdargs) {
 			test_arg = malloc(sizeof(char) * ARG_MAX);
 
 			for (i = 0; r->cmdargs[i]; ++i) {
-				/* More in rule than requested
-				 * pfr_argc contains bin name 
+				/*
+				 * More in rule than requested
+				 * pfr_argc contains bin name
 				 */
-				if (i >= req->pfr_argc - 1) { 
+				if (i >= req->pfr_argc - 1) {
 					free(test_arg);
 					return 0;
 				}
 
-				memcpy(test_arg, req->pfr_argarea + req->pfr_argp[i+1].pfa_offset,
+				memcpy(test_arg, req->pfr_argarea +
+				    req->pfr_argp[i+1].pfa_offset,
 				    req->pfr_argp[i+1].pfa_len);
 
 				test_arg[req->pfr_argp[i+1].pfa_len + 1] = '\0';
@@ -880,7 +889,10 @@ match(const struct pfexec_req *req, struct pfexec_resp *resp, struct rule *r)
 				bzero(test_arg, sizeof(char) * ARG_MAX);
 			}
 			free(test_arg);
-			/* More args requested than in rule,(pfr_argc contains bin name )*/ 
+			/*
+			 * More args requested than in rule,
+			 * (pfr_argc contains bin name)
+			 */
 			if (i != req->pfr_argc - 1) {
 				return 0;
 			}
@@ -895,8 +907,8 @@ match(const struct pfexec_req *req, struct pfexec_resp *resp, struct rule *r)
 	return 1;
 }
 
-/**
- * Validate a specified gid 
+/*
+ * Validate a specified gid
  */
 static int
 parsegid(const char *s, gid_t *gid)
@@ -916,7 +928,7 @@ parsegid(const char *s, gid_t *gid)
 	return 0;
 }
 
-/**
+/*
  * Test a desired uid matches username
  */
 static int
@@ -930,8 +942,8 @@ uidcheck(const char *s, uid_t desired)
 	return 0;
 }
 
-/**
- * Get a uid from username 
+/*
+ * Get a uid from username
  */
 static int
 parseuid(const char *s, uid_t *uid)
@@ -951,11 +963,11 @@ parseuid(const char *s, uid_t *uid)
 	return 0;
 }
 
-/**
+/*
  * Get gid from a given username
  */
 static int
-gid_from_uid(const char *s, gid_t *gid) 
+gid_from_uid(const char *s, gid_t *gid)
 {
 	struct passwd *pw;
 	const char *errstr;
@@ -996,5 +1008,3 @@ log_request(const struct pfexec_req *req, const struct pfexec_resp *resp,
 	    "%d: %s", req->pfr_pid, req->pfr_uid, resp->pfr_errno,
 	    strerror(resp->pfr_errno));
 }
-
-

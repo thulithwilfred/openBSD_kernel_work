@@ -53,7 +53,8 @@ envcmp(struct envnode *a, struct envnode *b)
 {
 	return strcmp(a->key, b->key);
 }
-RB_GENERATE_STATIC(envtree, envnode, node, envcmp)
+
+RB_GENERATE_STATIC(envtree, envnode, node, envcmp);
 
 static struct envnode *
 createnode(const char *key, const char *value)
@@ -123,9 +124,10 @@ createenv(const struct rule *rule, const struct passwd *mypw,
 
 	fillenv(env, copyset);
 
-	/* Build new tree with only request environs for (Searching only)
+	/*
+	 * Build new tree with only request environs for (Searching only)
 	 * Yes, this is kinda dumb... desperate time i guess..
-	 */	
+	 */
 	for (i = 0; req_environ[i] != NULL; i++) {
 		e = req_environ[i];
 		/* ignore invalid or overlong names */
@@ -136,12 +138,11 @@ createenv(const struct rule *rule, const struct passwd *mypw,
 			continue;
 		memcpy(name, e, len);
 		name[len] = '\0';
-		
-		/* Removes Duplicated from default env tree */
-		if(rule->options & KEEPENV) {
-			remove_dups_from_basic(name, env);		
-		}
 
+		/* Removes Duplicated from default env tree */
+		if (rule->options & KEEPENV) {
+			remove_dups_from_basic(name, env);
+		}
 		node = createnode(name, eq + 1);
 		if (RB_INSERT(envtree, &req_envnode.root, node)) {
 			/* ignore any later duplicates */
@@ -154,7 +155,7 @@ createenv(const struct rule *rule, const struct passwd *mypw,
 }
 /*
  * Remove duplicates from the default set created.
- *	only to be used when keepenv is set. 
+ * only to be used when keepenv is set.
  */
 void
 remove_dups_from_basic(char *name, struct env *env)
@@ -163,10 +164,9 @@ remove_dups_from_basic(char *name, struct env *env)
 
 	key.key = name;
 	if ((node = RB_FIND(envtree, &env->root, &key))) {
-		RB_REMOVE(envtree, &env->root, node);	
+		RB_REMOVE(envtree, &env->root, node);
 		freenode(node);
 	}
-
 }
 
 static char **
@@ -178,9 +178,9 @@ flattenenv(struct env *env, const struct rule *rule)
 
 	if (rule->options & KEEPENV)
 		envp = reallocarray(NULL, env->count + req_envnode.count + 1,
-	    	sizeof(char *));
-	else 
-		envp = reallocarray(NULL, env->count + 1, sizeof(char *));	
+		    sizeof(char *));
+	else
+		envp = reallocarray(NULL, env->count + 1, sizeof(char *));
 
 	if (!envp)
 		err(1, NULL);
@@ -190,7 +190,7 @@ flattenenv(struct env *env, const struct rule *rule)
 	RB_FOREACH_SAFE(node, envtree, &env->root, next) {
 		if (asprintf(&envp[i], "%s=%s", node->key, node->value) == -1)
 			err(1, NULL);
-		RB_REMOVE(envtree, &env->root, node);	
+		RB_REMOVE(envtree, &env->root, node);
 		freenode(node);
 		i++;
 	}
@@ -200,8 +200,11 @@ flattenenv(struct env *env, const struct rule *rule)
 	/* Append KEEP env */
 	if (rule->options & KEEPENV) {
 		RB_FOREACH_SAFE(node, envtree, &req_envnode.root, next) {
-			if (asprintf(&envp[i], "%s=%s", node->key, node->value) == -1)
+
+			if (asprintf(&envp[i], "%s=%s",
+			    node->key, node->value) == -1)
 				err(1, NULL);
+
 			RB_REMOVE(envtree, &req_envnode.root, node);
 			freenode(node);
 			i++;
@@ -247,7 +250,7 @@ fillenv(struct env *env, const char **envlist)
 			freenode(node);
 			env->count--;
 		} else if ((node = RB_FIND(envtree, &req_envnode.root, &key))) {
-			/* Remove from keep tree (if in here...)*/
+			/* Remove from keep tree (if in here...) */
 			RB_REMOVE(envtree, &req_envnode.root, node);
 			freenode(node);
 			req_envnode.count--;
@@ -261,17 +264,19 @@ fillenv(struct env *env, const char **envlist)
 			val = eq + 1;
 			if (*val == '$') {
 				key.key = val + 1;
-				if ((node = RB_FIND(envtree, &req_envnode.root, &key))) {
+				if ((node = RB_FIND(envtree, &req_envnode.root,
+				    &key))) {
 					val = node->value;
 				}
 			}
 		} else {
 			key.key = name;
-			if ((node = RB_FIND(envtree, &req_envnode.root, &key))) {
+			if ((node = RB_FIND(envtree, &req_envnode.root,
+			    &key))) {
 				val = node->value;
 			} else {
 				val = NULL;
-			}		
+			}
 		}
 		/* at last, we have something to insert */
 		if (val) {
@@ -289,7 +294,7 @@ prepenv(const struct rule *rule, const struct passwd *mypw,
 	struct env *env;
 
 	env = createenv(rule, mypw, targpw);
-	
+
 	if (rule->envlist) {
 		fillenv(env, rule->envlist);
 	}
