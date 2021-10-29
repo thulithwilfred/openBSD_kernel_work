@@ -1,0 +1,6680 @@
+? a3_final.patch
+? gnu/lib/libstdc++-v3/c++config.h
+? gnu/lib/libstdc++-v3/gthr-default.h
+? gnu/lib/libstdc++-v3/gthr-posix.h
+? gnu/lib/libstdc++-v3/gthr-single.h
+? gnu/lib/libstdc++-v3/gthr-tpf.h
+? gnu/lib/libstdc++-v3/gthr.h
+? gnu/usr.bin/cc/include/mm_malloc.h
+? gnu/usr.bin/cc/include/unwind.h
+? lib/libc/.ldadd
+? lib/libc/Ovfork.d
+? lib/libc/Ovfork.po
+? lib/libc/Symbols.map
+? lib/libc/_CurrentRuneLocale.d
+? lib/libc/_CurrentRuneLocale.po
+? lib/libc/_Exit.d
+? lib/libc/_Exit.po
+? lib/libc/___getcwd.d
+? lib/libc/___getcwd.po
+? lib/libc/___realpath.d
+? lib/libc/___realpath.po
+? lib/libc/___runetype_mb.d
+? lib/libc/___runetype_mb.po
+? lib/libc/__get_tcb.d
+? lib/libc/__get_tcb.po
+? lib/libc/__mb_cur_max.d
+? lib/libc/__mb_cur_max.po
+? lib/libc/__semctl.d
+? lib/libc/__semctl.po
+? lib/libc/__set_tcb.d
+? lib/libc/__set_tcb.po
+? lib/libc/__syscall.d
+? lib/libc/__syscall.po
+? lib/libc/__threxit.d
+? lib/libc/__threxit.po
+? lib/libc/__thrsigdivert.d
+? lib/libc/__thrsigdivert.po
+? lib/libc/__thrsleep.d
+? lib/libc/__thrsleep.po
+? lib/libc/__thrwakeup.d
+? lib/libc/__thrwakeup.po
+? lib/libc/_atomic_lock.d
+? lib/libc/_atomic_lock.po
+? lib/libc/_def_messages.d
+? lib/libc/_def_messages.po
+? lib/libc/_def_monetary.d
+? lib/libc/_def_monetary.po
+? lib/libc/_def_numeric.d
+? lib/libc/_def_numeric.po
+? lib/libc/_def_time.d
+? lib/libc/_def_time.po
+? lib/libc/_exit.d
+? lib/libc/_exit.po
+? lib/libc/_get_locname.d
+? lib/libc/_get_locname.po
+? lib/libc/_ptrace.d
+? lib/libc/_ptrace.po
+? lib/libc/_rand48.d
+? lib/libc/_rand48.po
+? lib/libc/_setjmp.d
+? lib/libc/_setjmp.po
+? lib/libc/_wctrans.d
+? lib/libc/_wctrans.po
+? lib/libc/_yp_check.d
+? lib/libc/_yp_check.po
+? lib/libc/a64l.d
+? lib/libc/a64l.po
+? lib/libc/abort.d
+? lib/libc/abort.po
+? lib/libc/abs.d
+? lib/libc/abs.po
+? lib/libc/accept.d
+? lib/libc/accept.po
+? lib/libc/accept4.d
+? lib/libc/accept4.po
+? lib/libc/access.d
+? lib/libc/access.po
+? lib/libc/acct.d
+? lib/libc/acct.po
+? lib/libc/adjfreq.d
+? lib/libc/adjfreq.po
+? lib/libc/adjtime.d
+? lib/libc/adjtime.po
+? lib/libc/alarm.d
+? lib/libc/alarm.po
+? lib/libc/arc4random.d
+? lib/libc/arc4random.po
+? lib/libc/arc4random_uniform.d
+? lib/libc/arc4random_uniform.po
+? lib/libc/asctime.d
+? lib/libc/asctime.po
+? lib/libc/asprintf.d
+? lib/libc/asprintf.po
+? lib/libc/asr.d
+? lib/libc/asr.po
+? lib/libc/asr_debug.d
+? lib/libc/asr_debug.po
+? lib/libc/asr_utils.d
+? lib/libc/asr_utils.po
+? lib/libc/assert.d
+? lib/libc/assert.po
+? lib/libc/atexit.d
+? lib/libc/atexit.po
+? lib/libc/atfork.d
+? lib/libc/atfork.po
+? lib/libc/atof.d
+? lib/libc/atof.po
+? lib/libc/atoi.d
+? lib/libc/atoi.po
+? lib/libc/atol.d
+? lib/libc/atol.po
+? lib/libc/atoll.d
+? lib/libc/atoll.po
+? lib/libc/auth_none.d
+? lib/libc/auth_none.po
+? lib/libc/auth_subr.d
+? lib/libc/auth_subr.po
+? lib/libc/auth_unix.d
+? lib/libc/auth_unix.po
+? lib/libc/authenticate.d
+? lib/libc/authenticate.po
+? lib/libc/authunix_prot.d
+? lib/libc/authunix_prot.po
+? lib/libc/base64.d
+? lib/libc/base64.po
+? lib/libc/basename.d
+? lib/libc/basename.po
+? lib/libc/bcmp.d
+? lib/libc/bcmp.po
+? lib/libc/bcrypt.d
+? lib/libc/bcrypt.po
+? lib/libc/bind.d
+? lib/libc/bind.po
+? lib/libc/bindresvport.d
+? lib/libc/bindresvport.po
+? lib/libc/blowfish.d
+? lib/libc/blowfish.po
+? lib/libc/brk.d
+? lib/libc/brk.po
+? lib/libc/bsearch.d
+? lib/libc/bsearch.po
+? lib/libc/bt_close.d
+? lib/libc/bt_close.po
+? lib/libc/bt_conv.d
+? lib/libc/bt_conv.po
+? lib/libc/bt_debug.d
+? lib/libc/bt_debug.po
+? lib/libc/bt_delete.d
+? lib/libc/bt_delete.po
+? lib/libc/bt_get.d
+? lib/libc/bt_get.po
+? lib/libc/bt_open.d
+? lib/libc/bt_open.po
+? lib/libc/bt_overflow.d
+? lib/libc/bt_overflow.po
+? lib/libc/bt_page.d
+? lib/libc/bt_page.po
+? lib/libc/bt_put.d
+? lib/libc/bt_put.po
+? lib/libc/bt_search.d
+? lib/libc/bt_search.po
+? lib/libc/bt_seq.d
+? lib/libc/bt_seq.po
+? lib/libc/bt_split.d
+? lib/libc/bt_split.po
+? lib/libc/bt_utils.d
+? lib/libc/bt_utils.po
+? lib/libc/btowc.d
+? lib/libc/btowc.po
+? lib/libc/bzero.d
+? lib/libc/bzero.po
+? lib/libc/callbacks.d
+? lib/libc/callbacks.po
+? lib/libc/canceled.d
+? lib/libc/canceled.po
+? lib/libc/catclose.d
+? lib/libc/catclose.po
+? lib/libc/catgets.d
+? lib/libc/catgets.po
+? lib/libc/catopen.d
+? lib/libc/catopen.po
+? lib/libc/cfgetispeed.d
+? lib/libc/cfgetispeed.po
+? lib/libc/cfgetospeed.d
+? lib/libc/cfgetospeed.po
+? lib/libc/cfmakeraw.d
+? lib/libc/cfmakeraw.po
+? lib/libc/cfsetispeed.d
+? lib/libc/cfsetispeed.po
+? lib/libc/cfsetospeed.d
+? lib/libc/cfsetospeed.po
+? lib/libc/cfsetspeed.d
+? lib/libc/cfsetspeed.po
+? lib/libc/chdir.d
+? lib/libc/chdir.po
+? lib/libc/chflags.d
+? lib/libc/chflags.po
+? lib/libc/chflagsat.d
+? lib/libc/chflagsat.po
+? lib/libc/chmod.d
+? lib/libc/chmod.po
+? lib/libc/chown.d
+? lib/libc/chown.po
+? lib/libc/chroot.d
+? lib/libc/chroot.po
+? lib/libc/citrus_none.d
+? lib/libc/citrus_none.po
+? lib/libc/citrus_utf8.d
+? lib/libc/citrus_utf8.po
+? lib/libc/clnt_generic.d
+? lib/libc/clnt_generic.po
+? lib/libc/clnt_perror.d
+? lib/libc/clnt_perror.po
+? lib/libc/clnt_raw.d
+? lib/libc/clnt_raw.po
+? lib/libc/clnt_simple.d
+? lib/libc/clnt_simple.po
+? lib/libc/clnt_tcp.d
+? lib/libc/clnt_tcp.po
+? lib/libc/clnt_udp.d
+? lib/libc/clnt_udp.po
+? lib/libc/clock.d
+? lib/libc/clock.po
+? lib/libc/clock_getcpuclockid.d
+? lib/libc/clock_getcpuclockid.po
+? lib/libc/clock_getres.d
+? lib/libc/clock_getres.po
+? lib/libc/clock_gettime.d
+? lib/libc/clock_gettime.po
+? lib/libc/clock_settime.d
+? lib/libc/clock_settime.po
+? lib/libc/close.d
+? lib/libc/close.po
+? lib/libc/closedir.d
+? lib/libc/closedir.po
+? lib/libc/closefrom.d
+? lib/libc/closefrom.po
+? lib/libc/clrerr.d
+? lib/libc/clrerr.po
+? lib/libc/confstr.d
+? lib/libc/confstr.po
+? lib/libc/connect.d
+? lib/libc/connect.po
+? lib/libc/creat.d
+? lib/libc/creat.po
+? lib/libc/crypt.d
+? lib/libc/crypt.po
+? lib/libc/cryptutil.d
+? lib/libc/cryptutil.po
+? lib/libc/ctermid.d
+? lib/libc/ctermid.po
+? lib/libc/ctype_.d
+? lib/libc/ctype_.po
+? lib/libc/daemon.d
+? lib/libc/daemon.po
+? lib/libc/db.d
+? lib/libc/db.po
+? lib/libc/devname.d
+? lib/libc/devname.po
+? lib/libc/difftime.d
+? lib/libc/difftime.po
+? lib/libc/dirfd.d
+? lib/libc/dirfd.po
+? lib/libc/dirname.d
+? lib/libc/dirname.po
+? lib/libc/disklabel.d
+? lib/libc/disklabel.po
+? lib/libc/div.d
+? lib/libc/div.po
+? lib/libc/dlfcn_stubs.d
+? lib/libc/dlfcn_stubs.po
+? lib/libc/dmisc.d
+? lib/libc/dmisc.po
+? lib/libc/dprintf.d
+? lib/libc/dprintf.po
+? lib/libc/drand48.d
+? lib/libc/drand48.po
+? lib/libc/dtoa.d
+? lib/libc/dtoa.po
+? lib/libc/dup.d
+? lib/libc/dup.po
+? lib/libc/dup2.d
+? lib/libc/dup2.po
+? lib/libc/dup3.d
+? lib/libc/dup3.po
+? lib/libc/duplocale.d
+? lib/libc/duplocale.po
+? lib/libc/ecvt.d
+? lib/libc/ecvt.po
+? lib/libc/erand48.d
+? lib/libc/erand48.po
+? lib/libc/err.d
+? lib/libc/err.po
+? lib/libc/errc.d
+? lib/libc/errc.po
+? lib/libc/errlist.d
+? lib/libc/errlist.po
+? lib/libc/errno.d
+? lib/libc/errno.po
+? lib/libc/errx.d
+? lib/libc/errx.po
+? lib/libc/ethers.d
+? lib/libc/ethers.po
+? lib/libc/exec.d
+? lib/libc/exec.po
+? lib/libc/execve.d
+? lib/libc/execve.po
+? lib/libc/exit.d
+? lib/libc/exit.po
+? lib/libc/explicit_bzero.d
+? lib/libc/explicit_bzero.po
+? lib/libc/fabs.d
+? lib/libc/fabs.po
+? lib/libc/faccessat.d
+? lib/libc/faccessat.po
+? lib/libc/fchdir.d
+? lib/libc/fchdir.po
+? lib/libc/fchflags.d
+? lib/libc/fchflags.po
+? lib/libc/fchmod.d
+? lib/libc/fchmod.po
+? lib/libc/fchmodat.d
+? lib/libc/fchmodat.po
+? lib/libc/fchown.d
+? lib/libc/fchown.po
+? lib/libc/fchownat.d
+? lib/libc/fchownat.po
+? lib/libc/fclose.d
+? lib/libc/fclose.po
+? lib/libc/fcntl.d
+? lib/libc/fcntl.po
+? lib/libc/fdatasync.d
+? lib/libc/fdatasync.po
+? lib/libc/fdopen.d
+? lib/libc/fdopen.po
+? lib/libc/feof.d
+? lib/libc/feof.po
+? lib/libc/ferror.d
+? lib/libc/ferror.po
+? lib/libc/fflush.d
+? lib/libc/fflush.po
+? lib/libc/ffs.d
+? lib/libc/ffs.po
+? lib/libc/fgetc.d
+? lib/libc/fgetc.po
+? lib/libc/fgetln.d
+? lib/libc/fgetln.po
+? lib/libc/fgetpos.d
+? lib/libc/fgetpos.po
+? lib/libc/fgets.d
+? lib/libc/fgets.po
+? lib/libc/fgetwc.d
+? lib/libc/fgetwc.po
+? lib/libc/fgetwln.d
+? lib/libc/fgetwln.po
+? lib/libc/fgetws.d
+? lib/libc/fgetws.po
+? lib/libc/fhopen.d
+? lib/libc/fhopen.po
+? lib/libc/fhstat.d
+? lib/libc/fhstat.po
+? lib/libc/fhstatfs.d
+? lib/libc/fhstatfs.po
+? lib/libc/fileno.d
+? lib/libc/fileno.po
+? lib/libc/findfp.d
+? lib/libc/findfp.po
+? lib/libc/flags.d
+? lib/libc/flags.po
+? lib/libc/flock.d
+? lib/libc/flock.po
+? lib/libc/flockfile.d
+? lib/libc/flockfile.po
+? lib/libc/flt_rounds.d
+? lib/libc/flt_rounds.po
+? lib/libc/fmemopen.d
+? lib/libc/fmemopen.po
+? lib/libc/fnmatch.d
+? lib/libc/fnmatch.po
+? lib/libc/fopen.d
+? lib/libc/fopen.po
+? lib/libc/fork.d
+? lib/libc/fork.po
+? lib/libc/fpathconf.d
+? lib/libc/fpathconf.po
+? lib/libc/fpclassify.d
+? lib/libc/fpclassify.po
+? lib/libc/fpclassifyl.d
+? lib/libc/fpclassifyl.po
+? lib/libc/fpgetmask.d
+? lib/libc/fpgetmask.po
+? lib/libc/fpgetround.d
+? lib/libc/fpgetround.po
+? lib/libc/fpgetsticky.d
+? lib/libc/fpgetsticky.po
+? lib/libc/fprintf.d
+? lib/libc/fprintf.po
+? lib/libc/fpsetmask.d
+? lib/libc/fpsetmask.po
+? lib/libc/fpsetround.d
+? lib/libc/fpsetround.po
+? lib/libc/fpsetsticky.d
+? lib/libc/fpsetsticky.po
+? lib/libc/fpurge.d
+? lib/libc/fpurge.po
+? lib/libc/fputc.d
+? lib/libc/fputc.po
+? lib/libc/fputs.d
+? lib/libc/fputs.po
+? lib/libc/fputwc.d
+? lib/libc/fputwc.po
+? lib/libc/fputws.d
+? lib/libc/fputws.po
+? lib/libc/fread.d
+? lib/libc/fread.po
+? lib/libc/freeaddrinfo.d
+? lib/libc/freeaddrinfo.po
+? lib/libc/freelocale.d
+? lib/libc/freelocale.po
+? lib/libc/freopen.d
+? lib/libc/freopen.po
+? lib/libc/frexp.d
+? lib/libc/frexp.po
+? lib/libc/fscanf.d
+? lib/libc/fscanf.po
+? lib/libc/fseek.d
+? lib/libc/fseek.po
+? lib/libc/fsetpos.d
+? lib/libc/fsetpos.po
+? lib/libc/fstab.d
+? lib/libc/fstab.po
+? lib/libc/fstat.d
+? lib/libc/fstat.po
+? lib/libc/fstatat.d
+? lib/libc/fstatat.po
+? lib/libc/fstatfs.d
+? lib/libc/fstatfs.po
+? lib/libc/fsync.d
+? lib/libc/fsync.po
+? lib/libc/ftell.d
+? lib/libc/ftell.po
+? lib/libc/ftok.d
+? lib/libc/ftok.po
+? lib/libc/ftruncate.d
+? lib/libc/ftruncate.po
+? lib/libc/fts.d
+? lib/libc/fts.po
+? lib/libc/ftw.d
+? lib/libc/ftw.po
+? lib/libc/funopen.d
+? lib/libc/funopen.po
+? lib/libc/futex.d
+? lib/libc/futex.po
+? lib/libc/futimens.d
+? lib/libc/futimens.po
+? lib/libc/futimes.d
+? lib/libc/futimes.po
+? lib/libc/fvwrite.d
+? lib/libc/fvwrite.po
+? lib/libc/fwalk.d
+? lib/libc/fwalk.po
+? lib/libc/fwide.d
+? lib/libc/fwide.po
+? lib/libc/fwprintf.d
+? lib/libc/fwprintf.po
+? lib/libc/fwrite.d
+? lib/libc/fwrite.po
+? lib/libc/fwscanf.d
+? lib/libc/fwscanf.po
+? lib/libc/gai_strerror.d
+? lib/libc/gai_strerror.po
+? lib/libc/gcvt.d
+? lib/libc/gcvt.po
+? lib/libc/gdtoa.d
+? lib/libc/gdtoa.po
+? lib/libc/get_myaddress.d
+? lib/libc/get_myaddress.po
+? lib/libc/getaddrinfo.d
+? lib/libc/getaddrinfo.po
+? lib/libc/getaddrinfo_async.d
+? lib/libc/getaddrinfo_async.po
+? lib/libc/getbsize.d
+? lib/libc/getbsize.po
+? lib/libc/getc.d
+? lib/libc/getc.po
+? lib/libc/getcap.d
+? lib/libc/getcap.po
+? lib/libc/getchar.d
+? lib/libc/getchar.po
+? lib/libc/getcwd.d
+? lib/libc/getcwd.po
+? lib/libc/getdelim.d
+? lib/libc/getdelim.po
+? lib/libc/getdents.d
+? lib/libc/getdents.po
+? lib/libc/getdomainname.d
+? lib/libc/getdomainname.po
+? lib/libc/getdtablecount.d
+? lib/libc/getdtablecount.po
+? lib/libc/getdtablesize.d
+? lib/libc/getdtablesize.po
+? lib/libc/getegid.d
+? lib/libc/getegid.po
+? lib/libc/getentropy.d
+? lib/libc/getentropy.po
+? lib/libc/getenv.d
+? lib/libc/getenv.po
+? lib/libc/geteuid.d
+? lib/libc/geteuid.po
+? lib/libc/getfh.d
+? lib/libc/getfh.po
+? lib/libc/getfsstat.d
+? lib/libc/getfsstat.po
+? lib/libc/getgid.d
+? lib/libc/getgid.po
+? lib/libc/getgrent.d
+? lib/libc/getgrent.po
+? lib/libc/getgrouplist.d
+? lib/libc/getgrouplist.po
+? lib/libc/getgroups.d
+? lib/libc/getgroups.po
+? lib/libc/gethex.d
+? lib/libc/gethex.po
+? lib/libc/gethostid.d
+? lib/libc/gethostid.po
+? lib/libc/gethostnamadr.d
+? lib/libc/gethostnamadr.po
+? lib/libc/gethostnamadr_async.d
+? lib/libc/gethostnamadr_async.po
+? lib/libc/gethostname.d
+? lib/libc/gethostname.po
+? lib/libc/getifaddrs.d
+? lib/libc/getifaddrs.po
+? lib/libc/getitimer.d
+? lib/libc/getitimer.po
+? lib/libc/getline.d
+? lib/libc/getline.po
+? lib/libc/getloadavg.d
+? lib/libc/getloadavg.po
+? lib/libc/getlogin.d
+? lib/libc/getlogin.po
+? lib/libc/getlogin_r.d
+? lib/libc/getlogin_r.po
+? lib/libc/getmntinfo.d
+? lib/libc/getmntinfo.po
+? lib/libc/getnameinfo.d
+? lib/libc/getnameinfo.po
+? lib/libc/getnameinfo_async.d
+? lib/libc/getnameinfo_async.po
+? lib/libc/getnetent.d
+? lib/libc/getnetent.po
+? lib/libc/getnetgrent.d
+? lib/libc/getnetgrent.po
+? lib/libc/getnetnamadr.d
+? lib/libc/getnetnamadr.po
+? lib/libc/getnetnamadr_async.d
+? lib/libc/getnetnamadr_async.po
+? lib/libc/getopt_long.d
+? lib/libc/getopt_long.po
+? lib/libc/getpagesize.d
+? lib/libc/getpagesize.po
+? lib/libc/getpeereid.d
+? lib/libc/getpeereid.po
+? lib/libc/getpeername.d
+? lib/libc/getpeername.po
+? lib/libc/getpgid.d
+? lib/libc/getpgid.po
+? lib/libc/getpgrp.d
+? lib/libc/getpgrp.po
+? lib/libc/getpid.d
+? lib/libc/getpid.po
+? lib/libc/getppid.d
+? lib/libc/getppid.po
+? lib/libc/getpriority.d
+? lib/libc/getpriority.po
+? lib/libc/getprogname.d
+? lib/libc/getprogname.po
+? lib/libc/getproto.d
+? lib/libc/getproto.po
+? lib/libc/getprotoent.d
+? lib/libc/getprotoent.po
+? lib/libc/getprotoname.d
+? lib/libc/getprotoname.po
+? lib/libc/getpwent.d
+? lib/libc/getpwent.po
+? lib/libc/getresgid.d
+? lib/libc/getresgid.po
+? lib/libc/getresuid.d
+? lib/libc/getresuid.po
+? lib/libc/getrlimit.d
+? lib/libc/getrlimit.po
+? lib/libc/getrpcent.d
+? lib/libc/getrpcent.po
+? lib/libc/getrpcport.d
+? lib/libc/getrpcport.po
+? lib/libc/getrrsetbyname.d
+? lib/libc/getrrsetbyname.po
+? lib/libc/getrrsetbyname_async.d
+? lib/libc/getrrsetbyname_async.po
+? lib/libc/getrtable.d
+? lib/libc/getrtable.po
+? lib/libc/getrusage.d
+? lib/libc/getrusage.po
+? lib/libc/getservbyname.d
+? lib/libc/getservbyname.po
+? lib/libc/getservbyport.d
+? lib/libc/getservbyport.po
+? lib/libc/getservent.d
+? lib/libc/getservent.po
+? lib/libc/getsid.d
+? lib/libc/getsid.po
+? lib/libc/getsockname.d
+? lib/libc/getsockname.po
+? lib/libc/getsockopt.d
+? lib/libc/getsockopt.po
+? lib/libc/getsubopt.d
+? lib/libc/getsubopt.po
+? lib/libc/getthrid.d
+? lib/libc/getthrid.po
+? lib/libc/gettimeofday.d
+? lib/libc/gettimeofday.po
+? lib/libc/getttyent.d
+? lib/libc/getttyent.po
+? lib/libc/getuid.d
+? lib/libc/getuid.po
+? lib/libc/getusershell.d
+? lib/libc/getusershell.po
+? lib/libc/getw.d
+? lib/libc/getw.po
+? lib/libc/getwc.d
+? lib/libc/getwc.po
+? lib/libc/getwchar.d
+? lib/libc/getwchar.po
+? lib/libc/getwd.d
+? lib/libc/getwd.po
+? lib/libc/glob.d
+? lib/libc/glob.po
+? lib/libc/gmisc.d
+? lib/libc/gmisc.po
+? lib/libc/gmon.d
+? lib/libc/gmon.po
+? lib/libc/hash.d
+? lib/libc/hash.po
+? lib/libc/hash_bigkey.d
+? lib/libc/hash_bigkey.po
+? lib/libc/hash_buf.d
+? lib/libc/hash_buf.po
+? lib/libc/hash_func.d
+? lib/libc/hash_func.po
+? lib/libc/hash_log2.d
+? lib/libc/hash_log2.po
+? lib/libc/hash_page.d
+? lib/libc/hash_page.po
+? lib/libc/hcreate.d
+? lib/libc/hcreate.po
+? lib/libc/hd_init.d
+? lib/libc/hd_init.po
+? lib/libc/hdtoa.d
+? lib/libc/hdtoa.po
+? lib/libc/heapsort.d
+? lib/libc/heapsort.po
+? lib/libc/herror.d
+? lib/libc/herror.po
+? lib/libc/hexnan.d
+? lib/libc/hexnan.po
+? lib/libc/htonl.d
+? lib/libc/htonl.po
+? lib/libc/htons.d
+? lib/libc/htons.po
+? lib/libc/icdb.d
+? lib/libc/icdb.po
+? lib/libc/if_indextoname.d
+? lib/libc/if_indextoname.po
+? lib/libc/if_nameindex.d
+? lib/libc/if_nameindex.po
+? lib/libc/if_nametoindex.d
+? lib/libc/if_nametoindex.po
+? lib/libc/imaxabs.d
+? lib/libc/imaxabs.po
+? lib/libc/imaxdiv.d
+? lib/libc/imaxdiv.po
+? lib/libc/inet_addr.d
+? lib/libc/inet_addr.po
+? lib/libc/inet_lnaof.d
+? lib/libc/inet_lnaof.po
+? lib/libc/inet_makeaddr.d
+? lib/libc/inet_makeaddr.po
+? lib/libc/inet_net_ntop.d
+? lib/libc/inet_net_ntop.po
+? lib/libc/inet_net_pton.d
+? lib/libc/inet_net_pton.po
+? lib/libc/inet_neta.d
+? lib/libc/inet_neta.po
+? lib/libc/inet_netof.d
+? lib/libc/inet_netof.po
+? lib/libc/inet_network.d
+? lib/libc/inet_network.po
+? lib/libc/inet_ntoa.d
+? lib/libc/inet_ntoa.po
+? lib/libc/inet_ntop.d
+? lib/libc/inet_ntop.po
+? lib/libc/inet_pton.d
+? lib/libc/inet_pton.po
+? lib/libc/infinity.d
+? lib/libc/infinity.po
+? lib/libc/init.d
+? lib/libc/init.po
+? lib/libc/initgroups.d
+? lib/libc/initgroups.po
+? lib/libc/insque.d
+? lib/libc/insque.po
+? lib/libc/ioctl.d
+? lib/libc/ioctl.po
+? lib/libc/ip6opt.d
+? lib/libc/ip6opt.po
+? lib/libc/isatty.d
+? lib/libc/isatty.po
+? lib/libc/isctype.d
+? lib/libc/isctype.po
+? lib/libc/isctype_l.d
+? lib/libc/isctype_l.po
+? lib/libc/isfdtype.d
+? lib/libc/isfdtype.po
+? lib/libc/isfinite.d
+? lib/libc/isfinite.po
+? lib/libc/isfinitel.d
+? lib/libc/isfinitel.po
+? lib/libc/isinf.d
+? lib/libc/isinf.po
+? lib/libc/isinfl.d
+? lib/libc/isinfl.po
+? lib/libc/isnan.d
+? lib/libc/isnan.po
+? lib/libc/isnanl.d
+? lib/libc/isnanl.po
+? lib/libc/isnormal.d
+? lib/libc/isnormal.po
+? lib/libc/isnormall.d
+? lib/libc/isnormall.po
+? lib/libc/issetugid.d
+? lib/libc/issetugid.po
+? lib/libc/iswctype.d
+? lib/libc/iswctype.po
+? lib/libc/iswctype_l.d
+? lib/libc/iswctype_l.po
+? lib/libc/jrand48.d
+? lib/libc/jrand48.po
+? lib/libc/kevent.d
+? lib/libc/kevent.po
+? lib/libc/kill.d
+? lib/libc/kill.po
+? lib/libc/killpg.d
+? lib/libc/killpg.po
+? lib/libc/kqueue.d
+? lib/libc/kqueue.po
+? lib/libc/ktrace.d
+? lib/libc/ktrace.po
+? lib/libc/l64a.d
+? lib/libc/l64a.po
+? lib/libc/labs.d
+? lib/libc/labs.po
+? lib/libc/lchown.d
+? lib/libc/lchown.po
+? lib/libc/lcong48.d
+? lib/libc/lcong48.po
+? lib/libc/ldexp.d
+? lib/libc/ldexp.po
+? lib/libc/ldiv.d
+? lib/libc/ldiv.po
+? lib/libc/ldtoa.d
+? lib/libc/ldtoa.po
+? lib/libc/libc.so.96.0
+? lib/libc/link.d
+? lib/libc/link.po
+? lib/libc/linkaddr.d
+? lib/libc/linkaddr.po
+? lib/libc/linkat.d
+? lib/libc/linkat.po
+? lib/libc/listen.d
+? lib/libc/listen.po
+? lib/libc/llabs.d
+? lib/libc/llabs.po
+? lib/libc/lldiv.d
+? lib/libc/lldiv.po
+? lib/libc/localeconv.d
+? lib/libc/localeconv.po
+? lib/libc/localtime.d
+? lib/libc/localtime.po
+? lib/libc/lockf.d
+? lib/libc/lockf.po
+? lib/libc/login_cap.d
+? lib/libc/login_cap.po
+? lib/libc/lrand48.d
+? lib/libc/lrand48.po
+? lib/libc/lsearch.d
+? lib/libc/lsearch.po
+? lib/libc/lseek.d
+? lib/libc/lseek.po
+? lib/libc/lstat.d
+? lib/libc/lstat.po
+? lib/libc/madvise.d
+? lib/libc/madvise.po
+? lib/libc/makebuf.d
+? lib/libc/makebuf.po
+? lib/libc/malloc.d
+? lib/libc/malloc.po
+? lib/libc/mblen.d
+? lib/libc/mblen.po
+? lib/libc/mbrlen.d
+? lib/libc/mbrlen.po
+? lib/libc/mbstowcs.d
+? lib/libc/mbstowcs.po
+? lib/libc/mbtowc.d
+? lib/libc/mbtowc.po
+? lib/libc/mcount.d
+? lib/libc/mcount.po
+? lib/libc/md5.d
+? lib/libc/md5.po
+? lib/libc/md5hl.c
+? lib/libc/md5hl.d
+? lib/libc/md5hl.po
+? lib/libc/memccpy.d
+? lib/libc/memccpy.po
+? lib/libc/memchr.d
+? lib/libc/memchr.po
+? lib/libc/memcmp.d
+? lib/libc/memcmp.po
+? lib/libc/memcpy.d
+? lib/libc/memcpy.po
+? lib/libc/memmem.d
+? lib/libc/memmem.po
+? lib/libc/memmove.d
+? lib/libc/memmove.po
+? lib/libc/memrchr.d
+? lib/libc/memrchr.po
+? lib/libc/memset.d
+? lib/libc/memset.po
+? lib/libc/merge.d
+? lib/libc/merge.po
+? lib/libc/microtime.d
+? lib/libc/microtime.po
+? lib/libc/minherit.d
+? lib/libc/minherit.po
+? lib/libc/misc.d
+? lib/libc/misc.po
+? lib/libc/mkdir.d
+? lib/libc/mkdir.po
+? lib/libc/mkdirat.d
+? lib/libc/mkdirat.po
+? lib/libc/mkfifo.d
+? lib/libc/mkfifo.po
+? lib/libc/mkfifoat.d
+? lib/libc/mkfifoat.po
+? lib/libc/mknod.d
+? lib/libc/mknod.po
+? lib/libc/mknodat.d
+? lib/libc/mknodat.po
+? lib/libc/mktemp.d
+? lib/libc/mktemp.po
+? lib/libc/mlock.d
+? lib/libc/mlock.po
+? lib/libc/mlockall.d
+? lib/libc/mlockall.po
+? lib/libc/mmap.d
+? lib/libc/mmap.po
+? lib/libc/modf.d
+? lib/libc/modf.po
+? lib/libc/mount.d
+? lib/libc/mount.po
+? lib/libc/mpool.d
+? lib/libc/mpool.po
+? lib/libc/mprotect.d
+? lib/libc/mprotect.po
+? lib/libc/mquery.d
+? lib/libc/mquery.po
+? lib/libc/mrand48.d
+? lib/libc/mrand48.po
+? lib/libc/msgctl.d
+? lib/libc/msgctl.po
+? lib/libc/msgget.d
+? lib/libc/msgget.po
+? lib/libc/msgrcv.d
+? lib/libc/msgrcv.po
+? lib/libc/msgsnd.d
+? lib/libc/msgsnd.po
+? lib/libc/msync.d
+? lib/libc/msync.po
+? lib/libc/multibyte_citrus.d
+? lib/libc/multibyte_citrus.po
+? lib/libc/munlock.d
+? lib/libc/munlock.po
+? lib/libc/munlockall.d
+? lib/libc/munlockall.po
+? lib/libc/munmap.d
+? lib/libc/munmap.po
+? lib/libc/nan.d
+? lib/libc/nan.po
+? lib/libc/nanosleep.d
+? lib/libc/nanosleep.po
+? lib/libc/ndbm.d
+? lib/libc/ndbm.po
+? lib/libc/newlocale.d
+? lib/libc/newlocale.po
+? lib/libc/nfssvc.d
+? lib/libc/nfssvc.po
+? lib/libc/nftw.d
+? lib/libc/nftw.po
+? lib/libc/nice.d
+? lib/libc/nice.po
+? lib/libc/nl_langinfo.d
+? lib/libc/nl_langinfo.po
+? lib/libc/nl_langinfo_l.d
+? lib/libc/nl_langinfo_l.po
+? lib/libc/nlist.d
+? lib/libc/nlist.po
+? lib/libc/nrand48.d
+? lib/libc/nrand48.po
+? lib/libc/ntohl.d
+? lib/libc/ntohl.po
+? lib/libc/ntohs.d
+? lib/libc/ntohs.po
+? lib/libc/open.d
+? lib/libc/open.po
+? lib/libc/open_memstream.d
+? lib/libc/open_memstream.po
+? lib/libc/open_wmemstream.d
+? lib/libc/open_wmemstream.po
+? lib/libc/openat.d
+? lib/libc/openat.po
+? lib/libc/opendir.d
+? lib/libc/opendir.po
+? lib/libc/pathconf.d
+? lib/libc/pathconf.po
+? lib/libc/pause.d
+? lib/libc/pause.po
+? lib/libc/perror.d
+? lib/libc/perror.po
+? lib/libc/pfexecve.d
+? lib/libc/pfexecve.po
+? lib/libc/pipe.d
+? lib/libc/pipe.po
+? lib/libc/pipe2.d
+? lib/libc/pipe2.po
+? lib/libc/pledge.d
+? lib/libc/pledge.po
+? lib/libc/pmap_clnt.d
+? lib/libc/pmap_clnt.po
+? lib/libc/pmap_getmaps.d
+? lib/libc/pmap_getmaps.po
+? lib/libc/pmap_getport.d
+? lib/libc/pmap_getport.po
+? lib/libc/pmap_prot.d
+? lib/libc/pmap_prot.po
+? lib/libc/pmap_prot2.d
+? lib/libc/pmap_prot2.po
+? lib/libc/pmap_rmt.d
+? lib/libc/pmap_rmt.po
+? lib/libc/poll.d
+? lib/libc/poll.po
+? lib/libc/popen.d
+? lib/libc/popen.po
+? lib/libc/posix_madvise.d
+? lib/libc/posix_madvise.po
+? lib/libc/posix_pty.d
+? lib/libc/posix_pty.po
+? lib/libc/posix_spawn.d
+? lib/libc/posix_spawn.po
+? lib/libc/ppoll.d
+? lib/libc/ppoll.po
+? lib/libc/pread.d
+? lib/libc/pread.po
+? lib/libc/preadv.d
+? lib/libc/preadv.po
+? lib/libc/printf.d
+? lib/libc/printf.po
+? lib/libc/profil.d
+? lib/libc/profil.po
+? lib/libc/pselect.d
+? lib/libc/pselect.po
+? lib/libc/psignal.d
+? lib/libc/psignal.po
+? lib/libc/pthread_sigmask.d
+? lib/libc/pthread_sigmask.po
+? lib/libc/ptrace.d
+? lib/libc/ptrace.po
+? lib/libc/putc.d
+? lib/libc/putc.po
+? lib/libc/putchar.d
+? lib/libc/putchar.po
+? lib/libc/puts.d
+? lib/libc/puts.po
+? lib/libc/putw.d
+? lib/libc/putw.po
+? lib/libc/putwc.d
+? lib/libc/putwc.po
+? lib/libc/putwchar.d
+? lib/libc/putwchar.po
+? lib/libc/pw_dup.d
+? lib/libc/pw_dup.po
+? lib/libc/pwcache.d
+? lib/libc/pwcache.po
+? lib/libc/pwrite.d
+? lib/libc/pwrite.po
+? lib/libc/pwritev.d
+? lib/libc/pwritev.po
+? lib/libc/qsort.d
+? lib/libc/qsort.po
+? lib/libc/quotactl.d
+? lib/libc/quotactl.po
+? lib/libc/radixsort.d
+? lib/libc/radixsort.po
+? lib/libc/raise.d
+? lib/libc/raise.po
+? lib/libc/rand.d
+? lib/libc/rand.po
+? lib/libc/random.d
+? lib/libc/random.po
+? lib/libc/rcmd.d
+? lib/libc/rcmd.po
+? lib/libc/rcmdsh.d
+? lib/libc/rcmdsh.po
+? lib/libc/read.d
+? lib/libc/read.po
+? lib/libc/readdir.d
+? lib/libc/readdir.po
+? lib/libc/readdir_r.d
+? lib/libc/readdir_r.po
+? lib/libc/readlink.d
+? lib/libc/readlink.po
+? lib/libc/readlinkat.d
+? lib/libc/readlinkat.po
+? lib/libc/readpassphrase.d
+? lib/libc/readpassphrase.po
+? lib/libc/readv.d
+? lib/libc/readv.po
+? lib/libc/reallocarray.d
+? lib/libc/reallocarray.po
+? lib/libc/realpath.d
+? lib/libc/realpath.po
+? lib/libc/reboot.d
+? lib/libc/reboot.po
+? lib/libc/rec_close.d
+? lib/libc/rec_close.po
+? lib/libc/rec_delete.d
+? lib/libc/rec_delete.po
+? lib/libc/rec_get.d
+? lib/libc/rec_get.po
+? lib/libc/rec_open.d
+? lib/libc/rec_open.po
+? lib/libc/rec_put.d
+? lib/libc/rec_put.po
+? lib/libc/rec_search.d
+? lib/libc/rec_search.po
+? lib/libc/rec_seq.d
+? lib/libc/rec_seq.po
+? lib/libc/rec_utils.d
+? lib/libc/rec_utils.po
+? lib/libc/recv.d
+? lib/libc/recv.po
+? lib/libc/recvfrom.d
+? lib/libc/recvfrom.po
+? lib/libc/recvmsg.d
+? lib/libc/recvmsg.po
+? lib/libc/refill.d
+? lib/libc/refill.po
+? lib/libc/regcomp.d
+? lib/libc/regcomp.po
+? lib/libc/regerror.d
+? lib/libc/regerror.po
+? lib/libc/regexec.d
+? lib/libc/regexec.po
+? lib/libc/regfree.d
+? lib/libc/regfree.po
+? lib/libc/remove.d
+? lib/libc/remove.po
+? lib/libc/remque.d
+? lib/libc/remque.po
+? lib/libc/rename.d
+? lib/libc/rename.po
+? lib/libc/renameat.d
+? lib/libc/renameat.po
+? lib/libc/res_comp.d
+? lib/libc/res_comp.po
+? lib/libc/res_data.d
+? lib/libc/res_data.po
+? lib/libc/res_debug.d
+? lib/libc/res_debug.po
+? lib/libc/res_debug_syms.d
+? lib/libc/res_debug_syms.po
+? lib/libc/res_init.d
+? lib/libc/res_init.po
+? lib/libc/res_mkquery.d
+? lib/libc/res_mkquery.po
+? lib/libc/res_query.d
+? lib/libc/res_query.po
+? lib/libc/res_random.d
+? lib/libc/res_random.po
+? lib/libc/res_search_async.d
+? lib/libc/res_search_async.po
+? lib/libc/res_send.d
+? lib/libc/res_send.po
+? lib/libc/res_send_async.d
+? lib/libc/res_send_async.po
+? lib/libc/revoke.d
+? lib/libc/revoke.po
+? lib/libc/rewind.d
+? lib/libc/rewind.po
+? lib/libc/rewinddir.d
+? lib/libc/rewinddir.po
+? lib/libc/rget.d
+? lib/libc/rget.po
+? lib/libc/rmd160.d
+? lib/libc/rmd160.po
+? lib/libc/rmd160hl.c
+? lib/libc/rmd160hl.d
+? lib/libc/rmd160hl.po
+? lib/libc/rmdir.d
+? lib/libc/rmdir.po
+? lib/libc/rpc_callmsg.d
+? lib/libc/rpc_callmsg.po
+? lib/libc/rpc_commondata.d
+? lib/libc/rpc_commondata.po
+? lib/libc/rpc_prot.d
+? lib/libc/rpc_prot.po
+? lib/libc/rresvport.d
+? lib/libc/rresvport.po
+? lib/libc/rthdr.d
+? lib/libc/rthdr.po
+? lib/libc/rthread.d
+? lib/libc/rthread.po
+? lib/libc/rthread_cond.d
+? lib/libc/rthread_cond.po
+? lib/libc/rthread_condattr.d
+? lib/libc/rthread_condattr.po
+? lib/libc/rthread_debug.d
+? lib/libc/rthread_debug.po
+? lib/libc/rthread_file.d
+? lib/libc/rthread_file.po
+? lib/libc/rthread_libc.d
+? lib/libc/rthread_libc.po
+? lib/libc/rthread_mutex.d
+? lib/libc/rthread_mutex.po
+? lib/libc/rthread_once.d
+? lib/libc/rthread_once.po
+? lib/libc/rthread_tls.d
+? lib/libc/rthread_tls.po
+? lib/libc/rune.d
+? lib/libc/rune.po
+? lib/libc/runeglue.d
+? lib/libc/runeglue.po
+? lib/libc/runetable.d
+? lib/libc/runetable.po
+? lib/libc/ruserok.d
+? lib/libc/ruserok.po
+? lib/libc/sbrk.d
+? lib/libc/sbrk.po
+? lib/libc/scandir.d
+? lib/libc/scandir.po
+? lib/libc/scanf.d
+? lib/libc/scanf.po
+? lib/libc/sched_yield.d
+? lib/libc/sched_yield.po
+? lib/libc/seed48.d
+? lib/libc/seed48.po
+? lib/libc/seekdir.d
+? lib/libc/seekdir.po
+? lib/libc/select.d
+? lib/libc/select.po
+? lib/libc/semctl.d
+? lib/libc/semctl.po
+? lib/libc/semget.d
+? lib/libc/semget.po
+? lib/libc/semop.d
+? lib/libc/semop.po
+? lib/libc/send.d
+? lib/libc/send.po
+? lib/libc/sendmsg.d
+? lib/libc/sendmsg.po
+? lib/libc/sendsyslog.d
+? lib/libc/sendsyslog.po
+? lib/libc/sendto.d
+? lib/libc/sendto.po
+? lib/libc/setbuf.d
+? lib/libc/setbuf.po
+? lib/libc/setbuffer.d
+? lib/libc/setbuffer.po
+? lib/libc/setdomainname.d
+? lib/libc/setdomainname.po
+? lib/libc/setegid.d
+? lib/libc/setegid.po
+? lib/libc/setenv.d
+? lib/libc/setenv.po
+? lib/libc/seteuid.d
+? lib/libc/seteuid.po
+? lib/libc/setgid.d
+? lib/libc/setgid.po
+? lib/libc/setgroups.d
+? lib/libc/setgroups.po
+? lib/libc/sethostent.d
+? lib/libc/sethostent.po
+? lib/libc/sethostid.d
+? lib/libc/sethostid.po
+? lib/libc/sethostname.d
+? lib/libc/sethostname.po
+? lib/libc/setitimer.d
+? lib/libc/setitimer.po
+? lib/libc/setjmp.d
+? lib/libc/setjmp.po
+? lib/libc/setlocale.d
+? lib/libc/setlocale.po
+? lib/libc/setlogin.d
+? lib/libc/setlogin.po
+? lib/libc/setmode.d
+? lib/libc/setmode.po
+? lib/libc/setpgid.d
+? lib/libc/setpgid.po
+? lib/libc/setpgrp.d
+? lib/libc/setpgrp.po
+? lib/libc/setpriority.d
+? lib/libc/setpriority.po
+? lib/libc/setproctitle.d
+? lib/libc/setproctitle.po
+? lib/libc/setprogname.d
+? lib/libc/setprogname.po
+? lib/libc/setregid.d
+? lib/libc/setregid.po
+? lib/libc/setresgid.d
+? lib/libc/setresgid.po
+? lib/libc/setresuid.d
+? lib/libc/setresuid.po
+? lib/libc/setreuid.d
+? lib/libc/setreuid.po
+? lib/libc/setrlimit.d
+? lib/libc/setrlimit.po
+? lib/libc/setrtable.d
+? lib/libc/setrtable.po
+? lib/libc/setsid.d
+? lib/libc/setsid.po
+? lib/libc/setsockopt.d
+? lib/libc/setsockopt.po
+? lib/libc/settimeofday.d
+? lib/libc/settimeofday.po
+? lib/libc/setuid.d
+? lib/libc/setuid.po
+? lib/libc/setvbuf.d
+? lib/libc/setvbuf.po
+? lib/libc/sha1.d
+? lib/libc/sha1.po
+? lib/libc/sha1hl.c
+? lib/libc/sha1hl.d
+? lib/libc/sha1hl.po
+? lib/libc/sha2.d
+? lib/libc/sha2.po
+? lib/libc/sha224hl.c
+? lib/libc/sha224hl.d
+? lib/libc/sha224hl.po
+? lib/libc/sha256hl.c
+? lib/libc/sha256hl.d
+? lib/libc/sha256hl.po
+? lib/libc/sha384hl.c
+? lib/libc/sha384hl.d
+? lib/libc/sha384hl.po
+? lib/libc/sha512_256hl.c
+? lib/libc/sha512_256hl.d
+? lib/libc/sha512_256hl.po
+? lib/libc/sha512hl.c
+? lib/libc/sha512hl.d
+? lib/libc/sha512hl.po
+? lib/libc/shm_open.d
+? lib/libc/shm_open.po
+? lib/libc/shmat.d
+? lib/libc/shmat.po
+? lib/libc/shmctl.d
+? lib/libc/shmctl.po
+? lib/libc/shmdt.d
+? lib/libc/shmdt.po
+? lib/libc/shmget.d
+? lib/libc/shmget.po
+? lib/libc/shutdown.d
+? lib/libc/shutdown.po
+? lib/libc/sigaction.d
+? lib/libc/sigaction.po
+? lib/libc/sigaltstack.d
+? lib/libc/sigaltstack.po
+? lib/libc/sigcompat.d
+? lib/libc/sigcompat.po
+? lib/libc/siginterrupt.d
+? lib/libc/siginterrupt.po
+? lib/libc/siglist.d
+? lib/libc/siglist.po
+? lib/libc/signal.d
+? lib/libc/signal.po
+? lib/libc/signame.d
+? lib/libc/signame.po
+? lib/libc/signbit.d
+? lib/libc/signbit.po
+? lib/libc/signbitl.d
+? lib/libc/signbitl.po
+? lib/libc/sigpending.d
+? lib/libc/sigpending.po
+? lib/libc/sigprocmask.d
+? lib/libc/sigprocmask.po
+? lib/libc/sigsetjmp.d
+? lib/libc/sigsetjmp.po
+? lib/libc/sigsetops.d
+? lib/libc/sigsetops.po
+? lib/libc/sigsuspend.d
+? lib/libc/sigsuspend.po
+? lib/libc/sigwait.d
+? lib/libc/sigwait.po
+? lib/libc/siphash.d
+? lib/libc/siphash.po
+? lib/libc/sleep.d
+? lib/libc/sleep.po
+? lib/libc/smisc.d
+? lib/libc/smisc.po
+? lib/libc/snprintf.d
+? lib/libc/snprintf.po
+? lib/libc/sockatmark.d
+? lib/libc/sockatmark.po
+? lib/libc/socket.d
+? lib/libc/socket.po
+? lib/libc/socketpair.d
+? lib/libc/socketpair.po
+? lib/libc/sprintf.d
+? lib/libc/sprintf.po
+? lib/libc/srand48.d
+? lib/libc/srand48.po
+? lib/libc/sscanf.d
+? lib/libc/sscanf.po
+? lib/libc/stack_protector.d
+? lib/libc/stack_protector.po
+? lib/libc/stat.d
+? lib/libc/stat.po
+? lib/libc/statfs.d
+? lib/libc/statfs.po
+? lib/libc/statvfs.d
+? lib/libc/statvfs.po
+? lib/libc/stdio.d
+? lib/libc/stdio.po
+? lib/libc/stpcpy.d
+? lib/libc/stpcpy.po
+? lib/libc/stpncpy.d
+? lib/libc/stpncpy.po
+? lib/libc/strcasecmp.d
+? lib/libc/strcasecmp.po
+? lib/libc/strcasecmp_l.d
+? lib/libc/strcasecmp_l.po
+? lib/libc/strcasestr.d
+? lib/libc/strcasestr.po
+? lib/libc/strcat.d
+? lib/libc/strcat.po
+? lib/libc/strchr.d
+? lib/libc/strchr.po
+? lib/libc/strcmp.d
+? lib/libc/strcmp.po
+? lib/libc/strcoll.d
+? lib/libc/strcoll.po
+? lib/libc/strcoll_l.d
+? lib/libc/strcoll_l.po
+? lib/libc/strcpy.d
+? lib/libc/strcpy.po
+? lib/libc/strcspn.d
+? lib/libc/strcspn.po
+? lib/libc/strdup.d
+? lib/libc/strdup.po
+? lib/libc/strerror.d
+? lib/libc/strerror.po
+? lib/libc/strerror_l.d
+? lib/libc/strerror_l.po
+? lib/libc/strerror_r.d
+? lib/libc/strerror_r.po
+? lib/libc/strftime.d
+? lib/libc/strftime.po
+? lib/libc/strftime_l.d
+? lib/libc/strftime_l.po
+? lib/libc/strlcat.d
+? lib/libc/strlcat.po
+? lib/libc/strlcpy.d
+? lib/libc/strlcpy.po
+? lib/libc/strlen.d
+? lib/libc/strlen.po
+? lib/libc/strmode.d
+? lib/libc/strmode.po
+? lib/libc/strncat.d
+? lib/libc/strncat.po
+? lib/libc/strncmp.d
+? lib/libc/strncmp.po
+? lib/libc/strncpy.d
+? lib/libc/strncpy.po
+? lib/libc/strndup.d
+? lib/libc/strndup.po
+? lib/libc/strnlen.d
+? lib/libc/strnlen.po
+? lib/libc/strpbrk.d
+? lib/libc/strpbrk.po
+? lib/libc/strptime.d
+? lib/libc/strptime.po
+? lib/libc/strrchr.d
+? lib/libc/strrchr.po
+? lib/libc/strsep.d
+? lib/libc/strsep.po
+? lib/libc/strsignal.d
+? lib/libc/strsignal.po
+? lib/libc/strspn.d
+? lib/libc/strspn.po
+? lib/libc/strstr.d
+? lib/libc/strstr.po
+? lib/libc/strtod.d
+? lib/libc/strtod.po
+? lib/libc/strtodg.d
+? lib/libc/strtodg.po
+? lib/libc/strtof.d
+? lib/libc/strtof.po
+? lib/libc/strtofflags.d
+? lib/libc/strtofflags.po
+? lib/libc/strtoimax.d
+? lib/libc/strtoimax.po
+? lib/libc/strtok.d
+? lib/libc/strtok.po
+? lib/libc/strtol.d
+? lib/libc/strtol.po
+? lib/libc/strtold.d
+? lib/libc/strtold.po
+? lib/libc/strtoll.d
+? lib/libc/strtoll.po
+? lib/libc/strtonum.d
+? lib/libc/strtonum.po
+? lib/libc/strtord.d
+? lib/libc/strtord.po
+? lib/libc/strtorx.d
+? lib/libc/strtorx.po
+? lib/libc/strtoul.d
+? lib/libc/strtoul.po
+? lib/libc/strtoull.d
+? lib/libc/strtoull.po
+? lib/libc/strtoumax.d
+? lib/libc/strtoumax.po
+? lib/libc/strxfrm.d
+? lib/libc/strxfrm.po
+? lib/libc/strxfrm_l.d
+? lib/libc/strxfrm_l.po
+? lib/libc/sum.d
+? lib/libc/sum.po
+? lib/libc/svc.d
+? lib/libc/svc.po
+? lib/libc/svc_auth.d
+? lib/libc/svc_auth.po
+? lib/libc/svc_auth_unix.d
+? lib/libc/svc_auth_unix.po
+? lib/libc/svc_raw.d
+? lib/libc/svc_raw.po
+? lib/libc/svc_run.d
+? lib/libc/svc_run.po
+? lib/libc/svc_simple.d
+? lib/libc/svc_simple.po
+? lib/libc/svc_tcp.d
+? lib/libc/svc_tcp.po
+? lib/libc/svc_udp.d
+? lib/libc/svc_udp.po
+? lib/libc/swab.d
+? lib/libc/swab.po
+? lib/libc/swapctl.d
+? lib/libc/swapctl.po
+? lib/libc/swprintf.d
+? lib/libc/swprintf.po
+? lib/libc/swscanf.d
+? lib/libc/swscanf.po
+? lib/libc/symlink.d
+? lib/libc/symlink.po
+? lib/libc/symlinkat.d
+? lib/libc/symlinkat.po
+? lib/libc/sync.d
+? lib/libc/sync.po
+? lib/libc/sysarch.d
+? lib/libc/sysarch.po
+? lib/libc/syscall.d
+? lib/libc/syscall.po
+? lib/libc/sysconf.d
+? lib/libc/sysconf.po
+? lib/libc/sysctl.d
+? lib/libc/sysctl.po
+? lib/libc/syslog.d
+? lib/libc/syslog.po
+? lib/libc/syslog_r.d
+? lib/libc/syslog_r.po
+? lib/libc/system.d
+? lib/libc/system.po
+? lib/libc/tcdrain.d
+? lib/libc/tcdrain.po
+? lib/libc/tcflow.d
+? lib/libc/tcflow.po
+? lib/libc/tcflush.d
+? lib/libc/tcflush.po
+? lib/libc/tcgetattr.d
+? lib/libc/tcgetattr.po
+? lib/libc/tcgetpgrp.d
+? lib/libc/tcgetpgrp.po
+? lib/libc/tcgetsid.d
+? lib/libc/tcgetsid.po
+? lib/libc/tcsendbreak.d
+? lib/libc/tcsendbreak.po
+? lib/libc/tcsetattr.d
+? lib/libc/tcsetattr.po
+? lib/libc/tcsetpgrp.d
+? lib/libc/tcsetpgrp.po
+? lib/libc/telldir.d
+? lib/libc/telldir.po
+? lib/libc/tempnam.d
+? lib/libc/tempnam.po
+? lib/libc/tfind.d
+? lib/libc/tfind.po
+? lib/libc/tfork_thread.d
+? lib/libc/tfork_thread.po
+? lib/libc/thread_atexit.d
+? lib/libc/thread_atexit.po
+? lib/libc/thrkill.d
+? lib/libc/thrkill.po
+? lib/libc/tib.d
+? lib/libc/tib.po
+? lib/libc/time.d
+? lib/libc/time.po
+? lib/libc/timer_create.d
+? lib/libc/timer_create.po
+? lib/libc/timer_delete.d
+? lib/libc/timer_delete.po
+? lib/libc/timer_getoverrun.d
+? lib/libc/timer_getoverrun.po
+? lib/libc/timer_gettime.d
+? lib/libc/timer_gettime.po
+? lib/libc/timer_settime.d
+? lib/libc/timer_settime.po
+? lib/libc/times.d
+? lib/libc/times.po
+? lib/libc/timespec_get.d
+? lib/libc/timespec_get.po
+? lib/libc/timingsafe_bcmp.d
+? lib/libc/timingsafe_bcmp.po
+? lib/libc/timingsafe_memcmp.d
+? lib/libc/timingsafe_memcmp.po
+? lib/libc/tmpfile.d
+? lib/libc/tmpfile.po
+? lib/libc/tmpnam.d
+? lib/libc/tmpnam.po
+? lib/libc/tolower_.d
+? lib/libc/tolower_.po
+? lib/libc/toupper_.d
+? lib/libc/toupper_.po
+? lib/libc/tree.d
+? lib/libc/tree.po
+? lib/libc/truncate.d
+? lib/libc/truncate.po
+? lib/libc/tsearch.d
+? lib/libc/tsearch.po
+? lib/libc/ttyname.d
+? lib/libc/ttyname.po
+? lib/libc/ttyslot.d
+? lib/libc/ttyslot.po
+? lib/libc/ualarm.d
+? lib/libc/ualarm.po
+? lib/libc/ulp.d
+? lib/libc/ulp.po
+? lib/libc/umask.d
+? lib/libc/umask.po
+? lib/libc/uname.d
+? lib/libc/uname.po
+? lib/libc/ungetc.d
+? lib/libc/ungetc.po
+? lib/libc/ungetwc.d
+? lib/libc/ungetwc.po
+? lib/libc/unlink.d
+? lib/libc/unlink.po
+? lib/libc/unlinkat.d
+? lib/libc/unlinkat.po
+? lib/libc/unmount.d
+? lib/libc/unmount.po
+? lib/libc/unveil.d
+? lib/libc/unveil.po
+? lib/libc/unvis.d
+? lib/libc/unvis.po
+? lib/libc/uselocale.d
+? lib/libc/uselocale.po
+? lib/libc/usertc.d
+? lib/libc/usertc.po
+? lib/libc/usleep.d
+? lib/libc/usleep.po
+? lib/libc/utime.d
+? lib/libc/utime.po
+? lib/libc/utimensat.d
+? lib/libc/utimensat.po
+? lib/libc/utimes.d
+? lib/libc/utimes.po
+? lib/libc/utrace.d
+? lib/libc/utrace.po
+? lib/libc/uuid_compare.d
+? lib/libc/uuid_compare.po
+? lib/libc/uuid_create.d
+? lib/libc/uuid_create.po
+? lib/libc/uuid_create_nil.d
+? lib/libc/uuid_create_nil.po
+? lib/libc/uuid_equal.d
+? lib/libc/uuid_equal.po
+? lib/libc/uuid_from_string.d
+? lib/libc/uuid_from_string.po
+? lib/libc/uuid_hash.d
+? lib/libc/uuid_hash.po
+? lib/libc/uuid_is_nil.d
+? lib/libc/uuid_is_nil.po
+? lib/libc/uuid_stream.d
+? lib/libc/uuid_stream.po
+? lib/libc/uuid_to_string.d
+? lib/libc/uuid_to_string.po
+? lib/libc/valloc.d
+? lib/libc/valloc.po
+? lib/libc/vars6.d
+? lib/libc/vars6.po
+? lib/libc/vasprintf.d
+? lib/libc/vasprintf.po
+? lib/libc/vdprintf.d
+? lib/libc/vdprintf.po
+? lib/libc/verr.d
+? lib/libc/verr.po
+? lib/libc/verrc.d
+? lib/libc/verrc.po
+? lib/libc/verrx.d
+? lib/libc/verrx.po
+? lib/libc/vfprintf.d
+? lib/libc/vfprintf.po
+? lib/libc/vfscanf.d
+? lib/libc/vfscanf.po
+? lib/libc/vfwprintf.d
+? lib/libc/vfwprintf.po
+? lib/libc/vfwscanf.d
+? lib/libc/vfwscanf.po
+? lib/libc/vis.d
+? lib/libc/vis.po
+? lib/libc/vprintf.d
+? lib/libc/vprintf.po
+? lib/libc/vscanf.d
+? lib/libc/vscanf.po
+? lib/libc/vsnprintf.d
+? lib/libc/vsnprintf.po
+? lib/libc/vsprintf.d
+? lib/libc/vsprintf.po
+? lib/libc/vsscanf.d
+? lib/libc/vsscanf.po
+? lib/libc/vswprintf.d
+? lib/libc/vswprintf.po
+? lib/libc/vswscanf.d
+? lib/libc/vswscanf.po
+? lib/libc/vwarn.d
+? lib/libc/vwarn.po
+? lib/libc/vwarnc.d
+? lib/libc/vwarnc.po
+? lib/libc/vwarnx.d
+? lib/libc/vwarnx.po
+? lib/libc/vwprintf.d
+? lib/libc/vwprintf.po
+? lib/libc/vwscanf.d
+? lib/libc/vwscanf.po
+? lib/libc/w_accept.d
+? lib/libc/w_accept.po
+? lib/libc/w_accept4.d
+? lib/libc/w_accept4.po
+? lib/libc/w_clock_gettime.d
+? lib/libc/w_clock_gettime.po
+? lib/libc/w_close.d
+? lib/libc/w_close.po
+? lib/libc/w_closefrom.d
+? lib/libc/w_closefrom.po
+? lib/libc/w_connect.d
+? lib/libc/w_connect.po
+? lib/libc/w_fcntl.d
+? lib/libc/w_fcntl.po
+? lib/libc/w_fork.d
+? lib/libc/w_fork.po
+? lib/libc/w_fsync.d
+? lib/libc/w_fsync.po
+? lib/libc/w_gettimeofday.d
+? lib/libc/w_gettimeofday.po
+? lib/libc/w_msgrcv.d
+? lib/libc/w_msgrcv.po
+? lib/libc/w_msgsnd.d
+? lib/libc/w_msgsnd.po
+? lib/libc/w_msync.d
+? lib/libc/w_msync.po
+? lib/libc/w_nanosleep.d
+? lib/libc/w_nanosleep.po
+? lib/libc/w_open.d
+? lib/libc/w_open.po
+? lib/libc/w_openat.d
+? lib/libc/w_openat.po
+? lib/libc/w_poll.d
+? lib/libc/w_poll.po
+? lib/libc/w_ppoll.d
+? lib/libc/w_ppoll.po
+? lib/libc/w_pread.d
+? lib/libc/w_pread.po
+? lib/libc/w_preadv.d
+? lib/libc/w_preadv.po
+? lib/libc/w_pselect.d
+? lib/libc/w_pselect.po
+? lib/libc/w_pwrite.d
+? lib/libc/w_pwrite.po
+? lib/libc/w_pwritev.d
+? lib/libc/w_pwritev.po
+? lib/libc/w_read.d
+? lib/libc/w_read.po
+? lib/libc/w_readv.d
+? lib/libc/w_readv.po
+? lib/libc/w_recvfrom.d
+? lib/libc/w_recvfrom.po
+? lib/libc/w_recvmsg.d
+? lib/libc/w_recvmsg.po
+? lib/libc/w_select.d
+? lib/libc/w_select.po
+? lib/libc/w_sendmsg.d
+? lib/libc/w_sendmsg.po
+? lib/libc/w_sendto.d
+? lib/libc/w_sendto.po
+? lib/libc/w_sigaction.d
+? lib/libc/w_sigaction.po
+? lib/libc/w_sigprocmask.d
+? lib/libc/w_sigprocmask.po
+? lib/libc/w_sigsuspend.d
+? lib/libc/w_sigsuspend.po
+? lib/libc/w_vfork.d
+? lib/libc/w_vfork.po
+? lib/libc/w_wait4.d
+? lib/libc/w_wait4.po
+? lib/libc/w_write.d
+? lib/libc/w_write.po
+? lib/libc/w_writev.d
+? lib/libc/w_writev.po
+? lib/libc/wait.d
+? lib/libc/wait.po
+? lib/libc/wait3.d
+? lib/libc/wait3.po
+? lib/libc/wait4.d
+? lib/libc/wait4.po
+? lib/libc/waitpid.d
+? lib/libc/waitpid.po
+? lib/libc/warn.d
+? lib/libc/warn.po
+? lib/libc/warnc.d
+? lib/libc/warnc.po
+? lib/libc/warnx.d
+? lib/libc/warnx.po
+? lib/libc/wbuf.d
+? lib/libc/wbuf.po
+? lib/libc/wcscasecmp.d
+? lib/libc/wcscasecmp.po
+? lib/libc/wcscasecmp_l.d
+? lib/libc/wcscasecmp_l.po
+? lib/libc/wcscat.d
+? lib/libc/wcscat.po
+? lib/libc/wcschr.d
+? lib/libc/wcschr.po
+? lib/libc/wcscmp.d
+? lib/libc/wcscmp.po
+? lib/libc/wcscoll.d
+? lib/libc/wcscoll.po
+? lib/libc/wcscoll_l.d
+? lib/libc/wcscoll_l.po
+? lib/libc/wcscpy.d
+? lib/libc/wcscpy.po
+? lib/libc/wcscspn.d
+? lib/libc/wcscspn.po
+? lib/libc/wcsdup.d
+? lib/libc/wcsdup.po
+? lib/libc/wcsftime.d
+? lib/libc/wcsftime.po
+? lib/libc/wcslcat.d
+? lib/libc/wcslcat.po
+? lib/libc/wcslcpy.d
+? lib/libc/wcslcpy.po
+? lib/libc/wcslen.d
+? lib/libc/wcslen.po
+? lib/libc/wcsncat.d
+? lib/libc/wcsncat.po
+? lib/libc/wcsncmp.d
+? lib/libc/wcsncmp.po
+? lib/libc/wcsncpy.d
+? lib/libc/wcsncpy.po
+? lib/libc/wcspbrk.d
+? lib/libc/wcspbrk.po
+? lib/libc/wcsrchr.d
+? lib/libc/wcsrchr.po
+? lib/libc/wcsspn.d
+? lib/libc/wcsspn.po
+? lib/libc/wcsstr.d
+? lib/libc/wcsstr.po
+? lib/libc/wcstod.d
+? lib/libc/wcstod.po
+? lib/libc/wcstof.d
+? lib/libc/wcstof.po
+? lib/libc/wcstoimax.d
+? lib/libc/wcstoimax.po
+? lib/libc/wcstok.d
+? lib/libc/wcstok.po
+? lib/libc/wcstol.d
+? lib/libc/wcstol.po
+? lib/libc/wcstold.d
+? lib/libc/wcstold.po
+? lib/libc/wcstoll.d
+? lib/libc/wcstoll.po
+? lib/libc/wcstombs.d
+? lib/libc/wcstombs.po
+? lib/libc/wcstoul.d
+? lib/libc/wcstoul.po
+? lib/libc/wcstoull.d
+? lib/libc/wcstoull.po
+? lib/libc/wcstoumax.d
+? lib/libc/wcstoumax.po
+? lib/libc/wcswcs.d
+? lib/libc/wcswcs.po
+? lib/libc/wcswidth.d
+? lib/libc/wcswidth.po
+? lib/libc/wcsxfrm.d
+? lib/libc/wcsxfrm.po
+? lib/libc/wcsxfrm_l.d
+? lib/libc/wcsxfrm_l.po
+? lib/libc/wctob.d
+? lib/libc/wctob.po
+? lib/libc/wctomb.d
+? lib/libc/wctomb.po
+? lib/libc/wmemchr.d
+? lib/libc/wmemchr.po
+? lib/libc/wmemcmp.d
+? lib/libc/wmemcmp.po
+? lib/libc/wmemcpy.d
+? lib/libc/wmemcpy.po
+? lib/libc/wmemmove.d
+? lib/libc/wmemmove.po
+? lib/libc/wmemset.d
+? lib/libc/wmemset.po
+? lib/libc/wprintf.d
+? lib/libc/wprintf.po
+? lib/libc/write.d
+? lib/libc/write.po
+? lib/libc/writev.d
+? lib/libc/writev.po
+? lib/libc/wscanf.d
+? lib/libc/wscanf.po
+? lib/libc/wsetup.d
+? lib/libc/wsetup.po
+? lib/libc/xdr.d
+? lib/libc/xdr.po
+? lib/libc/xdr_array.d
+? lib/libc/xdr_array.po
+? lib/libc/xdr_domainname.d
+? lib/libc/xdr_domainname.po
+? lib/libc/xdr_float.d
+? lib/libc/xdr_float.po
+? lib/libc/xdr_keydat.d
+? lib/libc/xdr_keydat.po
+? lib/libc/xdr_mapname.d
+? lib/libc/xdr_mapname.po
+? lib/libc/xdr_mem.d
+? lib/libc/xdr_mem.po
+? lib/libc/xdr_peername.d
+? lib/libc/xdr_peername.po
+? lib/libc/xdr_rec.d
+? lib/libc/xdr_rec.po
+? lib/libc/xdr_reference.d
+? lib/libc/xdr_reference.po
+? lib/libc/xdr_stdio.d
+? lib/libc/xdr_stdio.po
+? lib/libc/xdr_valdat.d
+? lib/libc/xdr_valdat.po
+? lib/libc/xdr_ypbind_binding.d
+? lib/libc/xdr_ypbind_binding.po
+? lib/libc/xdr_ypbind_resp.d
+? lib/libc/xdr_ypbind_resp.po
+? lib/libc/xdr_ypbind_resptype.d
+? lib/libc/xdr_ypbind_resptype.po
+? lib/libc/xdr_ypbind_setdom.d
+? lib/libc/xdr_ypbind_setdom.po
+? lib/libc/xdr_ypmaplist.d
+? lib/libc/xdr_ypmaplist.po
+? lib/libc/xdr_ypreq_key.d
+? lib/libc/xdr_ypreq_key.po
+? lib/libc/xdr_ypreq_nokey.d
+? lib/libc/xdr_ypreq_nokey.po
+? lib/libc/xdr_ypresp_all.d
+? lib/libc/xdr_ypresp_all.po
+? lib/libc/xdr_ypresp_key_val.d
+? lib/libc/xdr_ypresp_key_val.po
+? lib/libc/xdr_ypresp_maplist.d
+? lib/libc/xdr_ypresp_maplist.po
+? lib/libc/xdr_ypresp_master.d
+? lib/libc/xdr_ypresp_master.po
+? lib/libc/xdr_ypresp_order.d
+? lib/libc/xdr_ypresp_order.po
+? lib/libc/xdr_ypresp_val.d
+? lib/libc/xdr_ypresp_val.po
+? lib/libc/xdr_ypstat.d
+? lib/libc/xdr_ypstat.po
+? lib/libc/yp_all.d
+? lib/libc/yp_all.po
+? lib/libc/yp_bind.d
+? lib/libc/yp_bind.po
+? lib/libc/yp_first.d
+? lib/libc/yp_first.po
+? lib/libc/yp_get_default_domain.d
+? lib/libc/yp_get_default_domain.po
+? lib/libc/yp_maplist.d
+? lib/libc/yp_maplist.po
+? lib/libc/yp_master.d
+? lib/libc/yp_master.po
+? lib/libc/yp_order.d
+? lib/libc/yp_order.po
+? lib/libc/yperr_string.d
+? lib/libc/yperr_string.po
+? lib/libc/ypexclude.d
+? lib/libc/ypexclude.po
+? lib/libc/ypmatch_cache.d
+? lib/libc/ypmatch_cache.po
+? lib/libc/ypprot_err.d
+? lib/libc/ypprot_err.po
+? lib/libcrypto/obj_mac.h
+? lib/libcrypto/obj_mac.num.tmp
+? lib/librpcsvc/bootparam_prot.h
+? lib/librpcsvc/klm_prot.h
+? lib/librpcsvc/mount.h
+? lib/librpcsvc/nfs_prot.h
+? lib/librpcsvc/nlm_prot.h
+? lib/librpcsvc/rex.h
+? lib/librpcsvc/rnusers.h
+? lib/librpcsvc/rquota.h
+? lib/librpcsvc/rstat.h
+? lib/librpcsvc/rusers.h
+? lib/librpcsvc/rwall.h
+? lib/librpcsvc/sm_inter.h
+? lib/librpcsvc/spray.h
+? lib/librpcsvc/yp.h
+? lib/librpcsvc/yppasswd.h
+Index: lib/libc/Symbols.list
+===================================================================
+RCS file: /cvs/src/lib/libc/Symbols.list,v
+retrieving revision 1.73
+diff -u -p -u -p -r1.73 Symbols.list
+--- lib/libc/Symbols.list	24 Oct 2019 05:57:41 -0000	1.73
++++ lib/libc/Symbols.list	29 Oct 2021 02:16:14 -0000
+@@ -709,6 +709,9 @@ openlog
+ openlog_r
+ pause
+ pclose
++pfexecve
++pfexecvp
++pfexecvpe
+ popen
+ posix_spawn
+ posix_spawn_file_actions_addclose
+Index: lib/libc/gen/Makefile.inc
+===================================================================
+RCS file: /cvs/src/lib/libc/gen/Makefile.inc,v
+retrieving revision 1.82
+diff -u -p -u -p -r1.82 Makefile.inc
+--- lib/libc/gen/Makefile.inc	2 Sep 2019 21:18:40 -0000	1.82
++++ lib/libc/gen/Makefile.inc	29 Oct 2021 02:16:14 -0000
+@@ -54,4 +54,5 @@ MAN+=	__tfork_thread.3 alarm.3 auth_subr
+ 	siginterrupt.3 signal.3 \
+ 	sigaddset.3 sigwait.3 sleep.3 statvfs.3 sysconf.3 strtofflags.3 \
+ 	syslog.3 time.3 times.3 timespec_get.3 toascii.3 tolower.3 toupper.3 \
+-	ttyname.3 ualarm.3 uname.3 unvis.3 usleep.3 utime.3 valloc.3 vis.3
++	ttyname.3 ualarm.3 uname.3 unvis.3 usleep.3 utime.3 valloc.3 vis.3 \
++	pfexecvp.3
+Index: lib/libc/gen/exec.c
+===================================================================
+RCS file: /cvs/src/lib/libc/gen/exec.c,v
+retrieving revision 1.23
+diff -u -p -u -p -r1.23 exec.c
+--- lib/libc/gen/exec.c	13 Mar 2016 18:34:20 -0000	1.23
++++ lib/libc/gen/exec.c	29 Oct 2021 02:16:14 -0000
+@@ -30,6 +30,7 @@
+ 
+ #include <sys/types.h>
+ #include <sys/uio.h>
++#include <sys/pfexec.h>
+ 
+ #include <errno.h>
+ #include <limits.h>
+@@ -143,7 +144,7 @@ execvpe(const char *name, char *const *a
+ 	if (name == NULL || *name == '\0') {
+ 		errno = ENOENT;
+ 		return (-1);
+- 	}
++	}
+ 
+ 	/* If it's an absolute or relative path name, it's easy. */
+ 	if (strchr(name, '/')) {
+@@ -250,3 +251,126 @@ execvp(const char *name, char *const *ar
+ }
+ DEF_WEAK(execvp);
+ 
++int
++pfexecvpe(const struct pfexecve_opts *opts, const char *name, char *const *argv,
++    char *const *envp)
++{
++	char **memp;
++	int cnt;
++	size_t lp, ln, len;
++	char *p;
++	int eacces = 0;
++	char *bp, *cur, *path, buf[PATH_MAX];
++
++	/*
++	 * Do not allow null name
++	 */
++	if (name == NULL || *name == '\0') {
++		errno = ENOENT;
++		return (-1);
++	}
++
++	/* If it's an absolute or relative path name, it's easy. */
++	if (strchr(name, '/')) {
++		bp = (char *)name;
++		cur = path = NULL;
++		goto retry;
++	}
++	bp = buf;
++
++	/* Get the path we're searching. */
++	if (!(path = getenv("PATH")))
++		path = _PATH_DEFPATH;
++	len = strlen(path) + 1;
++	cur = alloca(len);
++	if (cur == NULL) {
++		errno = ENOMEM;
++		return (-1);
++	}
++	strlcpy(cur, path, len);
++	path = cur;
++	while ((p = strsep(&cur, ":"))) {
++		/*
++		 * It's a SHELL path -- double, leading and trailing colons
++		 * mean the current directory.
++		 */
++		if (!*p) {
++			p = ".";
++			lp = 1;
++		} else
++			lp = strlen(p);
++		ln = strlen(name);
++
++		/*
++		 * If the path is too long complain.  This is a possible
++		 * security issue; given a way to make the path too long
++		 * the user may execute the wrong program.
++		 */
++		if (lp + ln + 2 > sizeof(buf)) {
++			struct iovec iov[3];
++
++			iov[0].iov_base = "execvp: ";
++			iov[0].iov_len = 8;
++			iov[1].iov_base = p;
++			iov[1].iov_len = lp;
++			iov[2].iov_base = ": path too long\n";
++			iov[2].iov_len = 16;
++			(void)writev(STDERR_FILENO, iov, 3);
++			continue;
++		}
++		bcopy(p, buf, lp);
++		buf[lp] = '/';
++		bcopy(name, buf + lp + 1, ln);
++		buf[lp + ln + 1] = '\0';
++
++retry:		(void)pfexecve(opts, bp, argv, envp);
++		switch(errno) {
++		case E2BIG:
++			goto done;
++		case EISDIR:
++		case ELOOP:
++		case ENAMETOOLONG:
++		case ENOENT:
++			break;
++		case ENOEXEC:
++			for (cnt = 0; argv[cnt]; ++cnt)
++				;
++			memp = alloca((cnt + 2) * sizeof(char *));
++			if (memp == NULL)
++				goto done;
++			memp[0] = "sh";
++			memp[1] = bp;
++			bcopy(argv + 1, memp + 2, cnt * sizeof(char *));
++			(void)pfexecve(opts, _PATH_BSHELL, memp, envp);
++			goto done;
++		case ENOMEM:
++			goto done;
++		case ENOTDIR:
++			break;
++		case ETXTBSY:
++			/*
++			 * We used to retry here, but sh(1) doesn't.
++			 */
++			goto done;
++		case EACCES:
++			eacces = 1;
++			break;
++		default:
++			goto done;
++		}
++	}
++	if (eacces)
++		errno = EACCES;
++	else if (!errno)
++		errno = ENOENT;
++done:
++	return (-1);
++}
++DEF_WEAK(pfexecvpe);
++
++int
++pfexecvp(const struct pfexecve_opts *opts, const char *name, char *const *argv)
++{
++    return pfexecvpe(opts, name, argv, environ);
++}
++DEF_WEAK(pfexecvp);
+Index: lib/libc/gen/pfexecvp.3
+===================================================================
+RCS file: lib/libc/gen/pfexecvp.3
+diff -N lib/libc/gen/pfexecvp.3
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ lib/libc/gen/pfexecvp.3	29 Oct 2021 02:16:14 -0000
+@@ -0,0 +1,82 @@
++.\" Copyright 2021, the University of Queensland
++.\"
++.\" Redistribution and use in source and binary forms, with or without
++.\" modification, are permitted provided that the following conditions
++.\" are met:
++.\" 1. Redistributions of source code must retain the above copyright
++.\"    notice, this list of conditions and the following disclaimer.
++.\" 2. Redistributions in binary form must reproduce the above copyright
++.\"    notice, this list of conditions and the following disclaimer in the
++.\"    documentation and/or other materials provided with the distribution.
++.\" 3. Neither the name of the University nor the names of its contributors
++.\"    may be used to endorse or promote products derived from this software
++.\"    without specific prior written permission.
++.\"
++.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
++.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
++.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++.\" SUCH DAMAGE.
++.Dd $Mdocdate: October 1 2021 $
++.Dt PFEXECVP 3
++.Os
++.Sh NAME
++.Nm pfexecvp ,
++.Nm pfexecvpe
++.Nd execute a file with elevated privileges
++.Sh SYNOPSIS
++.In sys/pfexec.h
++.Ft int
++.Fn pfexecvp "const struct pfexecve_opts *opts" "const char *file" "char *const argv[]"
++.Ft int
++.Fn pfexecvpe "const struct pfexecve_opts *opts" "const char *file" "char *const argv[]" "char *const envp[]"
++.Sh DESCRIPTION
++This family of functions request elevated privileges from the system and then
++replace the current process image with a new process image.
++The functions described in this manual page are front-ends for the
++.Xr pfexecve 2
++system call; see that manual page for detailed information
++about the elevation process and replacement of the current process.
++.Pp
++The second argument for these functions is the pathname of a file which
++is to be executed. These functions duplicate the actions of the shell in
++searching for an executable file if the specified file name does not contain
++a slash
++.Pq Sq \&/
++character.
++The search path is the path specified in the environment by
++.Ev PATH
++variable.
++If this variable isn't specified,
++.Dv _PATH_DEFPATH
++from
++.In paths.h
++is used instead, its value being:
++.Pa /usr/bin:/bin:/usr/sbin:/sbin:/usr/X11R6/bin:/usr/local/bin
++.Sh RETURN VALUES
++If any of these functions return, an error has occurred.
++The return value is \-1, and the global variable
++.Va errno
++will be set to indicate the error.
++.Sh ERRORS
++.Fn pfexecvp
++and
++.Fn pfexecvpe
++may fail and set
++.Va errno
++for any of the errors specified for the library functions
++.Xr pfexecve 2
++and
++.Xr malloc 3 .
++.Sh SEE ALSO
++.Xr sh 1 ,
++.Xr pfexecve 2 ,
++.Xr execve 2,
++.Xr execv 3
++.Xr environ 7
+Index: lib/libc/hidden/sys/pfexec.h
+===================================================================
+RCS file: lib/libc/hidden/sys/pfexec.h
+diff -N lib/libc/hidden/sys/pfexec.h
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ lib/libc/hidden/sys/pfexec.h	29 Oct 2021 02:16:14 -0000
+@@ -0,0 +1,26 @@
++/*
++ * Copyright 2021, the University of Queensland
++ *
++ * Permission to use, copy, modify, and distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef _LIBC_SYS_PFEXEC_H_
++#define _LIBC_SYS_PFEXEC_H_
++
++#include_next <sys/pfexec.h>
++
++PROTO_NORMAL(pfexecve);
++PROTO_NORMAL(pfexecvp);
++PROTO_NORMAL(pfexecvpe);
++
++#endif /* !_LIBC_SYS_PFEXEC_H_ */
+Index: lib/libc/sys/Makefile.inc
+===================================================================
+RCS file: /cvs/src/lib/libc/sys/Makefile.inc,v
+retrieving revision 1.159
+diff -u -p -u -p -r1.159 Makefile.inc
+--- lib/libc/sys/Makefile.inc	6 Jul 2020 13:33:06 -0000	1.159
++++ lib/libc/sys/Makefile.inc	29 Oct 2021 02:16:15 -0000
+@@ -46,7 +46,7 @@ ASM=	__semctl.o __syscall.o __thrsigdive
+ 	bind.o chdir.o chflags.o chflagsat.o chmod.o chown.o chroot.o \
+ 	clock_getres.o clock_settime.o \
+ 	dup.o dup2.o dup3.o \
+-	execve.o \
++	execve.o pfexecve.o \
+ 	faccessat.o fchdir.o fchflags.o fchmod.o fchmodat.o fchown.o \
+ 	fchownat.o fhopen.o fhstat.o fhstatfs.o \
+ 	flock.o fpathconf.o fstat.o fstatat.o fstatfs.o \
+@@ -197,4 +197,5 @@ MAN+=	__get_tcb.2 __thrsigdivert.2 __thr
+ 	sigprocmask.2 sigreturn.2 sigsuspend.2 socket.2 \
+ 	socketpair.2 stat.2 statfs.2 swapctl.2 symlink.2 \
+ 	sync.2 sysarch.2 syscall.2 sysctl.2 thrkill.2 truncate.2 \
+-	umask.2 unlink.2 unveil.2 utimes.2 utrace.2 vfork.2 wait.2 write.2
++	umask.2 unlink.2 unveil.2 utimes.2 utrace.2 vfork.2 wait.2 write.2 \
++	pfexecve.2
+Index: lib/libc/sys/pfexecve.2
+===================================================================
+RCS file: lib/libc/sys/pfexecve.2
+diff -N lib/libc/sys/pfexecve.2
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ lib/libc/sys/pfexecve.2	29 Oct 2021 02:16:15 -0000
+@@ -0,0 +1,145 @@
++.\" Copyright 2021, the University of Queensland
++.\"
++.\" Redistribution and use in source and binary forms, with or without
++.\" modification, are permitted provided that the following conditions
++.\" are met:
++.\" 1. Redistributions of source code must retain the above copyright
++.\"    notice, this list of conditions and the following disclaimer.
++.\" 2. Redistributions in binary form must reproduce the above copyright
++.\"    notice, this list of conditions and the following disclaimer in the
++.\"    documentation and/or other materials provided with the distribution.
++.\" 3. Neither the name of the University nor the names of its contributors
++.\"    may be used to endorse or promote products derived from this software
++.\"    without specific prior written permission.
++.\"
++.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
++.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
++.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++.\" SUCH DAMAGE.
++.Dd $Mdocdate: October 1 2021 $
++.Dt PFEXECVE 2
++.Os
++.Sh NAME
++.Nm pfexecve
++.Nd execute a file with elevated privileges
++.Sh SYNOPSIS
++.In sys/pfexec.h
++.Ft int
++.Fn pfexecve "const struct pfexecve_opts *opts" "const char *path" "char *const argv[]" "char *const envp[]"
++.Sh DESCRIPTION
++.Fn pfexecve
++requests elevated privileges from the system and then transforms the calling
++process into a new process in the same way as
++.Xr execve 2 .
++The new process is constructed from an ordinary file,
++whose name is pointed to by
++.Fa path ,
++called the
++.Em new process file .
++This file is either an executable object file,
++or a file of data for an interpreter.
++.Pp
++Elevation of privilege may be allowed or denied by system policy, which is
++determined by the daemon
++.Xr pfexecd 8 .
++The kernel will provide information about the process calling
++.Fn pfexecve
++to
++.Em pfexecd
++in order to allow it to reach a decision.
++.Pp
++The argument
++.Fa opts
++is a pointer to a
++.Em pfexecve_opts
++structure:
++.Bd -literal -offset indent
++struct pfexecve_opts {
++	uint32_t	 pfo_flags;
++	char		 pfo_user[LOGIN_NAME_MAX];
++};
++.Ed
++.Pp
++The
++.Em pfo_flags
++member of the
++.Em pfexecve_opts
++structure is a bitwise OR combination of any of the flags listed in the
++.Em pfexecve_flags
++enumeration:
++.Bl -tag -width PFEXECVE_NOPROMPT
++.It Li PFEXECVE_NOPROMPT
++Indicates that the call should be treated as non-interactive and no credential
++input from the user on the terminal should be attempted. If elevation would
++require additional credentials, the presence of this flag will cause it to
++fail instead.
++.It Li PFEXECVE_USER
++Indicates that the
++.Em pfo_user
++field contains the username of a valid user on the system, and requests that
++the privileges of this user be granted to the process rather than those of
++.Em root ,
++the default.
++.El
++.Pp
++The argument
++.Fa argv
++is a pointer to a null-terminated array of
++character pointers to NUL-terminated character strings.
++These strings construct the argument list to be made available to the new
++process.
++At least one non-null argument must be present in the array;
++by custom, the first element should be
++the name of the executed program (for example, the last component of
++.Fa path ) .
++.Pp
++The argument
++.Fa envp
++is also a pointer to a null-terminated array of
++character pointers to NUL-terminated strings.
++A pointer to this array is normally stored in the global variable
++.Va environ .
++These strings pass information to the
++new process that is not directly an argument to the command (see
++.Xr environ 7 ) .
++.Pp
++.Sh RETURN VALUES
++As the
++.Fn pfexecve
++function overlays the current process image
++with a new process image the successful call
++has no process to return to.
++If
++.Fn pfexecve
++does return to the calling process an error has occurred; the
++return value will be \-1 and the global variable
++.Va errno
++is set to indicate the error.
++.Sh ERRORS
++.Fn pfexecve
++will fail and return to the calling process if:
++.Bl -tag -width Er
++.It Bq Er EINVAL
++The contents of the given arguments are invalid.
++.It Bq Er EPERM
++Elevation of privilege was denied by policy.
++.It Bq Er ENOTCONN
++A connection to the
++.Xr pfexecd 8
++daemon could not be established in order to evaluate escalation policy.
++.El
++.Pp
++Other errors may be returned as per
++.Xr execve 2 .
++.Sh SEE ALSO
++.Xr execve 2 ,
++.Xr pfexecvp 3 ,
++.Xr pfexecd 8 ,
++.Xr environ 7
+Index: share/man/man4/tty.4
+===================================================================
+RCS file: /cvs/src/share/man/man4/tty.4,v
+retrieving revision 1.53
+diff -u -p -u -p -r1.53 tty.4
+--- share/man/man4/tty.4	7 Sep 2019 10:28:27 -0000	1.53
++++ share/man/man4/tty.4	29 Oct 2021 02:16:29 -0000
+@@ -330,6 +330,10 @@ Start output on the terminal (like typin
+ .It Dv TIOCSCTTY Fa void
+ Make the terminal the controlling terminal for the process (the process
+ must not currently have a controlling terminal).
++.It Dv TIOCJTTY Fa void
++"Joins" the current process to the session and process group which is currently
++in the foreground of the terminal, making it the new controlling terminal for
++the process. This command can only be used by root.
+ .It Dv TIOCDRAIN Fa void
+ Wait until all output is drained.
+ .It Dv TIOCEXCL Fa void
+Index: sys/conf/files
+===================================================================
+RCS file: /cvs/src/sys/conf/files,v
+retrieving revision 1.702
+diff -u -p -u -p -r1.702 files
+--- sys/conf/files	16 Apr 2021 08:17:35 -0000	1.702
++++ sys/conf/files	29 Oct 2021 02:16:32 -0000
+@@ -704,6 +704,7 @@ file kern/kern_resource.c
+ file kern/kern_pledge.c
+ file kern/kern_unveil.c
+ file kern/kern_sched.c
++file kern/kern_pfexec.c
+ file kern/kern_intrmap.c		intrmap
+ file kern/kern_sensors.c
+ file kern/kern_sig.c
+Index: sys/kern/init_sysent.c
+===================================================================
+RCS file: /cvs/src/sys/kern/init_sysent.c,v
+retrieving revision 1.220
+diff -u -p -u -p -r1.220 init_sysent.c
+--- sys/kern/init_sysent.c	18 Mar 2021 08:44:59 -0000	1.220
++++ sys/kern/init_sysent.c	29 Oct 2021 02:16:34 -0000
+@@ -4,7 +4,7 @@
+  * System call switch table.
+  *
+  * DO NOT EDIT-- this file is automatically generated.
+- * created from;	OpenBSD: syscalls.master,v 1.209 2021/03/18 08:43:38 mvs Exp 
++ * created from;	OpenBSD: syscalls.master,v 1.208 2021/01/18 18:25:51 mvs Exp 
+  */
+ 
+ #include <sys/param.h>
+@@ -751,5 +751,7 @@ struct sysent sysent[] = {
+ 	    sys___set_tcb },			/* 329 = __set_tcb */
+ 	{ 0, 0, SY_NOLOCK | 0,
+ 	    sys___get_tcb },			/* 330 = __get_tcb */
++	{ 4, s(struct sys_pfexecve_args), 0,
++	    sys_pfexecve },			/* 331 = pfexecve */
+ };
+ 
+Index: sys/kern/kern_exec.c
+===================================================================
+RCS file: /cvs/src/sys/kern/kern_exec.c,v
+retrieving revision 1.223
+diff -u -p -u -p -r1.223 kern_exec.c
+--- sys/kern/kern_exec.c	16 Mar 2021 16:32:22 -0000	1.223
++++ sys/kern/kern_exec.c	29 Oct 2021 02:16:34 -0000
+@@ -920,3 +920,540 @@ exec_timekeep_map(struct process *pr)
+ 
+ 	return (0);
+ }
++
++
++/*
++ * Duplicate execve to be called exclusively by pfexecve
++ * This functions is slightly modified to make it work exclusively with
++ * pfexecve and should not be used by anything else!
++ *
++ * Yes, this is a very think inside the box type of solution, 
++ *		but it is a solution...
++ */
++int
++sys_execve_from_pfexec(struct proc *p, void *v, register_t *retval)
++{
++	struct sys_execve_args /* {
++		syscallarg(const char *) path;
++		syscallarg(char *const *) argp;
++		syscallarg(char *const *) envp;
++	} */ *uap = v;
++	int error;
++	struct exec_package pack;
++	struct nameidata nid;
++	struct vattr attr;
++	struct ucred *cred = p->p_ucred;
++	char *argp;
++	char * const *cpp, *dp, *sp;
++#ifdef KTRACE
++	char *env_start;
++#endif
++	struct process *pr = p->p_p;
++	long argc, envc;
++	size_t len, sgap, dstsize;
++#ifdef MACHINE_STACK_GROWS_UP
++	size_t slen;
++#endif
++	char *stack;
++	struct ps_strings arginfo;
++	struct vmspace *vm;
++	extern struct emul emul_native;
++	struct vnode *otvp;
++
++	/* get other threads to stop */
++	if ((error = single_thread_set(p, SINGLE_UNWIND, 1)))
++		return (error);
++
++	/*
++	 * Cheap solution to complicated problems.
++	 * Mark this process as "leave me alone, I'm execing".
++	 */
++	atomic_setbits_int(&pr->ps_flags, PS_INEXEC);
++
++	NDINIT(&nid, LOOKUP, NOFOLLOW, UIO_USERSPACE, SCARG(uap, path), p);
++	nid.ni_pledge = PLEDGE_EXEC;
++	nid.ni_unveil = UNVEIL_EXEC;
++
++	/*
++	 * initialize the fields of the exec package.
++	 */
++	pack.ep_name = (char *)SCARG(uap, path);
++	pack.ep_hdr = malloc(exec_maxhdrsz, M_EXEC, M_WAITOK);
++	pack.ep_hdrlen = exec_maxhdrsz;
++	pack.ep_hdrvalid = 0;
++	pack.ep_ndp = &nid;
++	pack.ep_interp = NULL;
++	pack.ep_emul_arg = NULL;
++	VMCMDSET_INIT(&pack.ep_vmcmds);
++	pack.ep_vap = &attr;
++	pack.ep_emul = &emul_native;
++	pack.ep_flags = 0;
++
++	/* see if we can run it. */
++	if ((error = check_exec(p, &pack)) != 0) {
++		goto freehdr;
++	}
++
++	/* XXX -- THE FOLLOWING SECTION NEEDS MAJOR CLEANUP */
++
++	/* allocate an argument buffer */
++	argp = km_alloc(NCARGS, &kv_exec, &kp_pageable, &kd_waitok);
++#ifdef DIAGNOSTIC
++	if (argp == NULL)
++		panic("execve: argp == NULL");
++#endif
++	dp = argp;
++	argc = 0;
++
++	/*
++	 * Copy the fake args list, if there's one, freeing it as we go.
++	 * exec_script_makecmds() allocates either 2 or 3 fake args bounded
++	 * by MAXINTERP + MAXPATHLEN < NCARGS so no overflow can happen.
++	 */
++	if (pack.ep_flags & EXEC_HASARGL) {
++		dstsize = NCARGS;
++		for(; pack.ep_fa[argc] != NULL; argc++) {
++			len = strlcpy(dp, pack.ep_fa[argc], dstsize);
++			len++;
++			dp += len; dstsize -= len;
++			if (pack.ep_fa[argc+1] != NULL)
++				free(pack.ep_fa[argc], M_EXEC, len);
++			else
++				free(pack.ep_fa[argc], M_EXEC, MAXPATHLEN);
++		}
++		free(pack.ep_fa, M_EXEC, 4 * sizeof(char *));
++		pack.ep_flags &= ~EXEC_HASARGL;
++	}
++
++	/* Now get argv & environment */
++	if (!(cpp = SCARG(uap, argp))) {
++		error = EFAULT;
++		goto bad;
++	}
++
++	if (pack.ep_flags & EXEC_SKIPARG)
++		cpp++;
++
++	while (1) {
++		len = argp + ARG_MAX - dp;
++		if ((error = copyin(cpp, &sp, sizeof(sp))) != 0)
++			goto bad;
++		if (!sp)
++			break;
++		if ((error = copyinstr(sp, dp, len, &len)) != 0) {
++			if (error == ENAMETOOLONG)
++				error = E2BIG;
++			goto bad;
++		}
++		dp += len;
++		cpp++;
++		argc++;
++	}
++
++	/* must have at least one argument */
++	if (argc == 0) {
++		error = EINVAL;
++		goto bad;
++	}
++
++#ifdef KTRACE
++	if (KTRPOINT(p, KTR_EXECARGS))
++		ktrexec(p, KTR_EXECARGS, argp, dp - argp);
++#endif
++
++	envc = 0;
++	/* environment does not need to be there */
++	if ((cpp = SCARG(uap, envp)) != NULL ) {
++#ifdef KTRACE
++		env_start = dp;
++#endif
++		while (1) {
++			len = argp + ARG_MAX - dp;
++			memcpy(&sp, cpp, sizeof(sp));
++
++			if (!sp)
++				break;
++
++			strncpy(dp, sp, strlen(sp));
++			len = strlen(sp) + 1; 	/* For NUL */
++			dp += len;
++			cpp++;
++			envc++;
++		}
++
++#ifdef KTRACE
++		if (KTRPOINT(p, KTR_EXECENV))
++			ktrexec(p, KTR_EXECENV, env_start, dp - env_start);
++#endif
++	}
++
++	dp = (char *)(((long)dp + _STACKALIGNBYTES) & ~_STACKALIGNBYTES);
++
++	sgap = STACKGAPLEN;
++
++	/*
++	 * If we have enabled random stackgap, the stack itself has already
++	 * been moved from a random location, but is still aligned to a page
++	 * boundary.  Provide the lower bits of random placement now.
++	 */
++	if (stackgap_random != 0) {
++		sgap += arc4random() & PAGE_MASK;
++		sgap = (sgap + _STACKALIGNBYTES) & ~_STACKALIGNBYTES;
++	}
++
++	/* Now check if args & environ fit into new stack */
++	len = ((argc + envc + 2 + pack.ep_emul->e_arglen) * sizeof(char *) +
++	    sizeof(long) + dp + sgap + sizeof(struct ps_strings)) - argp;
++
++	len = (len + _STACKALIGNBYTES) &~ _STACKALIGNBYTES;
++
++	if (len > pack.ep_ssize) { /* in effect, compare to initial limit */
++		error = ENOMEM;
++		goto bad;
++	}
++
++	/* adjust "active stack depth" for process VSZ */
++	pack.ep_ssize = len;	/* maybe should go elsewhere, but... */
++
++	/*
++	 * we're committed: any further errors will kill the process, so
++	 * kill the other threads now.
++	 */
++	single_thread_set(p, SINGLE_EXIT, 1);
++
++	/*
++	 * Prepare vmspace for remapping. Note that uvmspace_exec can replace
++	 * ps_vmspace!
++	 */
++	uvmspace_exec(p, VM_MIN_ADDRESS, VM_MAXUSER_ADDRESS);
++
++	vm = pr->ps_vmspace;
++	/* Now map address space */
++	vm->vm_taddr = (char *)trunc_page(pack.ep_taddr);
++	vm->vm_tsize = atop(round_page(pack.ep_taddr + pack.ep_tsize) -
++	    trunc_page(pack.ep_taddr));
++	vm->vm_daddr = (char *)trunc_page(pack.ep_daddr);
++	vm->vm_dsize = atop(round_page(pack.ep_daddr + pack.ep_dsize) -
++	    trunc_page(pack.ep_daddr));
++	vm->vm_dused = 0;
++	vm->vm_ssize = atop(round_page(pack.ep_ssize));
++	vm->vm_maxsaddr = (char *)pack.ep_maxsaddr;
++	vm->vm_minsaddr = (char *)pack.ep_minsaddr;
++
++	/* create the new process's VM space by running the vmcmds */
++#ifdef DIAGNOSTIC
++	if (pack.ep_vmcmds.evs_used == 0)
++		panic("execve: no vmcmds");
++#endif
++	error = exec_process_vmcmds(p, &pack);
++
++	/* if an error happened, deallocate and punt */
++	if (error)
++		goto exec_abort;
++
++#ifdef MACHINE_STACK_GROWS_UP
++	pr->ps_strings = (vaddr_t)vm->vm_maxsaddr + sgap;
++        if (uvm_map_protect(&vm->vm_map, (vaddr_t)vm->vm_maxsaddr,
++            trunc_page(pr->ps_strings), PROT_NONE, TRUE))
++                goto exec_abort;
++#else
++	pr->ps_strings = (vaddr_t)vm->vm_minsaddr - sizeof(arginfo) - sgap;
++        if (uvm_map_protect(&vm->vm_map,
++            round_page(pr->ps_strings + sizeof(arginfo)),
++            (vaddr_t)vm->vm_minsaddr, PROT_NONE, TRUE))
++                goto exec_abort;
++#endif
++
++	memset(&arginfo, 0, sizeof(arginfo));
++
++	/* remember information about the process */
++	arginfo.ps_nargvstr = argc;
++	arginfo.ps_nenvstr = envc;
++
++#ifdef MACHINE_STACK_GROWS_UP
++	stack = (char *)vm->vm_maxsaddr + sizeof(arginfo) + sgap;
++	slen = len - sizeof(arginfo) - sgap;
++#else
++	stack = (char *)(vm->vm_minsaddr - len);
++#endif
++	/* Now copy argc, args & environ to new stack */
++	if (!(*pack.ep_emul->e_copyargs)(&pack, &arginfo, stack, argp))
++		goto exec_abort;
++
++	/* copy out the process's ps_strings structure */
++	if (copyout(&arginfo, (char *)pr->ps_strings, sizeof(arginfo)))
++		goto exec_abort;
++
++	stopprofclock(pr);	/* stop profiling */
++	fdcloseexec(p);		/* handle close on exec */
++	execsigs(p);		/* reset caught signals */
++	TCB_SET(p, NULL);	/* reset the TCB address */
++	pr->ps_kbind_addr = 0;	/* reset the kbind bits */
++	pr->ps_kbind_cookie = 0;
++	arc4random_buf(&pr->ps_sigcookie, sizeof pr->ps_sigcookie);
++
++	/* set command name & other accounting info */
++	memset(pr->ps_comm, 0, sizeof(pr->ps_comm));
++	len = min(nid.ni_cnd.cn_namelen, MAXCOMLEN);
++	memcpy(pr->ps_comm, nid.ni_cnd.cn_nameptr, len);
++	pr->ps_acflag &= ~AFORK;
++
++	/* record proc's vnode, for use by sysctl */
++	otvp = pr->ps_textvp;
++	vref(pack.ep_vp);
++	pr->ps_textvp = pack.ep_vp;
++	if (otvp)
++		vrele(otvp);
++
++	atomic_setbits_int(&pr->ps_flags, PS_EXEC);
++	if (pr->ps_flags & PS_PPWAIT) {
++		atomic_clearbits_int(&pr->ps_flags, PS_PPWAIT);
++		atomic_clearbits_int(&pr->ps_pptr->ps_flags, PS_ISPWAIT);
++		wakeup(pr->ps_pptr);
++	}
++
++	/*
++	 * If process does execve() while it has a mismatched real,
++	 * effective, or saved uid/gid, we set PS_SUGIDEXEC.
++	 */
++	if (cred->cr_uid != cred->cr_ruid ||
++	    cred->cr_uid != cred->cr_svuid ||
++	    cred->cr_gid != cred->cr_rgid ||
++	    cred->cr_gid != cred->cr_svgid)
++		atomic_setbits_int(&pr->ps_flags, PS_SUGIDEXEC);
++	else
++		atomic_clearbits_int(&pr->ps_flags, PS_SUGIDEXEC);
++
++	if (pr->ps_flags & PS_EXECPLEDGE) {
++		pr->ps_pledge = pr->ps_execpledge;
++		atomic_setbits_int(&pr->ps_flags, PS_PLEDGE);
++	} else {
++		atomic_clearbits_int(&pr->ps_flags, PS_PLEDGE);
++		pr->ps_pledge = 0;
++		/* XXX XXX XXX XXX */
++		/* Clear our unveil paths out so the child
++		 * starts afresh
++		 */
++		unveil_destroy(pr);
++		pr->ps_uvdone = 0;
++	}
++
++	/*
++	 * deal with set[ug]id.
++	 * MNT_NOEXEC has already been used to disable s[ug]id.
++	 */
++	if ((attr.va_mode & (VSUID | VSGID)) && proc_cansugid(p)) {
++		int i;
++
++		atomic_setbits_int(&pr->ps_flags, PS_SUGID|PS_SUGIDEXEC);
++
++#ifdef KTRACE
++		/*
++		 * If process is being ktraced, turn off - unless
++		 * root set it.
++		 */
++		if (pr->ps_tracevp && !(pr->ps_traceflag & KTRFAC_ROOT))
++			ktrcleartrace(pr);
++#endif
++		p->p_ucred = cred = crcopy(cred);
++		if (attr.va_mode & VSUID)
++			cred->cr_uid = attr.va_uid;
++		if (attr.va_mode & VSGID)
++			cred->cr_gid = attr.va_gid;
++
++		/*
++		 * For set[ug]id processes, a few caveats apply to
++		 * stdin, stdout, and stderr.
++		 */
++		error = 0;
++		fdplock(p->p_fd);
++		for (i = 0; i < 3; i++) {
++			struct file *fp = NULL;
++
++			/*
++			 * NOTE - This will never return NULL because of
++			 * immature fds. The file descriptor table is not
++			 * shared because we're suid.
++			 */
++			fp = fd_getfile(p->p_fd, i);
++
++			/*
++			 * Ensure that stdin, stdout, and stderr are already
++			 * allocated.  We do not want userland to accidentally
++			 * allocate descriptors in this range which has implied
++			 * meaning to libc.
++			 */
++			if (fp == NULL) {
++				short flags = FREAD | (i == 0 ? 0 : FWRITE);
++				struct vnode *vp;
++				int indx;
++
++				if ((error = falloc(p, &fp, &indx)) != 0)
++					break;
++#ifdef DIAGNOSTIC
++				if (indx != i)
++					panic("sys_execve: falloc indx != i");
++#endif
++				if ((error = cdevvp(getnulldev(), &vp)) != 0) {
++					fdremove(p->p_fd, indx);
++					closef(fp, p);
++					break;
++				}
++				if ((error = VOP_OPEN(vp, flags, cred, p)) != 0) {
++					fdremove(p->p_fd, indx);
++					closef(fp, p);
++					vrele(vp);
++					break;
++				}
++				if (flags & FWRITE)
++					vp->v_writecount++;
++				fp->f_flag = flags;
++				fp->f_type = DTYPE_VNODE;
++				fp->f_ops = &vnops;
++				fp->f_data = (caddr_t)vp;
++				fdinsert(p->p_fd, indx, 0, fp);
++			}
++			FRELE(fp, p);
++		}
++		fdpunlock(p->p_fd);
++		if (error)
++			goto exec_abort;
++	} else
++		atomic_clearbits_int(&pr->ps_flags, PS_SUGID);
++
++	/*
++	 * Reset the saved ugids and update the process's copy of the
++	 * creds if the creds have been changed
++	 */
++	if (cred->cr_uid != cred->cr_svuid ||
++	    cred->cr_gid != cred->cr_svgid) {
++		/* make sure we have unshared ucreds */
++		p->p_ucred = cred = crcopy(cred);
++		cred->cr_svuid = cred->cr_uid;
++		cred->cr_svgid = cred->cr_gid;
++	}
++
++	if (pr->ps_ucred != cred) {
++		struct ucred *ocred;
++
++		ocred = pr->ps_ucred;
++		crhold(cred);
++		pr->ps_ucred = cred;
++		crfree(ocred);
++	}
++
++	if (pr->ps_flags & PS_SUGIDEXEC) {
++		cancel_all_itimers();
++	}
++
++	/* reset CPU time usage for the thread, but not the process */
++	timespecclear(&p->p_tu.tu_runtime);
++	p->p_tu.tu_uticks = p->p_tu.tu_sticks = p->p_tu.tu_iticks = 0;
++
++	km_free(argp, NCARGS, &kv_exec, &kp_pageable);
++
++	pool_put(&namei_pool, nid.ni_cnd.cn_pnbuf);
++	vn_close(pack.ep_vp, FREAD, cred, p);
++
++	/*
++	 * notify others that we exec'd
++	 */
++	KNOTE(&pr->ps_klist, NOTE_EXEC);
++
++	/* map the process's timekeep page, needs to be before e_fixup */
++	if (exec_timekeep_map(pr))
++		goto free_pack_abort;
++
++	/* setup new registers and do misc. setup. */
++	if (pack.ep_emul->e_fixup != NULL) {
++		if ((*pack.ep_emul->e_fixup)(p, &pack) != 0)
++			goto free_pack_abort;
++	}
++#ifdef MACHINE_STACK_GROWS_UP
++	(*pack.ep_emul->e_setregs)(p, &pack, (u_long)stack + slen, retval);
++#else
++	(*pack.ep_emul->e_setregs)(p, &pack, (u_long)stack, retval);
++#endif
++
++	/* map the process's signal trampoline code */
++	if (exec_sigcode_map(pr, pack.ep_emul))
++		goto free_pack_abort;
++
++#ifdef __HAVE_EXEC_MD_MAP
++	/* perform md specific mappings that process might need */
++	if (exec_md_map(p, &pack))
++		goto free_pack_abort;
++#endif
++
++	if (pr->ps_flags & PS_TRACED)
++		psignal(p, SIGTRAP);
++
++	free(pack.ep_hdr, M_EXEC, pack.ep_hdrlen);
++
++	p->p_descfd = 255;
++	if ((pack.ep_flags & EXEC_HASFD) && pack.ep_fd < 255)
++		p->p_descfd = pack.ep_fd;
++
++	if (pack.ep_flags & EXEC_WXNEEDED)
++		atomic_setbits_int(&p->p_p->ps_flags, PS_WXNEEDED);
++	else
++		atomic_clearbits_int(&p->p_p->ps_flags, PS_WXNEEDED);
++
++	/* update ps_emul, the old value is no longer needed */
++	pr->ps_emul = pack.ep_emul;
++
++	atomic_clearbits_int(&pr->ps_flags, PS_INEXEC);
++	single_thread_clear(p, P_SUSPSIG);
++
++	return (0);
++
++bad:
++	/* free the vmspace-creation commands, and release their references */
++	kill_vmcmds(&pack.ep_vmcmds);
++	/* kill any opened file descriptor, if necessary */
++	if (pack.ep_flags & EXEC_HASFD) {
++		pack.ep_flags &= ~EXEC_HASFD;
++		fdplock(p->p_fd);
++		/* fdrelease unlocks p->p_fd. */
++		(void) fdrelease(p, pack.ep_fd);
++	}
++	if (pack.ep_interp != NULL)
++		pool_put(&namei_pool, pack.ep_interp);
++	if (pack.ep_emul_arg != NULL)
++		free(pack.ep_emul_arg, M_TEMP, pack.ep_emul_argsize);
++	/* close and put the exec'd file */
++	vn_close(pack.ep_vp, FREAD, cred, p);
++	pool_put(&namei_pool, nid.ni_cnd.cn_pnbuf);
++	km_free(argp, NCARGS, &kv_exec, &kp_pageable);
++
++freehdr:
++	free(pack.ep_hdr, M_EXEC, pack.ep_hdrlen);
++	atomic_clearbits_int(&pr->ps_flags, PS_INEXEC);
++	single_thread_clear(p, P_SUSPSIG);
++
++	return (error);
++
++exec_abort:
++	/*
++	 * the old process doesn't exist anymore.  exit gracefully.
++	 * get rid of the (new) address space we have created, if any, get rid
++	 * of our namei data and vnode, and exit noting failure
++	 */
++	uvm_unmap(&vm->vm_map, VM_MIN_ADDRESS, VM_MAXUSER_ADDRESS);
++	if (pack.ep_interp != NULL)
++		pool_put(&namei_pool, pack.ep_interp);
++	if (pack.ep_emul_arg != NULL)
++		free(pack.ep_emul_arg, M_TEMP, pack.ep_emul_argsize);
++	pool_put(&namei_pool, nid.ni_cnd.cn_pnbuf);
++	vn_close(pack.ep_vp, FREAD, cred, p);
++	km_free(argp, NCARGS, &kv_exec, &kp_pageable);
++
++free_pack_abort:
++	free(pack.ep_hdr, M_EXEC, pack.ep_hdrlen);
++	exit1(p, 0, SIGABRT, EXIT_NORMAL);
++
++	/* NOTREACHED */
++	atomic_clearbits_int(&pr->ps_flags, PS_INEXEC);
++
++	return (0);
++}
+\ No newline at end of file
+Index: sys/kern/kern_pfexec.c
+===================================================================
+RCS file: sys/kern/kern_pfexec.c
+diff -N sys/kern/kern_pfexec.c
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ sys/kern/kern_pfexec.c	29 Oct 2021 02:16:34 -0000
+@@ -0,0 +1,882 @@
++/*
++ * COMP3301 - Assingment 3
++ *
++ * syscall handler for pfexecve.
++ *
++ * Author	: Wilfred MK
++ * SID		: S4428042
++ * Riv		: 0.1
++ * Last Updated	: 12/10/2021
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
++ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
++ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++ * SUCH DAMAGE.
++ *
++ * @(#)kern_pfexec.c v0.1 (UQ) - Wilfred MK
++ */
++
++#include <sys/param.h>
++#include <sys/systm.h>
++#include <sys/filedesc.h>
++#include <sys/kernel.h>
++#include <sys/malloc.h>
++#include <sys/mount.h>
++#include <sys/proc.h>
++#include <sys/exec.h>
++#include <sys/resourcevar.h>
++#include <sys/signalvar.h>
++#include <sys/vnode.h>
++#include <sys/vmmeter.h>
++#include <sys/acct.h>
++#include <sys/ktrace.h>
++#include <sys/sched.h>
++#include <sys/sysctl.h>
++#include <sys/pool.h>
++#include <sys/mman.h>
++#include <sys/ptrace.h>
++#include <sys/atomic.h>
++#include <sys/pledge.h>
++#include <sys/unistd.h>
++
++#include <sys/pfexec.h>
++#include <sys/syscallargs.h>
++#include <sys/namei.h>
++#include <sys/pfexecvar.h>
++#include <sys/ucred.h>
++
++#include <sys/types.h>
++#include <sys/socket.h>
++#include <sys/socketvar.h>
++#include <sys/mbuf.h>
++#include <sys/un.h>
++#include <sys/task.h>
++
++#define TASK_ISCOMPLETE 1
++#define TASK_PENDING 0
++
++struct task_transeive_pfr;
++
++void connect_pfexecd(void *);
++static int parse_response(struct pfexec_resp *);
++static int set_creds_check(struct pfexec_resp *);
++static int dochroot_tings(struct proc *, struct pfexec_resp *);
++char **build_new_env(struct pfexec_resp *);
++void free_env(char **,  struct pfexec_resp *);
++static int lookup_chroot_path(struct proc *, struct pfexec_resp *);
++static int transceive_pfexecd(struct task_transeive_pfr *);
++
++/* Used for debug messaging to process tty */
++struct tty *tty;
++
++const struct kmem_va_mode kv_pfexec = {
++	.kv_wait = 1,
++	.kv_map = &exec_map
++};
++
++/* Combining struct for pfexec_connect task and transceive_pfexecd */
++struct task_transeive_pfr {
++	struct socket *so;
++	struct pfexec_req *req;		/* Used in data transmission */
++	struct pfexec_resp *resp;
++	uint32_t error;				/* Task error indicators */
++	uint32_t state;
++};
++
++/*
++ * Create and return and mbuf cluster chain from the buffer in buf,
++ * based on the buffer size tot_len.
++ */
++struct mbuf *
++build_mbuf2(void *buf, int tot_len)
++{
++	struct mbuf *m;
++	struct mbuf *top, **mp;
++	int len = 0, offset = 0;
++
++	top = NULL;
++	mp = &top;
++
++	while (tot_len > 0) {
++
++		len = (tot_len > MAXMCLBYTES) ? MAXMCLBYTES : tot_len;
++
++		m = MCLGETL(NULL, M_WAIT, len);
++
++		if (m == NULL) {
++			m_freem(top);
++			return NULL;
++		}
++
++		bzero(m->m_data, len);
++		memcpy(m->m_data, buf + offset, len);
++
++		offset += len;
++		m->m_len = len;
++		tot_len -= len;
++
++		*mp = m;
++		mp = &m->m_next;
++	}
++
++	return (top);
++}
++
++/*
++ * Send a request to a pfexecd and await response message.
++ * Can be interrupted by signals.
++ */
++static int
++transceive_pfexecd(struct task_transeive_pfr *t_pfr)
++{
++	struct socket *so = t_pfr->so;
++	struct pfexec_req *r = t_pfr->req;
++	struct pfexec_resp *resp = t_pfr->resp;
++
++	struct mbuf *top = NULL;
++	struct mbuf *recv_top = NULL;
++	struct uio auio;
++
++	int error = 0, recvflags = 0;
++
++	/* Build MBUF from req packet */
++	top = build_mbuf2((void *)r, sizeof(*r));
++
++	if (top == NULL) {
++		goto close;
++	}
++
++	/* Send Message and wait..., should free top */
++	if (!so) {
++		error = ENOTCONN;
++		goto close;
++	}
++
++	error = sosend(so, NULL, NULL, top, NULL, MSG_EOR);
++
++	if (error) {
++		error = ENOTCONN;
++		goto close;
++	}
++
++	/* Recv response, waiting for all data to be received */
++	bzero(&auio, sizeof(struct uio));
++	auio.uio_procp = NULL;
++	auio.uio_resid = sizeof(struct pfexec_resp) + 32;
++	recvflags = MSG_WAITALL;
++	error = soreceive(so, NULL, &auio, &recv_top, NULL, &recvflags, 0);
++
++	if (error) {
++		error = ENOTCONN;
++		goto close;
++	}
++
++	if (!recv_top) {
++		error = ENOTCONN;
++		goto close;
++	}
++
++	if ((recvflags & MSG_EOR) == 0) {
++		error = ENOTCONN;
++		goto close;
++	}
++
++	/* Copy Daemon Response */
++	m_copydata(recv_top, 0, sizeof(struct pfexec_resp), resp);
++
++	/* Release recv mbuf chain */
++	m_freem(recv_top);
++
++close:
++	soclose(so, MSG_DONTWAIT);
++	return (error);
++}
++
++
++/*
++ * Attemp a connection with the daemon and sent a message, block whilst
++ * waiting for a response. If any errors are occured, ENOTCONN is set in the
++ * arg errors.
++ */
++void
++connect_pfexecd(void *arg)
++{
++
++	struct task_transeive_pfr *t_pfr = arg;
++	struct pfexec_resp *resp = t_pfr->resp;
++	struct mbuf *nam = NULL;
++	struct sockaddr *sa;
++	struct sockaddr_un addr;
++	struct socket *so;
++
++	int s, error = 0;
++
++	t_pfr->state = TASK_PENDING;
++	t_pfr->error = error;
++
++	/* Create socket */
++	if ((error = socreate(AF_UNIX, &so, SOCK_SEQPACKET, 0))) {
++		goto close;
++	}
++
++	/* Connect to path PFEXECD_SOCK */
++	bzero(&addr, sizeof(addr));
++	addr.sun_len = sizeof(addr);
++	addr.sun_family = AF_UNIX;
++	strlcpy(addr.sun_path, PFEXECD_SOCK, sizeof(addr.sun_path));
++
++	MGET(nam, M_WAIT, MT_SONAME);
++	if (nam == NULL)
++		goto close;
++	nam->m_len = addr.sun_len;
++	sa = mtod(nam, struct sockaddr *);
++	memcpy(sa, &addr, addr.sun_len);
++
++	s = solock(so);
++
++	error = soconnect(so, nam);
++
++	if (error)  {
++		error = ENOTCONN;
++		goto unlock_release;
++	}
++
++	while ((so->so_state & SS_ISCONNECTING) && (so->so_error == 0)) {
++		error = sosleep_nsec(so, &so->so_timeo, PSOCK | PCATCH,
++		    "pfexecve_conn", INFSLP);
++
++		if (error)
++			goto unlock_release;
++	}
++
++	if (so->so_error) {
++		error = so->so_error;
++		so->so_error = 0;
++		error = ENOTCONN;
++		goto unlock_release;
++	}
++
++	if (error == 0)
++		t_pfr->so = so;
++	else {
++		soclose(so, MSG_DONTWAIT);
++		t_pfr->so = NULL;
++	}
++
++unlock_release:
++	sounlock(so, s);
++close:
++	m_freem(nam);
++	/* Signal Completion and Error */
++	t_pfr->state = TASK_ISCOMPLETE;
++	t_pfr->error = error;
++	wakeup(resp);
++}
++
++/*
++ * Validate that a path exists.
++ */
++static int
++lookup_path(const char *path, struct proc *p, struct vnode **vpp)
++{
++	struct nameidata ndi;
++	int rc;
++	struct vnode *vp;
++
++	NDINIT(&ndi, LOOKUP, FOLLOW | LOCKLEAF, UIO_USERSPACE, path, p);
++	rc = namei(&ndi);
++
++	if (rc != 0)
++		return (rc);
++
++	vp = ndi.ni_vp;
++	VOP_UNLOCK(vp);
++	*vpp = vp;
++	return (0);
++}
++
++/*
++ * pfexec system call.
++ */
++int
++sys_pfexecve(struct proc *p, void *v, register_t *retVal)
++{
++	struct sys_pfexecve_args /* {
++		syscallarg(const struct pfexecve_opts *) opts;
++		syscallarg(const char *)  path;
++		syscallarg(char *const *) argp;
++		syscallarg(char *const *) envp;
++	} */ *uap = v;
++
++	struct sys_execve_args /* {
++		syscallarg(const char *)  path;
++		syscallarg(char *const *) argp;
++		syscallarg(char *const *) envp;
++	} */ args;
++
++	struct taskq *tq;
++	struct task k_task;
++
++	struct process *pr = p->p_p;
++
++	struct ucred *cred = p->p_ucred;
++	struct ucred *newcred = NULL;
++
++	const char *file_path;
++	struct vnode *vp = NULL;
++
++	struct pfexec_req *req;
++	struct pfexec_resp *resp;
++	struct pfexecve_opts opts;
++	struct task_transeive_pfr t_pfr;
++
++	char **new_env = NULL;
++	char *const *cpp, *dp, *sp;
++	char *argp;
++
++	size_t len;
++	int error = 0, rc = 0, argc, envc;
++	uint32_t offset;
++
++	/*
++	 * Stop all threads in the calling process other than
++	 *   the calling thread
++	 */
++	if ((error = single_thread_set(p, SINGLE_UNWIND, 1)))
++		return (error);
++
++	/* 1. Validity Checks */
++	if (SCARG(uap, opts) == NULL)
++		return EINVAL;
++
++	if ((error = copyin(SCARG(uap, opts), &opts,
++	    sizeof(struct pfexecve_opts))))
++		return error;
++
++	/* Check the path to be executed is valid */
++	file_path = SCARG(uap, path);
++
++	if (file_path == NULL)
++		return ENOENT;
++
++	error = lookup_path(file_path, p, &vp);
++
++	if (error != 0)
++		return (error);			/* vnode cannot be resolved */
++
++
++	/* 2. Setup request packet */
++	req = malloc(sizeof(struct pfexec_req), M_EXEC,
++	    M_WAITOK | M_ZERO);
++
++	bzero(req, sizeof(struct pfexec_req));
++	req->pfr_pid = pr->ps_pid;
++	req->pfr_uid = cred->cr_uid;
++	req->pfr_gid = cred->cr_gid;
++	req->pfr_ngroups = cred->cr_ngroups;
++
++	memcpy(req->pfr_groups, cred->cr_groups,
++	    req->pfr_ngroups * sizeof(gid_t));
++
++	req->pfr_req_flags = opts.pfo_flags;
++
++	if (opts.pfo_flags & PFEXECVE_USER) {
++		if (*opts.pfo_user == '\0') {
++			error = EINVAL;
++			goto bad_free_req;
++		}
++		memcpy(req->pfr_req_user, opts.pfo_user,
++		    sizeof(char) * LOGIN_NAME_MAX);
++	}
++
++	copyin(file_path, req->pfr_path, sizeof(char) * PATH_MAX);
++
++	/* allocate an argument buffer */
++	argp =  malloc(NCARGS, M_EXEC, M_WAITOK | M_ZERO | M_CANFAIL);
++
++	if (argp == NULL) {
++		error = ENOMEM;
++		goto bad_free_req;
++	}
++
++	if (!(cpp = SCARG(uap, argp))) {
++		error = EFAULT;
++		goto release;
++	}
++
++	dp = argp;
++	argc = 0;
++	offset = 0;
++
++	while (1) {
++		len = argp + ARG_MAX - dp;
++
++		if ((error = copyin(cpp, &sp, sizeof(sp))) != 0)
++			goto release;
++
++		if (!sp)
++			break;
++
++		if ((error = copyinstr(sp, dp, len, &len)) != 0) {
++			if (error == ENAMETOOLONG)
++				error = E2BIG;
++			goto release;
++		}
++
++		if (argc >= 1024) {
++			error = E2BIG;
++			goto release;
++		}
++
++		if (offset >= ARG_MAX) {
++			error = E2BIG;
++			goto release;
++		}
++
++		req->pfr_argp[argc].pfa_offset = offset;
++		req->pfr_argp[argc].pfa_len = len - 1;	/* Not including NUL */
++		/* Max len - current offset into buffer - ONE NUL at the end */
++		rc = strlcat(req->pfr_argarea, dp, ARG_MAX - offset - 1);
++
++		if (rc >= (ARG_MAX - offset - 1)) {
++			error = E2BIG;
++			goto release;
++		}
++
++		offset += len - 1;			/* Not including NUL */
++		dp += len;
++		cpp++;
++		argc++;
++	}
++
++	/* must have at least one argument */
++	if (argc == 0) {
++		error = EINVAL;
++		goto release;
++	}
++
++	req->pfr_argc = argc;
++
++	/* GET ENVIRON */
++	envc = 0;
++	offset = 0;
++
++	if ((cpp = SCARG(uap, envp)) != NULL) {
++		while (1) {
++			len = argp + ARG_MAX - dp;
++			if ((error = copyin(cpp, &sp, sizeof(sp))) != 0)
++				goto release;
++			if (!sp)
++				break;
++			if ((error = copyinstr(sp, dp, len, &len)) != 0) {
++				if (error == ENAMETOOLONG)
++					error = E2BIG;
++				goto release;
++			}
++
++			req->pfr_envp[envc].pfa_offset = offset;
++			/* No NUL in len */
++			req->pfr_envp[envc].pfa_len = len - 1;
++			/* Max len - current offset into buffer */
++			rc = strlcat(req->pfr_envarea, dp,
++			    ARG_MAX - offset - 1);
++
++			if (rc >= (ARG_MAX - offset - 1)) {
++				error = E2BIG;
++				goto release;
++			}
++
++			offset += len - 1;
++			dp += len;
++			cpp++;
++			envc++;
++		}
++	}
++
++	req->pfr_envc = envc;
++	/* Free argp buffer */
++	free(argp, M_EXEC, NCARGS);
++
++	/* 3. pfexecd transeivce data */
++	tq = taskq_create("conn", 1, IPL_NONE, TASKQ_MPSAFE);
++	if (tq == NULL) {
++		error = EAGAIN;
++		goto bad_free_req;
++	}
++	/* Allocate for resp struct */
++	resp = malloc(sizeof(struct pfexec_resp), M_EXEC, M_WAITOK | M_ZERO);
++	bzero(&t_pfr, sizeof(struct task_transeive_pfr));
++	t_pfr.req = req;
++	t_pfr.resp = resp;
++
++	task_set(&k_task, connect_pfexecd, (void *)&t_pfr);
++	error = task_add(tq, &k_task);
++
++	if (error != 1) {
++		error = EBUSY;
++		taskq_destroy(tq);
++		goto bad_free_resp;
++	}
++
++	/* Wait for task to finish */
++	while (t_pfr.state != TASK_ISCOMPLETE) {
++		error = tsleep(resp, PCATCH | PWAIT, "pfexecve_conn",  0);
++		if (error) {
++			task_del(tq, &k_task);
++			taskq_destroy(tq);
++			goto bad_free_resp;
++		}
++	}
++
++	/* Release task resources */
++	taskq_destroy(tq);
++
++	if (t_pfr.error) {
++		/*
++		 * t_pfr.error is set to ENOTCONN
++		 * for all errors except socreate
++		 */
++		error = t_pfr.error;
++		goto bad_free_resp;
++	}
++
++	/* Error with tx/rx to pfexecd */
++	if ((error = transceive_pfexecd(&t_pfr)))
++		goto bad_free_resp;
++
++	/* No receive errors, we can parse daemon response */
++	if ((error = resp->pfr_errno) != 0) {
++		goto bad_free_resp;
++	}
++
++	/* 4. Validate Response and Extract data */
++
++	/* Parse the resp packet */
++	if ((error = parse_response(resp)))
++		goto bad_free_resp;
++
++	/* Unpack envp */
++	new_env = build_new_env(resp);
++
++	if (new_env == NULL) {
++		error = EINVAL;
++		goto bad_free_env;
++	}
++
++	/* Check that chroot path exists if required, pre exec */
++	if ((resp->pfr_flags & PFRESP_CHROOT) &&
++	    (error = lookup_chroot_path(p, resp)))
++		goto bad_free_env;
++
++	/* 5. Apply user credential changes to process */
++	if ((error = set_creds_check(resp)))
++		goto  bad_free_env;
++
++	/*
++	 * Copy credentials and update process ucred with newcred
++	 */
++	newcred = crget();
++	crset(newcred, cred);
++	crhold(cred);			/* Hold for fallback */
++	newcred->cr_uid = resp->pfr_uid;
++	newcred->cr_ruid = resp->pfr_uid;
++	newcred->cr_gid = resp->pfr_gid;
++	newcred->cr_rgid = resp->pfr_gid;
++
++	/* Set group memberships if requested */
++	if (resp->pfr_flags & PFRESP_GROUPS) {
++		if (resp->pfr_ngroups == 0) {
++			bzero(newcred->cr_groups, sizeof(gid_t)
++			    * newcred->cr_ngroups);
++			newcred->cr_ngroups = 0;
++		} else {
++			memcpy(newcred->cr_groups, resp->pfr_groups,
++			    sizeof(gid_t) * resp->pfr_ngroups);
++			newcred->cr_ngroups = resp->pfr_ngroups;
++		}
++	}
++
++	/* Change Creds */
++	pr->ps_ucred = newcred;
++	atomic_setbits_int(&pr->ps_flags, PS_SUGID);
++	chgproccnt(cred->cr_uid, -1);
++	chgproccnt(resp->pfr_uid, 1);
++
++	dorefreshcreds(pr, p);
++
++	/*
++	 * 6. Exec, exec will release stopped threads
++	 */
++	SCARG(&args, path) = SCARG(uap, path);
++	SCARG(&args, argp) = SCARG(uap, argp);
++	SCARG(&args, envp) = new_env;
++
++	error = sys_execve_from_pfexec(p, (void *)&args, retVal);
++
++	free_env(new_env, resp);
++
++	if (error) {
++		/* exec failed, must revert permissions and undo proccnt */
++		pr->ps_ucred = cred;
++		chgproccnt(newcred->cr_uid, -1);
++		chgproccnt(cred->cr_uid, 1);
++		dorefreshcreds(pr, p);
++		crfree(newcred);
++		goto bad_free_resp;
++	}
++
++	/* No longer requires a ref to old creds */
++	crfree(cred);
++
++	/* 7. Apply chroot change (if any) */
++	if (resp->pfr_flags & PFRESP_CHROOT) {
++		if ((error = dochroot_tings(p, resp)) != 0) {
++			goto bad_free_resp;
++		}
++	}
++
++	/* 8. Clean up */
++	free(resp, M_EXEC, sizeof(struct pfexec_resp));
++	free(req, M_EXEC, sizeof(struct pfexec_req));
++	vrele(vp);
++	return (0);
++
++	/* Bad Exits release alloced resources this run... */
++bad_free_env:
++	free_env(new_env, resp);
++bad_free_resp:
++	free(resp, M_EXEC, sizeof(struct pfexec_resp));
++bad_free_req:
++	free(req, M_EXEC, sizeof(struct pfexec_req));
++	vrele(vp);
++	return (error);
++release:
++	free(argp, M_EXEC, NCARGS);
++	free(req, M_EXEC, sizeof(struct pfexec_req));
++	vrele(vp);
++	return (error);
++}
++
++/*
++ * Free internal environment array
++ */
++void
++free_env(char **new_env, struct pfexec_resp *resp)
++{
++	int i;
++	for (i = 0; new_env[i] != NULL; ++i) {
++		free(new_env[i], M_EXEC, sizeof(char *)
++		    * resp->pfr_envp[i].pfa_len + 1);
++	}
++	free(new_env, M_EXEC, sizeof(char **) *  resp->pfr_envc + 1);
++}
++
++/*
++ * Create an env array for resp and return a pointer to it.
++ * 	array is terminated with NULL, and can be used to free it upto that.
++ */
++char **
++build_new_env(struct pfexec_resp *resp)
++{
++	int i;
++	char **new_env = malloc(sizeof(char *) * resp->pfr_envc + 1,
++	    M_EXEC, M_WAITOK | M_ZERO);
++
++	for (i = 0; i < resp->pfr_envc; ++i)  {
++		if (resp->pfr_envp[i].pfa_offset > ARG_MAX ||
++		    resp->pfr_envp[i].pfa_len > ARG_MAX) {
++			new_env[i] = NULL;
++			goto free_env;
++		}
++
++		new_env[i] = malloc(sizeof(char *) *
++		    resp->pfr_envp[i].pfa_len + 1,
++		    M_EXEC, M_WAITOK | M_ZERO);
++
++		strncpy(new_env[i], resp->pfr_envarea +
++		    resp->pfr_envp[i].pfa_offset,
++		    resp->pfr_envp[i].pfa_len);
++	}
++	/* Used for freeing later */
++	new_env[i] = NULL;		/* Indicate End of data */
++	return new_env;			/* Must be freed by caller */
++free_env:
++	for (i = 0; new_env[i] != NULL; ++i) {
++		free(new_env[i], M_EXEC, sizeof(char *)
++		    * resp->pfr_envp[i].pfa_len + 1);
++	}
++	free(new_env, M_EXEC, sizeof(char **) *  resp->pfr_envc + 1);
++	return NULL;
++}
++
++
++/*
++ * lookup path in sysspace, will release vref on success
++ * dochroot_tings also does basically this, but this is used as a
++ * prelim check prior to we exec.
++ */
++static int
++lookup_chroot_path(struct proc *p, struct pfexec_resp *resp)
++{
++	struct nameidata ndi;
++	int rc;
++	struct vnode *vp;
++
++	NDINIT(&ndi, LOOKUP, FOLLOW | LOCKLEAF,
++	    UIO_SYSSPACE, resp->pfr_chroot, p);
++	rc = namei(&ndi);
++	if (rc != 0)
++		return (rc);
++
++	vp = ndi.ni_vp;
++
++	/* Chroot path does not exist */
++	if (vp->v_type != VDIR)
++		rc = ENOTDIR;
++
++	vp = ndi.ni_vp;
++
++	/* Unlock node and release ref */
++	vput(vp);
++	return (0);
++}
++
++/*
++ * Check that dir change can be applied
++ */
++static int
++change_dir(struct nameidata *ndp, struct proc *p)
++{
++	struct vnode *vp;
++	int error;
++
++	if ((error = namei(ndp)) != 0)
++		return (error);
++
++	vp = ndp->ni_vp;
++
++	if (vp->v_type != VDIR)
++		error = ENOTDIR;
++
++	if (error)
++		vput(vp);
++	else
++		VOP_UNLOCK(vp);
++
++	return (error);
++}
++
++/*
++ * Change process root directory
++ */
++static int
++dochroot_tings(struct proc *p, struct pfexec_resp *resp)
++{
++	struct vnode *old_cdir, *old_rdir;
++	struct filedesc *fdp = p->p_fd;
++	struct nameidata nd;
++	int error = 0;
++
++	NDINIT(&nd, LOOKUP, FOLLOW | LOCKLEAF,
++	    UIO_SYSSPACE, resp->pfr_chroot, p);
++
++	if ((error = change_dir(&nd, p)) != 0) {
++		return error;
++	}
++
++	/* Off to jail u go */
++	if (fdp->fd_rdir != NULL) {
++		vref(nd.ni_vp);
++		old_rdir = fdp->fd_rdir;
++		old_cdir = fdp->fd_cdir;
++		fdp->fd_rdir = fdp->fd_cdir = nd.ni_vp;
++		vrele(old_rdir);
++
++		if (old_cdir != NULL)
++			vrele(old_cdir);
++	} else {
++		vref(nd.ni_vp);
++		fdp->fd_rdir = nd.ni_vp;
++		fdp->fd_cdir = nd.ni_vp;
++	}
++	return (0);
++}
++
++static int
++set_creds_check(struct pfexec_resp *resp)
++{
++	if ((resp->pfr_flags & PFRESP_UID) &&
++	    (resp->pfr_flags & PFRESP_GID))
++		return (0);
++
++	return (EINVAL);
++}
++
++/*
++ * Check that a given response packet resp, is formatted correctly.
++ * Should be called prior to accessing packet data.
++ */
++static int
++parse_response(struct pfexec_resp *resp)
++{
++	uint32_t flags = resp->pfr_flags;
++	uint32_t all_flags = PFRESP_UID | \
++	    PFRESP_GID | \
++	    PFRESP_GROUPS | \
++	    PFRESP_CHROOT | \
++	    PFRESP_ENV;
++
++	int error = 0;
++
++	/* Invalid Flags Set */
++	if (flags & ~all_flags) {
++		return EINVAL;
++	}
++
++	/* UID and GID must be within limits */
++	if (flags & PFRESP_UID) {
++		if (resp->pfr_uid >= UID_MAX) {
++			return EINVAL;
++		}
++	}
++
++	if (flags & PFRESP_GID) {
++		if (resp->pfr_uid >= GID_MAX) {
++			return EINVAL;
++		}
++	}
++
++	if (flags & PFRESP_GROUPS) {
++		if (resp->pfr_ngroups > NGROUPS_MAX) {
++			return EINVAL;
++		}
++	}
++
++	if (flags & PFRESP_CHROOT) {
++		if (strnlen(resp->pfr_chroot, PATH_MAX) < 1 ||
++		    strnlen(resp->pfr_chroot, PATH_MAX) >= PATH_MAX) {
++			return (EINVAL);
++		}
++	}
++
++	if (flags & PFRESP_ENV) {
++		if (resp->pfr_envc >= 1024) {
++			return (EINVAL);
++		}
++
++		if (strnlen(resp->pfr_envarea, ARG_MAX) < 1 ||
++		    strnlen(resp->pfr_envarea, ARG_MAX) >= ARG_MAX) {
++			return (EINVAL);
++		}
++	} else {
++		/* ENVIRON must always be valid */
++		return EINVAL;
++	}
++	return (error);
++}
+\ No newline at end of file
+Index: sys/kern/syscalls.c
+===================================================================
+RCS file: /cvs/src/sys/kern/syscalls.c,v
+retrieving revision 1.219
+diff -u -p -u -p -r1.219 syscalls.c
+--- sys/kern/syscalls.c	18 Mar 2021 08:44:59 -0000	1.219
++++ sys/kern/syscalls.c	29 Oct 2021 02:16:34 -0000
+@@ -4,7 +4,7 @@
+  * System call names.
+  *
+  * DO NOT EDIT-- this file is automatically generated.
+- * created from;	OpenBSD: syscalls.master,v 1.209 2021/03/18 08:43:38 mvs Exp 
++ * created from;	OpenBSD: syscalls.master,v 1.208 2021/01/18 18:25:51 mvs Exp 
+  */
+ 
+ char *syscallnames[] = {
+@@ -393,4 +393,5 @@ char *syscallnames[] = {
+ 	"#328 (obsolete __tfork51)",		/* 328 = obsolete __tfork51 */
+ 	"__set_tcb",			/* 329 = __set_tcb */
+ 	"__get_tcb",			/* 330 = __get_tcb */
++	"pfexecve",			/* 331 = pfexecve */
+ };
+Index: sys/kern/syscalls.master
+===================================================================
+RCS file: /cvs/src/sys/kern/syscalls.master,v
+retrieving revision 1.209
+diff -u -p -u -p -r1.209 syscalls.master
+--- sys/kern/syscalls.master	18 Mar 2021 08:43:38 -0000	1.209
++++ sys/kern/syscalls.master	29 Oct 2021 02:16:34 -0000
+@@ -566,3 +566,6 @@
+ 328	OBSOL		__tfork51
+ 329	STD NOLOCK	{ void sys___set_tcb(void *tcb); }
+ 330	STD NOLOCK	{ void *sys___get_tcb(void); }
++331	STD		{ int sys_pfexecve(const struct pfexecve_opts *opts, \
++			    const char *path, char * const *argp, \
++			    char * const *envp); }
+Index: sys/kern/tty.c
+===================================================================
+RCS file: /cvs/src/sys/kern/tty.c,v
+retrieving revision 1.167
+diff -u -p -u -p -r1.167 tty.c
+--- sys/kern/tty.c	8 Feb 2021 10:51:02 -0000	1.167
++++ sys/kern/tty.c	29 Oct 2021 02:16:34 -0000
+@@ -995,6 +995,16 @@ ttioctl(struct tty *tp, u_long cmd, cadd
+ 		pr->ps_session->s_ttyp = tp;
+ 		atomic_setbits_int(&pr->ps_flags, PS_CONTROLT);
+ 		break;
++	case TIOCJTTY:			/* join a tty */
++		if (suser(p))
++			return (EPERM);
++		if (pr->ps_session)
++			SESSRELE(pr->ps_session);
++		SESSHOLD(tp->t_session);
++		pr->ps_session = tp->t_session;
++		enterthispgrp(pr, tp->t_pgrp);
++		atomic_setbits_int(&pr->ps_flags, PS_CONTROLT);
++		break;
+ 	case FIOSETOWN: {		/* set pgrp of tty */
+ 		struct pgrp *pgrp;
+ 		struct process *pr1;
+Index: sys/sys/exec.h
+===================================================================
+RCS file: /cvs/src/sys/sys/exec.h,v
+retrieving revision 1.43
+diff -u -p -u -p -r1.43 exec.h
+--- sys/sys/exec.h	21 Mar 2021 11:29:38 -0000	1.43
++++ sys/sys/exec.h	29 Oct 2021 02:16:35 -0000
+@@ -149,6 +149,7 @@ struct exec_package {
+  * functions used either by execve() or the various cpu-dependent execve()
+  * hooks.
+  */
++int	sys_execve_from_pfexec(struct proc *, void *, register_t *);
+ int	exec_makecmds(struct proc *, struct exec_package *);
+ int	exec_runcmds(struct proc *, struct exec_package *);
+ void	vmcmdset_extend(struct exec_vmcmd_set *);
+Index: sys/sys/pfexec.h
+===================================================================
+RCS file: sys/sys/pfexec.h
+diff -N sys/sys/pfexec.h
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ sys/sys/pfexec.h	29 Oct 2021 02:16:35 -0000
+@@ -0,0 +1,47 @@
++/*
++ * Copyright 2021, the University of Queensland
++ *
++ * Permission to use, copy, modify, and distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#if !defined(_SYS_PFEXEC_H_)
++#define	_SYS_PFEXEC_H_
++
++#include <sys/types.h>
++#include <sys/syslimits.h>
++
++enum pfexecve_flags {
++	/* don't prompt for pws etc */
++	PFEXECVE_NOPROMPT	= (1 << 0),
++	/* request specific user (not root): pfo_user is valid */
++	PFEXECVE_USER		= (1 << 1),
++
++	PFEXECVE_ALL_FLAGS	= PFEXECVE_NOPROMPT |
++				  PFEXECVE_USER
++};
++
++/* Additonal pfexec-specific options to pfexecve() etc */
++struct pfexecve_opts {
++	uint32_t	 pfo_flags;		/* see enum pfexecve_flags */
++
++	/* valid if PFEXECVE_USER is set */
++	char		 pfo_user[LOGIN_NAME_MAX];
++};
++
++int      pfexecve(const struct pfexecve_opts *, const char *, char *const *,
++            char *const *);
++int	 pfexecvp(const struct pfexecve_opts *, const char *, char *const *);
++int	 pfexecvpe(const struct pfexecve_opts *, const char *, char *const *,
++	    char *const *);
++
++#endif /* !defined(_SYS_PFEXEC_H_) */
+Index: sys/sys/pfexecvar.h
+===================================================================
+RCS file: sys/sys/pfexecvar.h
+diff -N sys/sys/pfexecvar.h
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ sys/sys/pfexecvar.h	29 Oct 2021 02:16:35 -0000
+@@ -0,0 +1,88 @@
++/*
++ * Copyright 2021, the University of Queensland
++ *
++ * Permission to use, copy, modify, and distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#if !defined(_SYS_PFEXECVAR_H_)
++#define	_SYS_PFEXECVAR_H_
++
++#include <sys/types.h>
++#include <sys/syslimits.h>
++
++/* Path to the socket which pfexecd should listen on for kernel reqs */
++#define	PFEXECD_SOCK	"/var/run/pfexecd.sock"
++
++/* A reference to an argument or env var in one of the *area members */
++struct pfexec_arg {
++	uint32_t		pfa_offset;
++	uint32_t		pfa_len;	/* not including NUL */
++};
++
++/* Request, sent from kernel to pfexecd. */
++struct pfexec_req {
++	/* information about calling process */
++	uint32_t		pfr_pid;
++	uint32_t		pfr_uid;
++	uint32_t		pfr_gid;
++	uint32_t		pfr_ngroups;
++	uint32_t		pfr_groups[NGROUPS_MAX];
++
++	/* extra info provided to the pfexecve() syscall by userland */
++	uint32_t		pfr_req_flags;
++	char			pfr_req_user[LOGIN_NAME_MAX];
++
++	/* exec arguments from userland */
++	char			pfr_path[PATH_MAX];
++	uint32_t		pfr_argc;
++	struct pfexec_arg	pfr_argp[1024];
++	uint32_t		pfr_envc;
++	struct pfexec_arg	pfr_envp[1024];
++	char			pfr_argarea[ARG_MAX];
++	char			pfr_envarea[ARG_MAX];
++};
++
++enum pfexec_resp_flags {
++	PFRESP_UID	= (1<<0),
++	PFRESP_GID	= (1<<1),
++	PFRESP_GROUPS	= (1<<2),
++	PFRESP_CHROOT	= (1<<3),
++	PFRESP_ENV	= (1<<4)
++};
++
++/* Response, sent from pfexecd back to kernel. */
++struct pfexec_resp {
++	uint32_t		pfr_flags;	/* enum pfexec_resp_flags */
++
++	/* The errno to return to userland (if any). Always used. */
++	uint32_t		pfr_errno;
++
++	/*
++	 * Things to change about the target process. Each is valid if the
++	 * matching bit in pfr_flags is set.
++	 */
++	uint32_t		pfr_uid;
++
++	uint32_t		pfr_gid;
++
++	uint32_t		pfr_ngroups;
++	uint32_t		pfr_groups[NGROUPS_MAX];
++
++	char			pfr_chroot[PATH_MAX];
++
++	uint32_t		pfr_envc;
++	struct pfexec_arg	pfr_envp[1024];
++	char			pfr_envarea[ARG_MAX];
++};
++
++#endif /* !defined(_SYS_PFEXECVAR_H_) */
+Index: sys/sys/syscall.h
+===================================================================
+RCS file: /cvs/src/sys/sys/syscall.h,v
+retrieving revision 1.219
+diff -u -p -u -p -r1.219 syscall.h
+--- sys/sys/syscall.h	18 Mar 2021 08:44:59 -0000	1.219
++++ sys/sys/syscall.h	29 Oct 2021 02:16:35 -0000
+@@ -4,7 +4,7 @@
+  * System call numbers.
+  *
+  * DO NOT EDIT-- this file is automatically generated.
+- * created from;	OpenBSD: syscalls.master,v 1.209 2021/03/18 08:43:38 mvs Exp 
++ * created from;	OpenBSD: syscalls.master,v 1.208 2021/01/18 18:25:51 mvs Exp 
+  */
+ 
+ /* syscall: "syscall" ret: "int" args: "int" "..." */
+@@ -705,4 +705,7 @@
+ /* syscall: "__get_tcb" ret: "void *" args: */
+ #define	SYS___get_tcb	330
+ 
+-#define	SYS_MAXSYSCALL	331
++/* syscall: "pfexecve" ret: "int" args: "const struct pfexecve_opts *" "const char *" "char *const *" "char *const *" */
++#define	SYS_pfexecve	331
++
++#define	SYS_MAXSYSCALL	332
+Index: sys/sys/syscallargs.h
+===================================================================
+RCS file: /cvs/src/sys/sys/syscallargs.h,v
+retrieving revision 1.222
+diff -u -p -u -p -r1.222 syscallargs.h
+--- sys/sys/syscallargs.h	18 Mar 2021 08:44:59 -0000	1.222
++++ sys/sys/syscallargs.h	29 Oct 2021 02:16:35 -0000
+@@ -4,7 +4,7 @@
+  * System call argument lists.
+  *
+  * DO NOT EDIT-- this file is automatically generated.
+- * created from;	OpenBSD: syscalls.master,v 1.209 2021/03/18 08:43:38 mvs Exp 
++ * created from;	OpenBSD: syscalls.master,v 1.208 2021/01/18 18:25:51 mvs Exp 
+  */
+ 
+ #ifdef	syscallarg
+@@ -1109,6 +1109,13 @@ struct sys___set_tcb_args {
+ 	syscallarg(void *) tcb;
+ };
+ 
++struct sys_pfexecve_args {
++	syscallarg(const struct pfexecve_opts *) opts;
++	syscallarg(const char *) path;
++	syscallarg(char *const *) argp;
++	syscallarg(char *const *) envp;
++};
++
+ /*
+  * System call prototypes.
+  */
+@@ -1360,3 +1367,4 @@ int	sys_symlinkat(struct proc *, void *,
+ int	sys_unlinkat(struct proc *, void *, register_t *);
+ int	sys___set_tcb(struct proc *, void *, register_t *);
+ int	sys___get_tcb(struct proc *, void *, register_t *);
++int	sys_pfexecve(struct proc *, void *, register_t *);
+Index: sys/sys/ttycom.h
+===================================================================
+RCS file: /cvs/src/sys/sys/ttycom.h,v
+retrieving revision 1.17
+diff -u -p -u -p -r1.17 ttycom.h
+--- sys/sys/ttycom.h	16 Jun 2018 13:55:03 -0000	1.17
++++ sys/sys/ttycom.h	29 Oct 2021 02:16:35 -0000
+@@ -122,6 +122,7 @@ struct tstamps {
+ #define	TIOCGSID	_IOR('t', 99, int)	/* get sid of tty */
+ #define	TIOCCONS	_IOW('t', 98, int)	/* become virtual console */
+ #define	TIOCSCTTY	 _IO('t', 97)		/* become controlling tty */
++#define	TIOCJTTY	 _IO('t', 124)		/* join another tty (root) */
+ #define	TIOCEXT		_IOW('t', 96, int)	/* pty: external processing */
+ #define	TIOCSIG		_IOW('t', 95, int)	/* pty: generate signal */
+ #define	TIOCDRAIN	 _IO('t', 94)		/* wait till output drained */
+Index: usr.bin/pfexec/Makefile
+===================================================================
+RCS file: usr.bin/pfexec/Makefile
+diff -N usr.bin/pfexec/Makefile
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ usr.bin/pfexec/Makefile	29 Oct 2021 02:16:37 -0000
+@@ -0,0 +1,15 @@
++PROG=		pfexec
++MAN=		pfexec.1
++
++#Sources
++SRCS=           main.c
++
++
++CFLAGS+=        -fno-strict-aliasing -fstack-protector-all  \
++                -fwrapv -fPIC -Wall -g -O0 -Werror
++
++LDADD=-levent
++DPADD=${LIBEVENT}
++
++.include <bsd.prog.mk>
++
+Index: usr.bin/pfexec/main.c
+===================================================================
+RCS file: usr.bin/pfexec/main.c
+diff -N usr.bin/pfexec/main.c
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ usr.bin/pfexec/main.c	29 Oct 2021 02:16:37 -0000
+@@ -0,0 +1,273 @@
++/*
++ * COMP3301 - Assingment 3
++ *
++ * pfexec is a commandline utility that processes it's arguments and calls the
++ * pfexecve() system call.
++ * Author	: Wilfred MK
++ * SID		: S4428042
++ * Riv		: 0.1
++ * Last Updated	: 12/10/2021
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
++ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
++ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++ * SUCH DAMAGE.
++ *
++ * @(#)main.c v0.1 (UQ) - Wilfred MK
++ */
++
++
++#include <sys/param.h>
++#include <sys/pfexec.h>
++#include <sys/limits.h>
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <unistd.h>
++#include <string.h>
++#include <err.h>
++
++/* Define buffer limits */
++#define EXE_MAXLEN 256
++#define ARGS_MAXLEN 256
++
++/* Define options flags */
++#define	PFEXEC_S		(1 << 0)
++#define	PFEXEC_U		(1 << 1)
++#define	PFEXEC_N		(1 << 2)
++
++struct pfexec_data {
++	char executable_name[PATH_MAX];
++	char username[LOGIN_NAME_MAX];
++	char **args;
++	uint32_t args_count;  /* To be used when freeing. */
++};
++
++/* Define errors and errvals used in pfexec */
++enum pfexec_errno
++{
++	E_BADARGS = 1,
++	E_BADUNAME = 2,
++	E_BADEXE = 3,
++	E_TOOLONG = 4,
++	E_FAILED_PFEXEC = 5
++};
++
++/*
++ * @brief Prints the program usage message and exits.
++ */
++__dead static void
++usage(void)
++{
++	fprintf(stderr, "Usage: pfexec [options] <executable> [args...]\n"
++	"pfexec[options] -s\n\n");
++	fprintf(stderr, "Options:\n");
++
++	fprintf(stderr, "\t-u user\tAssume the privileges of the given"
++	    " user instead of \"root\"\n");
++	fprintf(stderr, "\t-n\tNon-iteractive/batch mode:"
++	" no prompts are used\n\t\t if prompts are required, will fail\n");
++	fprintf(stderr, "\t-s\tExecute a shell, rather than a specific command,"
++	    " no options\n");
++	exit(E_BADARGS);
++}
++
++/*
++ * Free allocated memory for pfexec arguments
++ */
++void
++free_args(char **args, uint32_t num_elements)
++{
++	for (int i = 0; i < num_elements; ++i) {
++		free(args[i]);
++	}
++	free(args);
++}
++
++/*
++ * Set PF flags based on arguments to this programs
++ * @note  PF flags are defined in include/sys/pfexec.h
++ */
++uint32_t
++gen_pfo_flags(uint32_t opt_flag)
++{
++	uint32_t pfo_flag = 0;
++
++	if (opt_flag & PFEXEC_N)
++		pfo_flag |= PFEXECVE_NOPROMPT;
++
++	if (opt_flag & PFEXEC_U)
++		pfo_flag |= PFEXECVE_USER;
++
++	return pfo_flag;
++}
++
++/*
++ * Execute a shell based on SHELL env variable, else run /bin/ksh.
++ */
++int
++execute_shell(uint32_t opt_flag, struct pfexec_data *d)
++{
++	struct pfexecve_opts p_opts;
++	int err_val = 0, i;
++	char *shell_path = malloc(sizeof(char) * 128);
++	char **args = malloc(sizeof(char *) * 2);
++	args[0] = malloc(sizeof(char) * 512);
++	args[1] = malloc(sizeof(char) * 12);
++
++	/* Evaluate SHELL env variable */
++	if (getenv("SHELL") == NULL)
++		strcpy(shell_path, "/bin/ksh");
++	else
++		strcpy(shell_path, getenv("SHELL"));
++
++	/* Setup args */
++	strncpy(args[0], shell_path, 512);
++	args[1] = NULL;
++
++	p_opts.pfo_flags = gen_pfo_flags(opt_flag);
++
++	/* Username defined, copy in uname */
++	if (opt_flag & PFEXEC_U)
++		strcpy(p_opts.pfo_user, d->username);
++
++	/* Call to pfexecve */
++	err_val = pfexecvp(&p_opts, shell_path, args);
++
++	/* If exec succeeded, this code never runs */
++	free(shell_path);
++	for (i = 0; i < 2; ++i)
++		free(args[i]);
++
++	free(args);
++
++	return err_val;
++}
++
++/*
++ * Process pfexec based on the provided options
++ */
++int
++process_pfexec(uint32_t opt_flag, struct pfexec_data *d)
++{
++	struct pfexecve_opts p_opts;
++	int err_val = 0;
++
++	/* Exexute Shell */
++	if (opt_flag & PFEXEC_S)
++		return execute_shell(opt_flag, d);
++
++	p_opts.pfo_flags = gen_pfo_flags(opt_flag);
++
++	/* Username defined, copy in uname */
++	if (opt_flag & PFEXEC_U)
++		strcpy(p_opts.pfo_user, d->username);
++
++	/* Call to pfexecve */
++	err_val = pfexecvp(&p_opts, d->executable_name, d->args);
++
++	/* If exec succeeded, this code never runs */
++	return (err_val);
++}
++
++/*
++ * pfexec is a commandline utility that processes
++ *		 it's arguments and calls the pfexecve() system call.
++ */
++int
++main(int argc, char **argv)
++{
++	struct pfexec_data *d;
++	int ch, errno = 0;
++	uint32_t opt_flag = 0;
++
++	if (argc <= 1)
++		usage();
++
++	d = malloc(sizeof(struct pfexec_data));
++	bzero(d, sizeof(struct pfexec_data));
++
++	while ((ch = getopt(argc, argv, "u:ns")) != -1) {
++		switch (ch) {
++		case 'u':
++			strcpy(d->username, optarg);
++			opt_flag |= PFEXEC_U;
++			if (strlen(d->username) < 1)
++				return E_BADUNAME;
++			break;
++		case 'n':
++			opt_flag |= PFEXEC_N;
++			break;
++		case 's':
++			opt_flag |= PFEXEC_S;
++			break;
++		default:
++			usage();
++		}
++	}
++
++	argc -= optind;
++	argv += optind;
++
++	/* Execute a shell, with specified options */
++	if (opt_flag & PFEXEC_S) {
++		/* Should not have any remaining args */
++		if (argc != 0)
++			usage();
++
++		errno = execute_shell(opt_flag, d);
++
++		if (errno)
++			goto early_close;
++	}
++
++	if (argc == 0)
++		usage();
++
++	/* Copy in executable name */
++	if (strlen(*argv) > EXE_MAXLEN)
++		return E_BADEXE;
++
++	strlcpy(d->executable_name, *argv, PATH_MAX);
++
++	/*
++	 *	Arguments Array
++	 *	argc here holds prog name and remaining args, +1 to add NUL
++	 *	terminate.
++	 */
++	d->args = malloc(sizeof(char *) * ((argc) + 1));
++
++	/* Args first element should be progname */
++	d->args[0] = malloc(sizeof(char) * strlen(*argv));
++	strlcpy(d->args[0], *argv, EXE_MAXLEN);
++
++	/* Create an args list */
++	for (int i = 1; i < argc; ++i) {
++		if (strlen(argv[i]) > ARG_MAX)
++			return E_TOOLONG;
++		d->args[i] = malloc(sizeof(char) * strlen(argv[i]));
++		strcpy(d->args[i], argv[i]);
++		d->args_count++;
++	}
++
++	/* Null terminate args */
++	d->args[d->args_count + 1] = (char *)0;
++
++	errno = process_pfexec(opt_flag, d);
++
++	/* Will only get here if pfexecve failed */
++	free_args(d->args, d->args_count);
++
++early_close:
++	free(d);
++	if (errno)
++		err(errno, "pfexecvp");
++
++	return (0);
++}
+\ No newline at end of file
+Index: usr.bin/pfexec/pfexec.1
+===================================================================
+RCS file: usr.bin/pfexec/pfexec.1
+diff -N usr.bin/pfexec/pfexec.1
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ usr.bin/pfexec/pfexec.1	29 Oct 2021 02:16:37 -0000
+@@ -0,0 +1,95 @@
++.\" Copyright 2021, the University of Queensland
++.\"
++.\" Redistribution and use in source and binary forms, with or without
++.\" modification, are permitted provided that the following conditions
++.\" are met:
++.\" 1. Redistributions of source code must retain the above copyright
++.\"    notice, this list of conditions and the following disclaimer.
++.\" 2. Redistributions in binary form must reproduce the above copyright
++.\"    notice, this list of conditions and the following disclaimer in the
++.\"    documentation and/or other materials provided with the distribution.
++.\" 3. Neither the name of the University nor the names of its contributors
++.\"    may be used to endorse or promote products derived from this software
++.\"    without specific prior written permission.
++.\"
++.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
++.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
++.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++.\" SUCH DAMAGE.
++.Dd $Mdocdate: October 1 2021 $
++.Dt PFEXEC 1
++.Os
++.Sh NAME
++.Nm pfexec
++.Nd execute commands with elevated privileges
++.Sh SYNOPSIS
++.Nm pfexec
++.Op Fl ns
++.Op Fl u Ar user
++.Ar command
++.Op Ar args
++.Sh DESCRIPTION
++The
++.Nm
++utility executes commands with elevated privileges (as root or another user).
++The
++.Ar command
++argument is mandatory unless
++.Fl s
++is specified.
++.Pp
++The user may be required to authenticate by entering their password on the
++controlling terminal, depending on policy configuration.
++.Pp
++The daemon
++.Xr pfexecd 8
++manages policy for the system based on its configuration files. The
++.Nm
++utility requires
++.Xr pfexecd 8
++to be running in order for it to operate.
++.Pp
++The options are as follows:
++.Bl -tag -width tenletters
++.It Fl n
++Non interactive mode, fail if the matching rule doesn't have the
++.Ic nopass
++option.
++.It Fl s
++Execute the shell from
++.Ev SHELL
++or
++.Pa /etc/passwd .
++.It Fl u Ar user
++Execute the command as
++.Ar user .
++The default is root.
++.El
++.El
++.Sh EXIT STATUS
++.Ex -std pfexec
++It may fail for one of the following reasons:
++.Pp
++.Bl -bullet -compact
++.It
++The
++.Xr pfexecd 8
++policy daemon is not running.
++.It
++The user attempted to run a command which is not permitted.
++.It
++The password was incorrect.
++.It
++The specified command was not found or is not executable.
++.El
++.Sh SEE ALSO
++.Xr pfexecd 8 ,
++.Xr pfexecd.conf 5 ,
++.Xr doas 1
+Index: usr.bin/pfexec/spam_ksh.sh
+===================================================================
+RCS file: usr.bin/pfexec/spam_ksh.sh
+diff -N usr.bin/pfexec/spam_ksh.sh
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ usr.bin/pfexec/spam_ksh.sh	29 Oct 2021 02:16:37 -0000
+@@ -0,0 +1,10 @@
++#!/bin/sh
++# set n to 1
++n=1
++
++# continue until $n equals 5
++while [ $n -le 2000 ]
++do
++	./pfexec id  	
++	n=$(( n+1 ))	 # increments $n
++done
+Index: usr.sbin/pfexecd/Makefile
+===================================================================
+RCS file: usr.sbin/pfexecd/Makefile
+diff -N usr.sbin/pfexecd/Makefile
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ usr.sbin/pfexecd/Makefile	29 Oct 2021 02:16:39 -0000
+@@ -0,0 +1,9 @@
++PROG=	pfexecd
++SRCS=	pfexecd.c parse.y env.c
++MAN=	pfexecd.8 pfexecd.conf.5
++
++LDADD=	-levent
++COPTS+= -Wall
++YFLAGS=
++
++.include <bsd.prog.mk>
+Index: usr.sbin/pfexecd/env.c
+===================================================================
+RCS file: usr.sbin/pfexecd/env.c
+diff -N usr.sbin/pfexecd/env.c
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ usr.sbin/pfexecd/env.c	29 Oct 2021 02:16:39 -0000
+@@ -0,0 +1,301 @@
++/* $OpenBSD: env.c,v 1.10 2019/07/07 19:21:28 tedu Exp $ */
++/*
++ * Copyright (c) 2016 Ted Unangst <tedu@openbsd.org>
++ *
++ * Permission to use, copy, modify, and distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <sys/types.h>
++#include <sys/tree.h>
++
++#include <string.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <err.h>
++#include <unistd.h>
++#include <errno.h>
++#include <pwd.h>
++
++#include "pfexecd.h"
++
++const char *formerpath;
++
++struct envnode {
++	RB_ENTRY(envnode) node;
++	const char *key;
++	const char *value;
++};
++
++struct env {
++	RB_HEAD(envtree, envnode) root;
++	u_int count;
++};
++
++struct env req_envnode;
++
++static void fillenv(struct env *, const char **);
++void remove_dups_from_basic(char *, struct env *);
++
++static int
++envcmp(struct envnode *a, struct envnode *b)
++{
++	return strcmp(a->key, b->key);
++}
++
++RB_GENERATE_STATIC(envtree, envnode, node, envcmp);
++
++static struct envnode *
++createnode(const char *key, const char *value)
++{
++	struct envnode *node;
++
++	node = malloc(sizeof(*node));
++	if (!node)
++		err(1, NULL);
++	node->key = strdup(key);
++	node->value = strdup(value);
++	if (!node->key || !node->value)
++		err(1, NULL);
++	return node;
++}
++
++static void
++freenode(struct envnode *node)
++{
++	free((char *)node->key);
++	free((char *)node->value);
++	free(node);
++}
++
++static void
++addnode(struct env *env, const char *key, const char *value)
++{
++	struct envnode *node;
++
++	node = createnode(key, value);
++	RB_INSERT(envtree, &env->root, node);
++	env->count++;
++}
++
++static struct env *
++createenv(const struct rule *rule, const struct passwd *mypw,
++    const struct passwd *targpw)
++{
++	static const char *copyset[] = {
++		"DISPLAY", "TERM",
++		NULL
++	};
++	extern char **req_environ;
++	struct env *env;
++	u_int i;
++
++	struct envnode *node;
++	const char *e, *eq;
++	size_t len;
++	char name[1024];
++
++	env = malloc(sizeof(*env));
++	if (!env)
++		err(1, NULL);
++	RB_INIT(&env->root);
++	env->count = 0;
++
++	RB_INIT(&req_envnode.root);
++	req_envnode.count = 0;
++
++	addnode(env, "PFEXEC_USER", mypw->pw_name);
++	addnode(env, "HOME", targpw->pw_dir);
++	addnode(env, "LOGNAME", targpw->pw_name);
++	addnode(env, "PATH", getenv("PATH"));
++	addnode(env, "SHELL", targpw->pw_shell);
++	addnode(env, "USER", targpw->pw_name);
++
++	fillenv(env, copyset);
++
++	/*
++	 * Build new tree with only request environs for (Searching only)
++	 * Yes, this is kinda dumb... desperate time i guess..
++	 */
++	for (i = 0; req_environ[i] != NULL; i++) {
++		e = req_environ[i];
++		/* ignore invalid or overlong names */
++		if ((eq = strchr(e, '=')) == NULL || eq == e)
++			continue;
++		len = eq - e;
++		if (len > sizeof(name) - 1)
++			continue;
++		memcpy(name, e, len);
++		name[len] = '\0';
++
++		/* Removes Duplicated from default env tree */
++		if (rule->options & KEEPENV) {
++			remove_dups_from_basic(name, env);
++		}
++		node = createnode(name, eq + 1);
++		if (RB_INSERT(envtree, &req_envnode.root, node)) {
++			/* ignore any later duplicates */
++			freenode(node);
++		} else {
++			req_envnode.count++;
++		}
++	}
++	return env;
++}
++/*
++ * Remove duplicates from the default set created.
++ * only to be used when keepenv is set.
++ */
++void
++remove_dups_from_basic(char *name, struct env *env)
++{
++	struct envnode *node, key;
++
++	key.key = name;
++	if ((node = RB_FIND(envtree, &env->root, &key))) {
++		RB_REMOVE(envtree, &env->root, node);
++		freenode(node);
++	}
++}
++
++static char **
++flattenenv(struct env *env, const struct rule *rule)
++{
++	char **envp;
++	struct envnode *node, *next;
++	u_int i;
++
++	if (rule->options & KEEPENV)
++		envp = reallocarray(NULL, env->count + req_envnode.count + 1,
++		    sizeof(char *));
++	else
++		envp = reallocarray(NULL, env->count + 1, sizeof(char *));
++
++	if (!envp)
++		err(1, NULL);
++	i = 0;
++
++	/* Append default env */
++	RB_FOREACH_SAFE(node, envtree, &env->root, next) {
++		if (asprintf(&envp[i], "%s=%s", node->key, node->value) == -1)
++			err(1, NULL);
++		RB_REMOVE(envtree, &env->root, node);
++		freenode(node);
++		i++;
++	}
++
++	node = NULL;
++	next = NULL;
++	/* Append KEEP env */
++	if (rule->options & KEEPENV) {
++		RB_FOREACH_SAFE(node, envtree, &req_envnode.root, next) {
++
++			if (asprintf(&envp[i], "%s=%s",
++			    node->key, node->value) == -1)
++				err(1, NULL);
++
++			RB_REMOVE(envtree, &req_envnode.root, node);
++			freenode(node);
++			i++;
++		}
++	}
++
++	envp[i] = NULL;
++	free(env);
++	return envp;
++}
++
++static void
++fillenv(struct env *env, const char **envlist)
++{
++	struct envnode *node, key;
++	const char *e, *eq;
++	const char *val;
++	char name[1024];
++	u_int i;
++	size_t len;
++
++	for (i = 0; envlist[i]; i++) {
++		e = envlist[i];
++
++		/* parse out env name */
++		if ((eq = strchr(e, '=')) == NULL)
++			len = strlen(e);
++		else
++			len = eq - e;
++		if (len > sizeof(name) - 1)
++			continue;
++		memcpy(name, e, len);
++		name[len] = '\0';
++
++		/* delete previous copies */
++		key.key = name;
++		if (*name == '-')
++			key.key = name + 1;
++
++		/* Remove from default tree */
++		if ((node = RB_FIND(envtree, &env->root, &key))) {
++			RB_REMOVE(envtree, &env->root, node);
++			freenode(node);
++			env->count--;
++		} else if ((node = RB_FIND(envtree, &req_envnode.root, &key))) {
++			/* Remove from keep tree (if in here...) */
++			RB_REMOVE(envtree, &req_envnode.root, node);
++			freenode(node);
++			req_envnode.count--;
++		}
++
++		if (*name == '-')
++			continue;
++
++		/* assign value or inherit from environ */
++		if (eq) {
++			val = eq + 1;
++			if (*val == '$') {
++				key.key = val + 1;
++				if ((node = RB_FIND(envtree, &req_envnode.root,
++				    &key))) {
++					val = node->value;
++				}
++			}
++		} else {
++			key.key = name;
++			if ((node = RB_FIND(envtree, &req_envnode.root,
++			    &key))) {
++				val = node->value;
++			} else {
++				val = NULL;
++			}
++		}
++		/* at last, we have something to insert */
++		if (val) {
++			node = createnode(name, val);
++			RB_INSERT(envtree, &env->root, node);
++			env->count++;
++		}
++	}
++}
++
++char **
++prepenv(const struct rule *rule, const struct passwd *mypw,
++    const struct passwd *targpw)
++{
++	struct env *env;
++
++	env = createenv(rule, mypw, targpw);
++
++	if (rule->envlist) {
++		fillenv(env, rule->envlist);
++	}
++
++	return flattenenv(env, rule);
++}
+Index: usr.sbin/pfexecd/parse.y
+===================================================================
+RCS file: usr.sbin/pfexecd/parse.y
+diff -N usr.sbin/pfexecd/parse.y
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ usr.sbin/pfexecd/parse.y	29 Oct 2021 02:16:39 -0000
+@@ -0,0 +1,398 @@
++/* $OpenBSD: parse.y,v 1.29 2021/01/27 17:02:50 millert Exp $ */
++/*
++ * Copyright (c) 2015 Ted Unangst <tedu@openbsd.org>
++ *
++ * Permission to use, copy, modify, and distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++%{
++#include <sys/types.h>
++#include <ctype.h>
++#include <unistd.h>
++#include <stdint.h>
++#include <stdarg.h>
++#include <stdio.h>
++#include <string.h>
++#include <err.h>
++
++#include "pfexecd.h"
++
++typedef struct {
++	union {
++		struct {
++			int action;
++			int options;
++			const char *cmd;
++			const char **cmdargs;
++			const char **envlist;
++			const char **grplist;	
++			const char *chroot_path;
++		};
++		const char **strlist;
++		const char *str;
++	};
++	int lineno;
++	int colno;
++} yystype;
++#define YYSTYPE yystype
++
++FILE *yyfp;
++
++struct rule **rules;
++size_t nrules;
++static size_t maxrules;
++
++int parse_errors = 0;
++
++static void yyerror(const char *, ...);
++static int yylex(void);
++
++static size_t
++arraylen(const char **arr)
++{
++	size_t cnt = 0;
++
++	while (*arr) {
++		cnt++;
++		arr++;
++	}
++	return cnt;
++}
++
++%}
++
++%token TPERMIT TDENY TAS TCMD TARGS
++%token TNOPASS TNOLOG TPERSIST TKEEPENV TSETENV
++%token TSTRING
++%token TKEEPGROUPS TSETGROUPS TSETENV TCHROOT
++
++%%
++
++grammar:	/* empty */
++		| grammar '\n'
++		| grammar rule '\n'
++		| error '\n'
++		;
++
++rule:		action ident target cmd {
++			struct rule *r;
++			r = calloc(1, sizeof(*r));
++			if (!r)
++				errx(1, "can't allocate rule");
++			r->action = $1.action;
++			r->options = $1.options;
++			r->envlist = $1.envlist;
++			r->grplist = $1.grplist;
++			r->chroot_path = $1.chroot_path;
++			r->ident = $2.str;
++			r->target = $3.str;
++			r->cmd = $4.cmd;
++			r->cmdargs = $4.cmdargs;
++			if (nrules == maxrules) {
++				if (maxrules == 0)
++					maxrules = 32;
++				rules = reallocarray(rules, maxrules,
++				    2 * sizeof(*rules));
++				if (!rules)
++					errx(1, "can't allocate rules");
++				maxrules *= 2;
++			}
++			rules[nrules++] = r;
++		} ;
++
++action:		TPERMIT options {
++			$$.action = PERMIT;
++			$$.options = $2.options;
++			$$.envlist = $2.envlist;
++			$$.grplist = $2.grplist;
++			$$.chroot_path = $2.chroot_path;
++		} | TDENY {
++			$$.action = DENY;
++			$$.options = 0;
++			$$.envlist = NULL;
++			$$.grplist = NULL;
++			$$.chroot_path = NULL;
++		} ;
++
++options:	/* none */ {
++			$$.options = 0;
++			$$.envlist = NULL;
++			$$.grplist = NULL;
++			$$.chroot_path = NULL;
++		} | options option {
++			$$.options = $1.options | $2.options;
++			$$.envlist = $1.envlist;
++			$$.grplist = $1.grplist;
++			$$.chroot_path = $1.chroot_path;
++			if (($$.options & (NOPASS|PERSIST)) == (NOPASS|PERSIST)) {
++				yyerror("can't combine nopass and persist");
++				YYERROR;
++			}
++			if (($$.options & (KEEPGROUPS|SETGROUPS)) == (KEEPGROUPS|SETGROUPS)) {
++				yyerror("can't combine keepgroups and setgroups");
++				YYERROR;
++			}
++			if ($2.envlist) {
++				if ($$.envlist) {
++					yyerror("can't have two setenv sections");
++					YYERROR;
++				} else
++					$$.envlist = $2.envlist;
++			}
++			if ($2.grplist) {
++				if ($$.grplist) {
++					yyerror("can't have two setgroup sections");
++					YYERROR;
++				} else
++					$$.grplist = $2.grplist;
++			}
++			if ($2.chroot_path) {
++				if ($$.chroot_path) {
++					yyerror("can't have two chroots");
++					YYERROR;
++				} else
++					$$.chroot_path = $2.chroot_path;
++			}
++
++		} ;
++option:		TNOPASS {
++			$$.options = NOPASS;
++			$$.envlist = NULL;
++		} | TNOLOG {
++			$$.options = NOLOG;
++			$$.envlist = NULL;
++		} | TPERSIST {
++			$$.options = PERSIST;
++			$$.envlist = NULL;
++		} | TKEEPENV {
++			$$.options = KEEPENV;
++			$$.envlist = NULL;
++		} | TSETENV '{' strlist '}' {
++			$$.options = SETENV;
++			$$.envlist = $3.strlist;
++		} | TKEEPGROUPS {
++			$$.options = KEEPGROUPS;
++			$$.envlist = NULL;
++		} | TSETGROUPS '{' strlist '}' {
++			$$.options = SETGROUPS;
++			$$.envlist = NULL;
++			$$.grplist = $3.strlist;
++		} | TCHROOT /* empty */ {
++			$$.options = CHROOT;
++			$$.envlist = NULL;
++			$$.chroot_path = NULL;		
++		} | TCHROOT '{' TSTRING '}' {
++			$$.options = CHROOT;
++			$$.envlist = NULL;
++			$$.chroot_path = $3.str;
++		} ;
++
++
++strlist:	/* empty */ {
++			if (!($$.strlist = calloc(1, sizeof(char *))))
++				errx(1, "can't allocate strlist");
++		} | strlist TSTRING {
++			int nstr = arraylen($1.strlist);
++			if (!($$.strlist = reallocarray($1.strlist, nstr + 2,
++			    sizeof(char *))))
++				errx(1, "can't allocate strlist");
++			$$.strlist[nstr] = $2.str;
++			$$.strlist[nstr + 1] = NULL;
++		} ;
++
++
++ident:		TSTRING {
++			$$.str = $1.str;
++		} ;
++
++target:		/* optional */ {
++			$$.str = NULL;
++		} | TAS TSTRING {
++			$$.str = $2.str;
++		} ;
++
++cmd:		/* optional */ {
++			$$.cmd = NULL;
++			$$.cmdargs = NULL;
++		} | TCMD TSTRING args {
++			$$.cmd = $2.str;
++			$$.cmdargs = $3.cmdargs;
++		} ;
++
++args:		/* empty */ {
++			$$.cmdargs = NULL;
++		} | TARGS strlist {
++			$$.cmdargs = $2.strlist;
++		} ;
++
++%%
++
++void
++yyerror(const char *fmt, ...)
++{
++	va_list va;
++
++	fprintf(stderr, "pfexecd: ");
++	va_start(va, fmt);
++	vfprintf(stderr, fmt, va);
++	va_end(va);
++	fprintf(stderr, " at line %d\n", yylval.lineno + 1);
++	parse_errors++;
++}
++
++static struct keyword {
++	const char *word;
++	int token;
++} keywords[] = {
++	{ "deny", TDENY },
++	{ "permit", TPERMIT },
++	{ "as", TAS },
++	{ "cmd", TCMD },
++	{ "args", TARGS },
++	{ "nopass", TNOPASS },
++	{ "nolog", TNOLOG },
++	{ "persist", TPERSIST },
++	{ "keepenv", TKEEPENV },
++	{ "setenv", TSETENV },
++	{ "keepgroups", TKEEPGROUPS},
++	{ "setgroups", TSETGROUPS},
++	{ "chroot", TCHROOT},
++};
++
++int
++yylex(void)
++{
++	char buf[1024], *ebuf, *p, *str;
++	int c, quotes = 0, escape = 0, qpos = -1, nonkw = 0;
++	size_t i;
++
++	p = buf;
++	ebuf = buf + sizeof(buf);
++
++repeat:
++	/* skip whitespace first */
++	for (c = getc(yyfp); c == ' ' || c == '\t'; c = getc(yyfp))
++		yylval.colno++;
++
++	/* check for special one-character constructions */
++	switch (c) {
++		case '\n':
++			yylval.colno = 0;
++			yylval.lineno++;
++			/* FALLTHROUGH */
++		case '{':
++		case '}':
++			return c;
++		case '#':
++			/* skip comments; NUL is allowed; no continuation */
++			while ((c = getc(yyfp)) != '\n')
++				if (c == EOF)
++					goto eof;
++			yylval.colno = 0;
++			yylval.lineno++;
++			return c;
++		case EOF:
++			goto eof;
++	}
++
++	/* parsing next word */
++	for (;; c = getc(yyfp), yylval.colno++) {
++		switch (c) {
++		case '\0':
++			yyerror("unallowed character NUL in column %d",
++			    yylval.colno + 1);
++			escape = 0;
++			continue;
++		case '\\':
++			escape = !escape;
++			if (escape)
++				continue;
++			break;
++		case '\n':
++			if (quotes)
++				yyerror("unterminated quotes in column %d",
++				    qpos + 1);
++			if (escape) {
++				nonkw = 1;
++				escape = 0;
++				yylval.colno = 0;
++				yylval.lineno++;
++				continue;
++			}
++			goto eow;
++		case EOF:
++			if (escape)
++				yyerror("unterminated escape in column %d",
++				    yylval.colno);
++			if (quotes)
++				yyerror("unterminated quotes in column %d",
++				    qpos + 1);
++			goto eow;
++			/* FALLTHROUGH */
++		case '{':
++		case '}':
++		case '#':
++		case ' ':
++		case '\t':
++			if (!escape && !quotes)
++				goto eow;
++			break;
++		case '"':
++			if (!escape) {
++				quotes = !quotes;
++				if (quotes) {
++					nonkw = 1;
++					qpos = yylval.colno;
++				}
++				continue;
++			}
++		}
++		*p++ = c;
++		if (p == ebuf) {
++			yyerror("too long line");
++			p = buf;
++		}
++		escape = 0;
++	}
++
++eow:
++	*p = 0;
++	if (c != EOF)
++		ungetc(c, yyfp);
++	if (p == buf) {
++		/*
++		 * There could be a number of reasons for empty buffer,
++		 * and we handle all of them here, to avoid cluttering
++		 * the main loop.
++		 */
++		if (c == EOF)
++			goto eof;
++		else if (qpos == -1)    /* accept, e.g., empty args: cmd foo args "" */
++			goto repeat;
++	}
++	if (!nonkw) {
++		for (i = 0; i < sizeof(keywords) / sizeof(keywords[0]); i++) {
++			if (strcmp(buf, keywords[i].word) == 0)
++				return keywords[i].token;
++		}
++	}
++	if ((str = strdup(buf)) == NULL)
++		err(1, "%s", __func__);
++	yylval.str = str;
++	return TSTRING;
++
++eof:
++	if (ferror(yyfp))
++		yyerror("input error reading config");
++	return 0;
++}
+Index: usr.sbin/pfexecd/pfexecd.8
+===================================================================
+RCS file: usr.sbin/pfexecd/pfexecd.8
+diff -N usr.sbin/pfexecd/pfexecd.8
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ usr.sbin/pfexecd/pfexecd.8	29 Oct 2021 02:16:39 -0000
+@@ -0,0 +1,80 @@
++.\" Copyright 2021, the University of Queensland
++.\"
++.\" Redistribution and use in source and binary forms, with or without
++.\" modification, are permitted provided that the following conditions
++.\" are met:
++.\" 1. Redistributions of source code must retain the above copyright
++.\"    notice, this list of conditions and the following disclaimer.
++.\" 2. Redistributions in binary form must reproduce the above copyright
++.\"    notice, this list of conditions and the following disclaimer in the
++.\"    documentation and/or other materials provided with the distribution.
++.\" 3. Neither the name of the University nor the names of its contributors
++.\"    may be used to endorse or promote products derived from this software
++.\"    without specific prior written permission.
++.\"
++.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
++.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
++.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++.\" SUCH DAMAGE.
++.Dd $Mdocdate: October 1 2021 $
++.Dt PFEXECD 8
++.Os
++.Sh NAME
++.Nm pfexecd
++.Nd pfexec policy daemon
++.Sh SYNOPSIS
++.Nm pfexecd
++.Op Fl ft
++.Op Fl c Ar file
++.Sh DESCRIPTION
++.Nm
++is a daemon which makes policy decisions about whether to allow privilege
++escalation by users of the
++.Xr pfexec 1
++tool and the
++.Xr pfexecve 2
++system call.
++.Pp
++Its main purpose is to listen for requests from the kernel, which contain
++credential information about the process and user requesting escalation, and
++then apply the policy specified in its configuration file,
++.Xr pfexecd.conf 5 .
++.Pp
++When escalation is allowed by policy,
++.Nm
++informs the kernel of the final credentials to set for the process, including
++the
++.Em UID ,
++.Em GID ,
++.Em groups ,
++and
++.Em environment variables
++that the new process should run with.
++.Pp
++When escalation is denied,
++.Nm
++specifies the
++.Xr errno 2
++error code value to be returned by
++.Xr pfexecve 2 .
++.Sh FILES
++.Bl -tag -width "/var/run/pfexecd.sock" -compact
++.It Pa /etc/pfexecd.conf
++Default configuration file.
++.It Pa /var/run/pfexecd.sock
++.Ux Ns -domain
++socket used for communication with the kernel via
++.Xr pfexecve 2 .
++.El
++.Sh SEE ALSO
++.Xr pfexec 1 ,
++.Xr pfexecve 2 ,
++.Xr pfexecd.conf 5 ,
++.Xr doas 1
+Index: usr.sbin/pfexecd/pfexecd.c
+===================================================================
+RCS file: usr.sbin/pfexecd/pfexecd.c
+diff -N usr.sbin/pfexecd/pfexecd.c
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ usr.sbin/pfexecd/pfexecd.c	29 Oct 2021 02:16:39 -0000
+@@ -0,0 +1,1020 @@
++/*
++ * COMP3301 - Assingment 3
++ *
++ * pfexecve response daemon
++ * Author	: Wilfred MK
++ * SID		: S4428042
++ * Riv		: 0.1
++ * Last Updated	: 12/10/2021
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
++ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
++ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++ * SUCH DAMAGE.
++ *
++ * @(#)main.c v0.1 (UQ) - Wilfred MK
++ */
++
++#include <stdio.h>
++#include <stdlib.h>
++#include <stdint.h>
++#include <unistd.h>
++#include <errno.h>
++#include <signal.h>
++#include <err.h>
++#include <syslog.h>
++#include <fcntl.h>
++#include <string.h>
++
++#include <sys/types.h>
++#include <sys/socket.h>
++#include <sys/stat.h>
++#include <sys/cdefs.h>
++#include <sys/time.h>
++#include <sys/queue.h>
++#include <sys/tree.h>
++#include <sys/un.h>
++#include <sys/pfexec.h>
++#include <sys/pfexecvar.h>
++
++#include <pwd.h>
++#include <event.h>
++#include <limits.h>
++#include <grp.h>
++#include <strings.h>
++
++#include "pfexecd.h"
++#define PFEXECD_USER "_pfexecd"
++
++const off_t CONFIG_MAX_SIZE	= 16777216LL;	/* 16 MB */
++const size_t BACKLOG		= 8;
++
++struct client {
++	TAILQ_ENTRY(client)		 c_entry;
++	struct sockaddr_storage		 c_raddr;
++	int				 c_fd;
++	struct event			 c_readable;
++	struct pfexec_req		 c_req;
++	struct pfexec_resp		 c_resp;
++};
++
++static struct event			 pfd_acceptable;
++static TAILQ_HEAD(clhead, client)	 pfd_clients;
++static char				*pfd_configbuf;
++
++static void	on_lsock_acceptable(int, short, void *);
++static void	on_client_readable(int, short, void *);
++static int	process_request(const struct pfexec_req *,
++    struct pfexec_resp *, short *);
++static void	log_request(const struct pfexec_req *,
++    const struct pfexec_resp *, short);
++
++static int permit(const struct pfexec_req *, struct pfexec_resp *,
++    const struct rule **);
++static int match(const struct pfexec_req *, struct pfexec_resp *,
++    struct rule *);
++
++static int parsegid(const char *, gid_t *);
++static int uidcheck(const char *, uid_t);
++static int parseuid(const char *, uid_t *);
++static int gid_from_uid(const char *, gid_t *);
++static int set_resp_options(const struct pfexec_req *, struct pfexec_resp *,
++    const struct rule *);
++
++static int update_resp_enva(struct pfexec_resp *, char **);
++
++/* Updated by the environment of a request packet */
++char **req_environ;
++
++void __dead
++usage(const char *arg0)
++{
++	fprintf(stderr, "Usage: %s [-f] [-c file]\n", arg0);
++	fprintf(stderr, "       %s [-c file] -t\n", arg0);
++	fprintf(stderr, "\nOptions:\n");
++	fprintf(stderr, "  -f            Foreground operation: do not fork or "
++	    "daemonise\n");
++	fprintf(stderr, "  -c <file>     Use <file> as configuration file "
++	    "instead of /etc/pfexecd.conf\n");
++	fprintf(stderr, "  -t            Test configuration file: check "
++	    "syntax and exit 0 if ok\n");
++	exit(1);
++}
++
++/*
++ * Limit daemon functionality and visibility of vfs
++ */
++static void
++to_jail(void)
++{
++
++	if (unveil(NULL, NULL) == -1) {
++		syslog(LOG_AUTHPRIV | LOG_NOTICE,
++		    "unveil failed (%d) %s", errno, strerror(errno));
++		exit(1);
++	}
++
++	if (pledge("stdio unix getpw", NULL) == -1) {
++		syslog(LOG_AUTHPRIV | LOG_NOTICE,
++		    "pledge failed (%d) %s", errno, strerror(errno));
++		exit(1);
++	}
++}
++
++/*
++ * Drop root privs and continue as _pfexecd (PFEXECD_USER)
++ */
++static void
++drop_privs(void)
++{
++	struct passwd *pw;
++	if ((pw = getpwnam(PFEXECD_USER)) == NULL)
++		err(1, "no such user %s", PFEXECD_USER);
++
++	/*
++	 * Drop root privs and continue as non-root user.
++	 */
++	if (setgroups(1, &pw->pw_gid) ||
++	    setresgid(pw->pw_gid, pw->pw_gid, pw->pw_gid) ||
++	    setresuid(pw->pw_uid, pw->pw_uid, pw->pw_uid)) {
++			syslog(LOG_AUTHPRIV | LOG_NOTICE,
++			    "failed to drop privs: %d (%s)", errno,
++			    strerror(errno));
++			exit(1);
++	}
++}
++
++/*
++ * Parse a given .y config file and indicate syntax errors.
++ */
++static void
++parse_config(FILE *f)
++{
++	extern FILE *yyfp;
++	extern int yyparse(void);
++	yyfp = f;
++
++	yyparse();
++
++	if (parse_errors) {
++		syslog(LOG_AUTHPRIV | LOG_NOTICE,
++		    "failed to parse config file, it just DOESNT work\n");
++		exit(1);
++	}
++}
++
++int
++main(int argc, char *argv[])
++{
++	const char *optstring = "fc:t";
++	const char *conf = "/etc/pfexecd.conf";
++	int daemon = 1, testmode = 0;
++	pid_t kid;
++	int c;
++	int rc, fd, lsock;
++	size_t conflen;
++	struct stat stat;
++	ssize_t done;
++	struct sockaddr_un laddr;
++	FILE *config_stream;
++
++	TAILQ_INIT(&pfd_clients);
++
++	while ((c = getopt(argc, argv, optstring)) != -1) {
++		switch (c) {
++		case 'f':
++			daemon = 0;
++			break;
++		case 't':
++			testmode = 1;
++			break;
++		case 'c':
++			conf = optarg;
++			break;
++		default:
++			warnx("invalid argument");
++			usage(argv[0]);
++		}
++	}
++
++	fd = open(conf, O_RDONLY);
++	if (fd < 0)
++		err(1, "open(%s)", conf);
++	rc = fstat(fd, &stat);
++	if (rc < 0)
++		err(1, "fstat(%s)", conf);
++	if ((stat.st_mode & S_IFREG) == 0)
++		errx(1, "config file %s is not a regular file", conf);
++	if (stat.st_size > CONFIG_MAX_SIZE)
++		errx(1, "config file %s is too big to be pfexecd.conf", conf);
++	conflen = stat.st_size + 1;
++	pfd_configbuf = calloc(1, conflen);
++	if (pfd_configbuf == NULL)
++		err(1, "malloc");
++
++	for (done = 0; done < stat.st_size;) {
++		ssize_t rr;
++		rr = read(fd, pfd_configbuf + done, conflen - done);
++		if (rr < 0)
++			err(1, "read(%s)", conf);
++		if (rr == 0)
++			break;
++		done += rr;
++	}
++	pfd_configbuf[conflen - 1] = '\n';
++	close(fd);
++
++	/*
++	 * Open the pfexecd listening socket which the kernel will connect
++	 * to. We unlink() any old socket file which exists before calling
++	 * bind() (it would be nicer to have a pid file and check it first)
++	 */
++	if (!testmode) {
++		lsock = socket(AF_UNIX, SOCK_SEQPACKET, 0);
++		if (lsock < 0)
++			err(1, "socket");
++
++		bzero(&laddr, sizeof(laddr));
++		laddr.sun_len = sizeof(laddr);
++		laddr.sun_family = AF_UNIX;
++		strlcpy(laddr.sun_path, PFEXECD_SOCK, sizeof(laddr.sun_path));
++
++		unlink(PFEXECD_SOCK);
++		if (bind(lsock, (struct sockaddr *)&laddr, sizeof(laddr)))
++			err(1, "bind(%s)", PFEXECD_SOCK);
++		if (listen(lsock, BACKLOG))
++			err(1, "listen(%s)", PFEXECD_SOCK);
++	}
++
++	if (daemon && !testmode) {
++		kid = fork();
++		if (kid < 0) {
++			err(1, "fork");
++		} else if (kid > 0) {
++			/* The parent process exits immediately. */
++			return (0);
++		}
++		umask(0);
++		if (setsid() < 0) {
++			syslog(LOG_AUTHPRIV | LOG_NOTICE,
++			    "setsid failed: %d (%s)", errno, strerror(errno));
++			exit(1);
++		}
++		chdir("/");
++
++		close(STDIN_FILENO);
++		close(STDOUT_FILENO);
++		close(STDERR_FILENO);
++	}
++
++	/* Drop privileges here */
++	drop_privs(); 		/* Will exit on error */
++	to_jail();			/* Sandbox this badboi */
++
++	/* TODO: parse configuration file here: do it *after* dropping privs */
++	config_stream = fmemopen(pfd_configbuf, conflen, "r");
++
++	if (config_stream == NULL) {
++		syslog(LOG_AUTHPRIV | LOG_NOTICE,
++		    "fmemopen failed: %d (%s)", errno, strerror(errno));
++		exit(1);
++	}
++
++	parse_config(config_stream);
++	fclose(config_stream);
++
++	/* If we're in config test mode and config parsing was ok, exit now. */
++	if (testmode)
++		return (0);
++
++	/*
++	 * Ignore SIGPIPE if we get it from any of our sockets: we'll poll
++	 * them for read/hup/err later and figure it out anyway.
++	 */
++	signal(SIGPIPE, SIG_IGN);
++
++	event_init();
++	event_set(&pfd_acceptable, lsock, EV_READ, on_lsock_acceptable, NULL);
++	event_add(&pfd_acceptable, NULL);
++	event_dispatch();
++
++	free(pfd_configbuf);
++	close(lsock);
++
++	return (0);
++}
++
++static void
++destroy_client(struct client *client)
++{
++	TAILQ_REMOVE(&pfd_clients, client, c_entry);
++	event_del(&client->c_readable);
++	close(client->c_fd);
++	free(client);
++}
++
++static void
++on_lsock_acceptable(int lsock, short evt, void *arg)
++{
++	struct sockaddr_storage raddr;
++	socklen_t slen;
++	int newfd, rc;
++	struct client *client;
++	uid_t uid;
++	gid_t gid;
++
++	slen = sizeof(raddr);
++	newfd = accept(lsock, (struct sockaddr *)&raddr, &slen);
++	if (newfd < 0) {
++		switch (errno) {
++		case ECONNABORTED:
++		case ECONNRESET:
++			goto out;
++		default:
++			syslog(LOG_AUTHPRIV | LOG_NOTICE, "failed to accept "
++			    "connection, aborting: %d (%s)", errno,
++			    strerror(errno));
++			exit(1);
++		}
++	}
++
++	/* Check that the process connecting to us is running as "root". */
++	rc = getpeereid(newfd, &uid, &gid);
++	if (rc != 0) {
++		syslog(LOG_AUTHPRIV | LOG_NOTICE, "failed to retrieve peer "
++		    "uid/gid for new connection, closing");
++		close(newfd);
++		goto out;
++	}
++	if (uid != 0 || gid != 0) {
++		syslog(LOG_AUTHPRIV | LOG_NOTICE, "rejecting connection "
++		    "from non-root user: uid %d, gid %d", uid, gid);
++		close(newfd);
++		goto out;
++	}
++
++	/*
++	 * Set the socket's send buffer size now to make sure there's enough
++	 * memory for it.
++	 */
++	slen = sizeof(struct pfexec_resp) + 32;
++	rc = setsockopt(newfd, SOL_SOCKET, SO_SNDBUF, &slen, sizeof(slen));
++	if (rc < 0) {
++		syslog(LOG_AUTHPRIV | LOG_NOTICE, "failed to set send buffer "
++		    "size for new client, closing");
++		close(newfd);
++		goto out;
++	}
++
++	client = calloc(1, sizeof(*client));
++
++	if (client == NULL) {
++		syslog(LOG_AUTHPRIV | LOG_NOTICE, "failed to allocate memory "
++		    "for new client, closing");
++		close(newfd);
++		goto out;
++	}
++
++	client->c_fd = newfd;
++	bcopy(&raddr, &client->c_raddr, sizeof(raddr));
++
++	TAILQ_INSERT_TAIL(&pfd_clients, client, c_entry);
++
++	event_set(&client->c_readable, newfd, EV_READ, on_client_readable,
++	    client);
++	event_add(&client->c_readable, NULL);
++
++out:
++	event_add(&pfd_acceptable, NULL);
++}
++
++static void
++on_client_readable(int sock, short evt, void *arg)
++{
++	struct client *client = (struct client *)arg;
++	struct msghdr hdr;
++	struct iovec iov;
++	ssize_t recvd;
++	short log_ok = 0;
++	int rc;
++
++	bzero(&hdr, sizeof(hdr));
++	bzero(&iov, sizeof(iov));
++	bzero(&client->c_req, sizeof(struct pfexec_req));
++	hdr.msg_iovlen = 1;
++	hdr.msg_iov = &iov;
++	iov.iov_base = &client->c_req;
++	iov.iov_len = sizeof(struct pfexec_req);
++
++	recvd = recvmsg(sock, &hdr, MSG_DONTWAIT);
++
++	if (recvd < 0) {
++		if (errno == EAGAIN)
++			goto out;
++		syslog(LOG_AUTHPRIV | LOG_NOTICE, "failed to read request "
++		    "from client, closing");
++		destroy_client(client);
++		return;
++	}
++
++	if (recvd == 0) {
++		/* EOF: the other end has closed the connection */
++		destroy_client(client);
++		return;
++	}
++	if (recvd < sizeof(struct pfexec_req)) {
++		syslog(LOG_AUTHPRIV | LOG_NOTICE, "short request from client, "
++		    "closing");
++		destroy_client(client);
++		return;
++	}
++
++	bzero(&client->c_resp, sizeof(struct pfexec_resp));
++	rc = process_request(&client->c_req, &client->c_resp, &log_ok);
++	if (rc != 0) {
++		bzero(&client->c_resp, sizeof(struct pfexec_resp));
++		client->c_resp.pfr_errno = rc;
++	}
++	log_request(&client->c_req, &client->c_resp, log_ok);
++
++	bzero(&hdr, sizeof(hdr));
++	bzero(&iov, sizeof(iov));
++	hdr.msg_iovlen = 1;
++	hdr.msg_iov = &iov;
++	iov.iov_base = &client->c_resp;
++	iov.iov_len = sizeof(struct pfexec_resp);
++	recvd = sendmsg(sock, &hdr, MSG_EOR);
++	if (recvd < 0) {
++		syslog(LOG_AUTHPRIV | LOG_NOTICE, "failed to write to client, "
++		    "closing");
++		destroy_client(client);
++		return;
++	}
++out:
++	/* End connection to particular request, its completed */
++	destroy_client(client);
++}
++
++static int
++process_request(const struct pfexec_req *req, struct pfexec_resp *resp,
++    short *log_ok)
++{
++	uint i;
++	const struct rule *rule;
++
++	/* Check for correctly formed request. */
++	if (req->pfr_ngroups >= NGROUPS_MAX)
++		return (EINVAL);
++	if (req->pfr_req_flags & ~PFEXECVE_ALL_FLAGS)
++		return (EINVAL);
++	if (strlen(req->pfr_path) < 1 ||
++	    strlen(req->pfr_path) >= PATH_MAX)
++		return (EINVAL);
++	if (req->pfr_argc >= 1024 || req->pfr_envc >= 1024)
++		return (EINVAL);
++	if ((req->pfr_req_flags & PFEXECVE_USER) && (
++	    strlen(req->pfr_req_user) < 1 ||
++	    strlen(req->pfr_req_user) >= LOGIN_NAME_MAX))
++		return (EINVAL);
++
++	/*
++	 * Validate all the argument and env var references before we try to
++	 * use any of them.
++	 */
++	for (i = 0; i < req->pfr_argc; ++i) {
++		const struct pfexec_arg *a = &req->pfr_argp[i];
++		if (a->pfa_offset >= ARG_MAX)
++			return (EINVAL);
++		if (a->pfa_len >= ARG_MAX)
++			return (EINVAL);
++		if (a->pfa_offset + a->pfa_len >= ARG_MAX)
++			return (EINVAL);
++	}
++	for (i = 0; i < req->pfr_envc; ++i) {
++		const struct pfexec_arg *a = &req->pfr_envp[i];
++		if (a->pfa_offset >= ARG_MAX)
++			return (EINVAL);
++		if (a->pfa_len >= ARG_MAX)
++			return (EINVAL);
++		if (a->pfa_offset + a->pfa_len >= ARG_MAX)
++			return (EINVAL);
++	}
++
++	/* Determine whether this request should be allowed */
++	if (!permit(req, resp, &rule)) {
++		syslog(LOG_AUTHPRIV | LOG_INFO, "Request denied");
++		return (EPERM);
++	}
++
++	/* At this point the *last* matching rule is found */
++	if (set_resp_options(req, resp, rule)) {
++		syslog(LOG_AUTHPRIV | LOG_INFO, "Request denied,"
++		" invalid args in conf");
++		return (EPERM);
++	}
++
++	/*
++	 * Determine Password Requirements
++	 * The following 3 features are not supported in this rivision..
++	 */
++	if (rule->options & PERSIST) {
++		syslog(LOG_AUTHPRIV | LOG_DEBUG, "Password persist set");
++	}
++
++	if ((rule->options & NOPASS) == 0) {
++		syslog(LOG_AUTHPRIV | LOG_DEBUG, "Password Required,"
++		" Not Implemented");
++		return EPERM;
++	}
++
++	if (req->pfr_req_flags & PFEXECVE_NOPROMPT) {
++		syslog(LOG_AUTHPRIV | LOG_DEBUG, "Unable to do prompts..");
++		return EPERM;
++	}
++
++	/* Logging enable by defualt */
++	if ((rule->options & NOLOG))
++		*log_ok = 0;
++	else
++		*log_ok = 1;
++
++	return (0);
++}
++
++/*
++ * Updates particular response fields of the response packet
++ * @note function must be called only after permit
++ */
++static int
++set_resp_options(const struct pfexec_req *req, struct pfexec_resp *resp,
++    const struct rule *r)
++{
++	const char *safepath = "/bin:/sbin:/usr/bin:/usr/sbin:"
++	    "/usr/local/bin:/usr/local/sbin";
++	char **envp;
++	struct group *grp;
++	char mypwbuf[_PW_BUF_LEN], targpwbuf[_PW_BUF_LEN];
++	struct passwd mypwstore, targpwstore;
++	struct passwd *mypw, *targpw;
++	int i, rv, j = 0, set_count = 0, dup = 0;
++	uint32_t gid, test_uid;
++
++	resp->pfr_ngroups = 0;
++	if (r->options & SETGROUPS) {
++		for (i = 0; r->grplist[i]; ++i) {
++			if (i >= NGROUPS_MAX)
++				return EINVAL;
++
++			if (parsegid(r->grplist[i], &gid) == -1)
++				return EINVAL;
++
++			/* Primary GID */
++			if (i == 0) {
++				resp->pfr_gid = gid;
++				continue;
++			}
++
++			for (int z = 0; z < i; ++z) {
++				if (resp->pfr_groups[z] == gid)
++					dup = 1;
++			}
++			/* Aleady in list, skip ahead */
++			if (dup) {
++				dup = 0;
++				continue;
++			}
++			resp->pfr_groups[set_count] = gid;
++			set_count++;
++		}
++		resp->pfr_ngroups = set_count; 	/* Count of actual elements */
++	} else {
++		/*
++		 * Get groups of target user,
++		 * by looking through group database
++		 */
++		/* Look for groups of target */
++		test_uid = resp->pfr_uid;
++		if (r->options & KEEPGROUPS) {
++			/* Look for groups of org user */
++			test_uid = req->pfr_uid;
++			resp->pfr_gid = req->pfr_gid;
++		}
++		while ((grp = getgrent()) != NULL) {
++			for (i = 0; grp->gr_mem[i] != NULL; ++i)
++				if (uidcheck(grp->gr_mem[i], test_uid) == 0) {
++					/* This groups is primary */
++					if (grp->gr_gid == resp->pfr_gid)
++						continue;
++					/*
++					 * Target user is a member of this group
++					 */
++					resp->pfr_groups[j] = grp->gr_gid;
++					j = ++resp->pfr_ngroups;
++				}
++			if (j >= NGROUPS_MAX)
++				return EINVAL;
++		}
++		endgrent();
++	}
++
++	resp->pfr_flags |= PFRESP_GROUPS;
++
++	/* Chroot set */
++	if (r->options & CHROOT) {
++		if (r->chroot_path) {
++			if (strnlen(r->chroot_path, PATH_MAX) >= PATH_MAX - 1)
++				return EINVAL;
++
++			strncpy(resp->pfr_chroot, r->chroot_path, PATH_MAX - 1);
++		} else {
++			strcpy(resp->pfr_chroot, "/var/empty");
++		}
++		resp->pfr_flags |= PFRESP_CHROOT;
++	}
++
++	/* Generate default environ, update current PATH to a safer path */
++	if (setenv("PATH", safepath, 1) == -1) {
++		syslog(LOG_AUTHPRIV | LOG_INFO,
++		    "failed to set PATH '%s'", safepath);
++		return EINVAL;
++	}
++
++	/* Calling proc */
++	rv = getpwuid_r(req->pfr_uid, &mypwstore, mypwbuf,
++	    sizeof(mypwbuf), &mypw);
++
++	if (rv != 0) {
++		syslog(LOG_AUTHPRIV | LOG_INFO,
++		    "getpwuid_r failed for calling proc");
++		return EINVAL;
++	}
++	if (mypw == NULL) {
++		syslog(LOG_AUTHPRIV | LOG_INFO,
++		    "no passwd entry for calling uid: %d", req->pfr_uid);
++		return EINVAL;
++	}
++
++	if (req->pfr_req_flags & PFEXECVE_USER) {
++		/* Run as proc (Target) */
++		rv = getpwnam_r(req->pfr_req_user, &targpwstore, targpwbuf,
++		    sizeof(targpwbuf), &targpw);
++	} else {
++		/* Run as root by def */
++		rv = getpwnam_r("root", &targpwstore, targpwbuf,
++		    sizeof(targpwbuf), &targpw);
++	}
++
++	if (rv != 0) {
++		syslog(LOG_AUTHPRIV | LOG_INFO,
++		    "getpwuid_r failed for target proc");
++		return EINVAL;
++	}
++
++	if (targpw == NULL) {
++		syslog(LOG_AUTHPRIV | LOG_INFO,
++		    "no passwd entry for target uid: %d", req->pfr_uid);
++		return EINVAL;
++	}
++
++	/* Setup Environ from Request */
++	req_environ = malloc(sizeof(char *) * req->pfr_envc + 1);
++
++	for (i = 0; i < req->pfr_envc; ++i) {
++		if (req->pfr_envp[i].pfa_offset > ARG_MAX ||
++		    req->pfr_envp[i].pfa_len > ARG_MAX) {
++			req_environ[i] = NULL;
++			goto free_env;
++		}
++
++		req_environ[i] = malloc(sizeof(char) *
++		    req->pfr_envp[i].pfa_len + 1);
++
++		memset(req_environ[i], 0, req->pfr_envp[i].pfa_len + 1);
++		strncpy(req_environ[i], req->pfr_envarea +
++		    req->pfr_envp[i].pfa_offset, req->pfr_envp[i].pfa_len);
++	}
++
++	/* Used for freeing later */
++	req_environ[i] = NULL;		/* Indicate End of data */
++
++	envp = prepenv(r, mypw, targpw);
++
++	/* Update response env buffer */
++	if (update_resp_enva(resp, envp))
++		goto free_env2;
++
++	/* Free all the things */
++	for (i = 0; req_environ[i] != NULL; ++i) {
++		free(req_environ[i]);
++	}
++
++	/* Free envp string */
++	for (i = 0; envp[i] != NULL; ++i) {
++		free(envp[i]);
++	}
++
++	/* Indicate new env is set for response */
++	resp->pfr_flags |= PFRESP_ENV;
++
++	return (0);
++
++	/* Bad returns */
++free_env2:
++	for (i = 0; envp[i] != NULL; ++i) {
++		free(envp[i]);
++	}
++free_env:
++	for (i = 0; req_environ[i] != NULL; ++i) {
++		free(req_environ[i]);
++	}
++	return EINVAL;
++}
++
++/*
++ * Update response packet environment area.
++ */
++static int
++update_resp_enva(struct pfexec_resp *resp, char **envp)
++{
++	int i, rc;
++	size_t len = 0, offset = 0;
++	resp->pfr_envc = 0;
++
++	for (i = 0; envp[i] != NULL; ++i) {
++		len = strnlen(envp[i], ARG_MAX);
++
++		if (len > ARG_MAX - offset - 1)
++			return E2BIG;
++
++		rc = strlcat(resp->pfr_envarea, envp[i], ARG_MAX - offset - 1);
++
++		if (rc >= (ARG_MAX - offset - 1))
++			return E2BIG;
++
++		resp->pfr_envc++;
++		resp->pfr_envp[i].pfa_offset = offset;
++		resp->pfr_envp[i].pfa_len = len;
++
++		offset += len;
++	}
++	return (0);
++}
++
++/*
++ * Validate if a given rule is permitted or not
++ * Update the response structure as required on match
++ */
++static int
++permit(const struct pfexec_req *req, struct pfexec_resp *resp,
++    const struct rule **lastr)
++{
++	size_t i;
++	*lastr = NULL;
++
++	for (i = 0; i < nrules; i++) {
++		if (match(req, resp, rules[i])) {
++			*lastr = rules[i];
++		}
++	}
++	if (!*lastr)
++		return 0;
++	return (*lastr)->action == PERMIT;
++}
++
++/*
++ * Match a specified to pfexec request.
++ * On success, updates the response buffer with final target uid and gid.
++ */
++static int
++match(const struct pfexec_req *req, struct pfexec_resp *resp, struct rule *r)
++{
++
++	uint32_t uid = req->pfr_uid;
++	uint32_t ngroups = req->pfr_ngroups;
++	uint32_t *groups = (uint32_t *)req->pfr_groups;
++
++	uid_t uid_req_user;
++	gid_t rgid, target_gid;
++	char *test_arg;
++
++	int i;
++
++	if (r->ident[0] == ':') {
++		if (parsegid(r->ident + 1, &rgid) == -1)
++			return 0;
++		for (i = 0; i < ngroups; i++) {
++			if (rgid == groups[i])
++				break;
++		}
++		if (i == ngroups)
++			return 0;
++	} else {
++		if (uidcheck(r->ident, uid) != 0)
++			return 0;
++	}
++
++	/* If target specified and target requested, these must match user */
++	if (r->target && r->target[0] == '_') {
++		/* Check that the requested user UID matched */
++		if (req->pfr_req_flags & PFEXECVE_USER)	{
++			if (parseuid(req->pfr_req_user, &uid_req_user) != 0) {
++				return 0;
++			}
++			if (uid_req_user != req->pfr_uid)
++				return 0;
++			uid_req_user = req->pfr_uid;
++			target_gid = req->pfr_gid;
++		} else {
++			uid_req_user = req->pfr_uid;
++			target_gid = req->pfr_gid;
++		}
++	} else if (r->target && !(req->pfr_req_flags & PFEXECVE_USER)) {
++		if (parseuid(r->target, &uid_req_user) != 0)
++			return 0;
++
++		if (gid_from_uid(r->target, &target_gid) != 0)
++			return 0;
++	} else if (r->target && (req->pfr_req_flags & PFEXECVE_USER) != 0) {
++		if (parseuid(req->pfr_req_user, &uid_req_user) != 0)
++			return 0;
++
++		if (uidcheck(r->target, uid_req_user) != 0)
++			return 0;
++
++		/* Target UID matched with reqeusted, get gid */
++		if (gid_from_uid(r->target, &target_gid) != 0)
++			return 0;
++
++	} else if ((req->pfr_req_flags & PFEXECVE_USER) != 0) {
++		/* Run as requested target, no rule restrictions */
++		if (parseuid(req->pfr_req_user, &uid_req_user) != 0)
++			return 0;
++
++		if (gid_from_uid(req->pfr_req_user, &target_gid) != 0)
++			return 0;
++
++	} else {
++		/* If no target specified, set default to root */
++		if (parseuid("root", &uid_req_user) != 0)
++			return 0;
++
++		if (gid_from_uid("root", &target_gid) != 0)
++			return 0;
++	}
++
++	/* Check for command specifications */
++	if (r->cmd) {
++		if (strcmp(r->cmd, req->pfr_path))
++			return 0;
++
++		/* Given args must be a 1:1 match */
++		if (r->cmdargs) {
++			test_arg = malloc(sizeof(char) * ARG_MAX);
++
++			for (i = 0; r->cmdargs[i]; ++i) {
++				/*
++				 * More in rule than requested
++				 * pfr_argc contains bin name
++				 */
++				if (i >= req->pfr_argc - 1) {
++					free(test_arg);
++					return 0;
++				}
++
++				memcpy(test_arg, req->pfr_argarea +
++				    req->pfr_argp[i+1].pfa_offset,
++				    req->pfr_argp[i+1].pfa_len);
++
++				test_arg[req->pfr_argp[i+1].pfa_len + 1] = '\0';
++
++				if (strcmp(r->cmdargs[i], test_arg)) {
++					free(test_arg);
++					return 0;
++				}
++				bzero(test_arg, sizeof(char) * ARG_MAX);
++			}
++			free(test_arg);
++			/*
++			 * More args requested than in rule,
++			 * (pfr_argc contains bin name)
++			 */
++			if (i != req->pfr_argc - 1) {
++				return 0;
++			}
++		}
++	}
++
++	/* Update response IDs and flags */
++	resp->pfr_flags = (PFRESP_UID | PFRESP_GID);
++	resp->pfr_uid = uid_req_user;
++	resp->pfr_gid = target_gid;
++	return 1;
++}
++
++/*
++ * Validate a specified gid
++ */
++static int
++parsegid(const char *s, gid_t *gid)
++{
++	struct group *gr;
++	const char *errstr;
++
++	if ((gr = getgrnam(s)) != NULL) {
++		*gid = gr->gr_gid;
++		if (*gid == GID_MAX)
++			return -1;
++		return 0;
++	}
++	*gid = strtonum(s, 0, GID_MAX - 1, &errstr);
++	if (errstr)
++		return -1;
++	return 0;
++}
++
++/*
++ * Test a desired uid matches username
++ */
++static int
++uidcheck(const char *s, uid_t desired)
++{
++	uid_t uid;
++	if (parseuid(s, &uid) != 0)
++		return -1;
++	if (uid != desired)
++		return -1;
++	return 0;
++}
++
++/*
++ * Get a uid from username
++ */
++static int
++parseuid(const char *s, uid_t *uid)
++{
++	struct passwd *pw;
++	const char *errstr;
++
++	if ((pw = getpwnam(s)) != NULL) {
++		*uid = pw->pw_uid;
++		if (*uid == UID_MAX)
++			return -1;
++		return 0;
++	}
++	*uid = strtonum(s, 0, UID_MAX - 1, &errstr);
++	if (errstr)
++		return -1;
++	return 0;
++}
++
++/*
++ * Get gid from a given username
++ */
++static int
++gid_from_uid(const char *s, gid_t *gid)
++{
++	struct passwd *pw;
++	const char *errstr;
++
++	if ((pw = getpwnam(s)) != NULL) {
++		*gid = pw->pw_gid;
++		if (*gid == GID_MAX)
++			return -1;
++		return 0;
++	}
++	*gid = strtonum(s, 0, GID_MAX - 1, &errstr);
++	if (errstr)
++		return -1;
++	return 0;
++}
++
++
++static void
++log_request(const struct pfexec_req *req, const struct pfexec_resp *resp,
++    short log_ok)
++{
++	const char *requser = (req->pfr_req_flags & PFEXECVE_USER) ?
++	    req->pfr_req_user : "root";
++	if (resp->pfr_errno == 0 && log_ok) {
++		syslog(LOG_AUTHPRIV | LOG_INFO,
++		    "uid %d ran command %s as %s (pid %d)",
++		    req->pfr_uid, req->pfr_path, requser, req->pfr_pid);
++		return;
++	}
++	if (resp->pfr_errno == EPERM) {
++		syslog(LOG_AUTHPRIV | LOG_NOTICE,
++		    "denied escalation for pid %d (%s) as %s, run by uid %d",
++		    req->pfr_pid, req->pfr_path, requser, req->pfr_uid);
++		return;
++	}
++	syslog(LOG_AUTHPRIV | LOG_NOTICE,
++	    "error processing esclation request from pid %d, run by uid %d: "
++	    "%d: %s", req->pfr_pid, req->pfr_uid, resp->pfr_errno,
++	    strerror(resp->pfr_errno));
++}
+\ No newline at end of file
+Index: usr.sbin/pfexecd/pfexecd.conf.5
+===================================================================
+RCS file: usr.sbin/pfexecd/pfexecd.conf.5
+diff -N usr.sbin/pfexecd/pfexecd.conf.5
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ usr.sbin/pfexecd/pfexecd.conf.5	29 Oct 2021 02:16:39 -0000
+@@ -0,0 +1,153 @@
++.\" Copyright 2021, the University of Queensland
++.\"
++.\" Redistribution and use in source and binary forms, with or without
++.\" modification, are permitted provided that the following conditions
++.\" are met:
++.\" 1. Redistributions of source code must retain the above copyright
++.\"    notice, this list of conditions and the following disclaimer.
++.\" 2. Redistributions in binary form must reproduce the above copyright
++.\"    notice, this list of conditions and the following disclaimer in the
++.\"    documentation and/or other materials provided with the distribution.
++.\" 3. Neither the name of the University nor the names of its contributors
++.\"    may be used to endorse or promote products derived from this software
++.\"    without specific prior written permission.
++.\"
++.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
++.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
++.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++.\" SUCH DAMAGE.
++.Dd $Mdocdate: October 1 2021 $
++.Dt PFEXECD.CONF 5
++.Os
++.Sh NAME
++.Nm pfexecd.conf
++.Nd pfexecd configuration file
++.Sh DESCRIPTION
++The
++.Nm
++configuration file contains the policy to be applied by the
++.Xr pfexecd 8
++daemon.
++.Pp
++It consists of a series of rules, in a similar format to
++.Xr doas.conf 5 .
++.Pp
++The rules have the following format:
++.Bd -ragged -offset indent
++.Ic permit Ns | Ns Ic deny
++.Op Ar options
++.Ar identity
++.Op Ic as Ar target
++.Op Ic cmd Ar command Op Ic args No ...
++.Ed
++Rules consist of the following parts:
++.Bl -tag -width 11n
++.It Ic permit Ns | Ns Ic deny
++The action to be taken if this rule matches.
++.It Ar options
++Options are:
++.Bl -tag -width keepenv
++.It Ic nopass
++The user is not required to enter a password.
++.It Ic nolog
++Do not log successful command execution to
++.Xr syslogd 8 .
++.It Ic persist
++After the user successfully authenticates, do not ask for a password
++again for some time.
++.It Ic keepgroups
++Keeps the group ID and group membership of the process calling
++.Xr pfexecve 2
++unchanged. By default, groups will be set to the target user's primary and
++default groups.
++.It Ic setgroups { Ar group Oo Ar group ... Oc Ic }
++Overrides the group memberships of the new process, setting the primary group
++to the first group specified, and additional group membership to the remaining
++space-separated group names.
++.It Ic keepenv
++Environment variables other than those listed in
++.Xr pfexec 1
++are retained when creating the environment for the new process.
++.It Ic setenv { Oo Ar variable ... Oc Oo Ar variable=value ... Oc Ic }
++Keep or set the space-separated specified variables.
++Variables may also be removed with a leading
++.Sq -
++or set using the latter syntax.
++If the first character of
++.Ar value
++is a
++.Ql $
++then the value to be set is taken from the existing environment
++variable of the indicated name.
++This option is processed after the default environment has been created.
++.It Ic chroot { Oo Ar path Oc Ic }
++Changes the root directory (in a similar manner to
++.Xr chroot 2 )
++of the new process to the given path after loading the executable. If no path
++is given, uses
++.Em /var/empty .
++The executable to be run does not have to exist within the chroot path.
++.El
++.It Ar identity
++The username to match.
++Groups may be specified by prepending a colon
++.Pq Sq \&: .
++Numeric IDs are also accepted.
++.It Ic as Ar target
++The target user the running user is allowed to run the command as.
++The default is all users.
++.It Ic cmd Ar command
++The command the user is allowed or denied to run.
++The default is all commands.
++Be advised that it is best to specify absolute paths.
++If a relative path is specified, only a restricted
++.Ev PATH
++will be searched.
++.It Ic args Op Ar argument ...
++Arguments to command.
++The command arguments provided by the user need to match those specified.
++The keyword
++.Ic args
++alone means that command must be run without any arguments.
++.El
++.Pp
++The last matching rule determines the action taken.
++If no rule matches, the action is denied.
++.Pp
++Comments can be put anywhere in the file using a hash mark
++.Pq Sq # ,
++and extend to the end of the current line.
++.Pp
++The following quoting rules apply:
++.Bl -dash
++.It
++The text between a pair of double quotes
++.Pq Sq \&"
++is taken as is.
++.It
++The backslash character
++.Pq Sq \e
++escapes the next character, including new line characters, outside comments;
++as a result, comments may not be extended over multiple lines.
++.It
++If quotes or backslashes are used in a word,
++it is not considered a keyword.
++.El
++.Sh FILES
++.Bl -tag -width /etc/pfexecd.conf -compact
++.It Pa /etc/pfexecd.conf
++.Xr pfexecd 8
++configuration file.
++.El
++.Sh SEE ALSO
++.Xr pfexec 1 ,
++.Xr pfexecd 8 ,
++.Xr doas.conf 5 ,
++.Xr doas 1
+Index: usr.sbin/pfexecd/pfexecd.h
+===================================================================
+RCS file: usr.sbin/pfexecd/pfexecd.h
+diff -N usr.sbin/pfexecd/pfexecd.h
+--- /dev/null	1 Jan 1970 00:00:00 -0000
++++ usr.sbin/pfexecd/pfexecd.h	29 Oct 2021 02:16:39 -0000
+@@ -0,0 +1,36 @@
++struct rule {
++	int action;
++	int options;
++	const char *ident;
++	const char *target;
++	const char *cmd;
++	const char **cmdargs;
++	const char **envlist;
++	const char **grplist;
++	const char *chroot_path;
++};
++
++extern struct rule **rules;
++extern size_t nrules;
++extern int parse_errors;
++
++struct passwd;
++extern const char *formerpath;
++extern char **req_environ;
++
++char **prepenv(const struct rule *, const struct passwd *,
++    const struct passwd *);
++
++
++#define PERMIT 1
++#define DENY 2
++
++#define NOPASS 		(1<<0)
++#define KEEPENV 	(1<<1)
++#define PERSIST 	(1<<2)
++#define NOLOG 		(1<<3)
++#define SETENV		(1<<4)
++#define KEEPGROUPS 	(1<<5)
++#define SETGROUPS 	(1<<6)
++#define CHROOT		(1<<7)
++
